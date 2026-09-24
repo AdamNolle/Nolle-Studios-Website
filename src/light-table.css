@@ -5,7 +5,7 @@
   --paper: #F2F5F9;
   --ease-out: cubic-bezier(.16,.84,.14,1);
   --ease-soft: cubic-bezier(.2,.8,.2,1);
-  --cork: url(./assets/cork-tile.jpg);
+  --cork: url(./assets/cork-tile.webp);
 }
 
 html, body { margin: 0; height: 100%; background: #08080A; overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
@@ -75,30 +75,10 @@ button { font: inherit; }
 }
 .ns-frame__kept { position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; border-radius: 50%; pointer-events: none; background: var(--paper); box-shadow: 0 0 0 2px rgba(8,9,11,.55); }
 
-/* ---------- Push pins ---------- */
+/* ---------- Push pins (Blender sprites, centred on the needle) ---------- */
 
-.ns-pin { position: absolute; width: 0; height: 0; pointer-events: none; z-index: 4; --pin-l: #FBF8F2; --pin-m: #D6CFC3; --pin-d: #8C8478; }
-.ns-pin > span { position: absolute; border-radius: 50%; }
-.ns-pin__shadow { left: -4px; top: -2px; width: 30px; height: 13px; background: rgba(28,11,0,.4); filter: blur(3px); transform: rotate(36deg); transform-origin: 4px 6px; }
-.ns-pin__base {
-  left: -10px; top: -10px; width: 20px; height: 20px;
-  background: radial-gradient(circle at 36% 30%, var(--pin-l), var(--pin-m) 54%, var(--pin-d) 100%);
-  box-shadow: 0 1px 1.5px rgba(0,0,0,.45), inset 0 -1.5px 1.5px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.4);
-}
-.ns-pin__head {
-  left: -7px; top: -9px; width: 12px; height: 12px;
-  background: radial-gradient(circle at 40% 34%, var(--pin-l), var(--pin-m) 62%, var(--pin-d) 100%);
-  box-shadow: 0 1.5px 2px rgba(0,0,0,.42), inset 0 -1px 1px rgba(0,0,0,.28), inset 0 .5px 0 rgba(255,255,255,.5);
-}
-.ns-pin__glint { left: -4.5px; top: -7px; width: 4px; height: 2.6px; background: rgba(255,255,255,.92); filter: blur(.35px); transform: rotate(-20deg); }
-/* Sheet pins sit a little prouder than the ones on the board. */
-.ns-pin--sheet { top: 15px; z-index: 6; }
-.ns-pin--sheet .ns-pin__base {
-  background: radial-gradient(circle at 38% 32%, var(--pin-l), var(--pin-m) 55%, var(--pin-d) 100%);
-  box-shadow: 0 1.5px 2px rgba(0,0,0,.5), inset 0 -2px 2px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.45);
-}
-.ns-pin--sheet .ns-pin__head { top: -9.5px; box-shadow: 0 2px 2.5px rgba(0,0,0,.45), inset 0 -1px 1px rgba(0,0,0,.3), inset 0 .5px 0 rgba(255,255,255,.55); }
-.ns-pin--sheet .ns-pin__glint { left: -4.6px; top: -7.4px; width: 4.4px; height: 2.8px; }
+/* 55px of sprite puts the pin's 11mm flange at ~20px. */
+.ns-pin { position: absolute; width: 55px; height: 55px; transform: translate(-50%, -50%); pointer-events: none; z-index: 6; }
 
 /* ---------- Board (one roll, pannable) ---------- */
 
@@ -118,26 +98,11 @@ button { font: inherit; }
 }
 .ns-print__btn:hover { transform: translateY(-2px) scale(1.012); }
 .ns-print__img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.ns-print__edge { position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 0 1px rgba(255,255,255,.1), 0 10px 18px rgba(40,19,3,.4), 0 2px 4px rgba(40,19,3,.36); }
+.ns-print__edge { position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 0 1px rgba(255,255,255,.1), 5px 9px 18px rgba(40,19,3,.4), 1px 2px 4px rgba(40,19,3,.36); }
 .ns-print__sheen { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(118deg, rgba(255,255,255,.09) 0 13%, transparent 28%); }
 
-.ns-tape {
-  position: absolute; top: -13px; left: 50%; height: 28px; overflow: hidden;
-  clip-path: polygon(2.5% 0%, 0% 13%, 2.5% 26%, 0% 39%, 2.5% 52%, 0% 65%, 2.5% 78%, 0% 91%, 2% 100%, 98% 100%, 100% 91%, 97.5% 78%, 100% 65%, 97.5% 52%, 100% 39%, 97.5% 26%, 100% 13%, 97.5% 0%);
-  background: linear-gradient(180deg, rgba(255,255,255,.3), rgba(255,255,255,.07) 20%, rgba(255,255,255,.04) 50%, rgba(255,255,255,.09) 80%, rgba(255,255,255,.26));
-  backdrop-filter: blur(1.4px) brightness(1.06) saturate(1.08); -webkit-backdrop-filter: blur(1.4px) brightness(1.06) saturate(1.08);
-  box-shadow: 0 2px 5px rgba(48,24,4,.22);
-}
-.ns-tape > div { position: absolute; }
-.ns-tape__streaks { inset: 0; background: linear-gradient(104deg, rgba(255,255,255,.2) 0 6%, transparent 13% 36%, rgba(255,255,255,.14) 42% 48%, transparent 56%, rgba(255,255,255,.09) 72% 78%, transparent 86%); }
-.ns-tape__fibres {
-  inset: 0; opacity: .45;
-  background-image: radial-gradient(circle at 4px 5px, rgba(255,255,255,.5) 0 .7px, transparent 1.1px), radial-gradient(circle at 12px 13px, rgba(255,255,255,.32) 0 .6px, transparent 1px), radial-gradient(circle at 18px 6px, rgba(120,80,40,.16) 0 .8px, transparent 1.2px);
-  background-size: 19px 17px, 23px 21px, 31px 15px;
-}
-.ns-tape__edge { left: 0; right: 0; height: 1px; }
-.ns-tape__edge--top { top: 0; background: rgba(255,255,255,.46); }
-.ns-tape__edge--bottom { bottom: 0; background: rgba(255,255,255,.38); }
+/* Tape sprite, centred on the print's top edge. */
+.ns-tape { position: absolute; left: 50%; top: 0; height: auto; transform: translate(-50%, -50%); pointer-events: none; z-index: 5; }
 
 /* ---------- Loupe ---------- */
 
@@ -224,13 +189,28 @@ button { font: inherit; }
 }
 .ns-rail__base { position: absolute; left: 0; right: 0; top: var(--base-y); height: 1px; background: linear-gradient(90deg, transparent, rgba(236,240,246,.22) 20%, rgba(236,240,246,.22) 80%, transparent); }
 .ns-rail__ticks { position: absolute; left: 0; right: 0; top: 0; height: var(--base-y); overflow: hidden; }
-.ns-rail__reel { position: absolute; left: 50%; bottom: 0; height: 100%; display: flex; will-change: transform; }
-.ns-tick { position: relative; flex: none; height: 100%; }
-.ns-tick__bar { position: absolute; left: -.75px; bottom: 0; width: 1.5px; height: 46px; border-radius: 1px 1px 0 0; transform-origin: 50% 100%; background: #EEF2F7; }
+.ns-rail__reel { position: absolute; left: 50%; bottom: 0; width: 0; height: 100%; }
+.ns-tick { position: absolute; left: 0; bottom: 0; width: 0; height: 100%; will-change: transform; }
+/* Each bar is its frame's colour, lit from the top like a filament. */
+.ns-tick__bar {
+  position: absolute; left: -1px; bottom: 0; width: 2px; height: 58px; border-radius: 1px 1px 0 0; transform-origin: 50% 100%;
+  background-color: #EEF2F7; background-image: linear-gradient(0deg, rgba(10,10,14,.38), rgba(255,255,255,0) 55%, rgba(255,255,255,.35));
+}
 .ns-tick__foot { position: absolute; left: 50%; bottom: 0; width: 1px; height: 4px; margin-left: -.5px; background: rgba(236,240,246,.26); }
 .ns-tick__cap { position: absolute; left: -2px; width: 4px; height: 4px; background: var(--paper); box-shadow: 0 0 6px rgba(242,245,249,.7); }
+/* The viewed frame's colour bleeding into the glass around the playhead. */
+.ns-rail__aura {
+  position: absolute; left: 50%; top: 0; width: 220px; height: 100%; margin-left: -110px; pointer-events: none;
+  background: radial-gradient(closest-side at 50% 62%, rgba(var(--tint), .26), rgba(var(--tint), .08) 55%, transparent);
+  mix-blend-mode: screen;
+}
+.ns-rail__span {
+  position: absolute; top: calc(var(--base-y) - 1px); height: 2px; border-radius: 1px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgb(var(--tint)) 10%, rgb(var(--tint)) 90%, transparent);
+  box-shadow: 0 0 10px rgba(var(--tint), .55), 0 0 2px rgba(var(--tint), .8);
+}
 .ns-rail__ruler { position: absolute; left: 0; right: 0; top: 69px; height: 16px; overflow: hidden; }
-.ns-rail__marks { position: absolute; left: 50%; top: 0; height: 16px; will-change: transform; }
+.ns-rail__marks { position: absolute; left: 50%; top: 0; height: 16px; }
 .ns-rail__label {
   position: absolute; top: 2px; padding-left: 5px; white-space: nowrap; font-family: var(--mono); font-size: 8.5px;
   letter-spacing: .16em; text-transform: uppercase; transition: color .3s, opacity .3s;

@@ -1,14 +1,17 @@
 import { Component } from "react";
 import { EVENTS, TH, MID } from "./archive.js";
+import { tintOf } from "./tints.js";
 
 const SHUT = ["1/500", "1/250", "1/1000", "1/125", "1/2000", "1/60"];
 const APER = ["f/2", "f/2.8", "f/1.8", "f/4", "f/5.6"];
 const ASPECTS = [1.5, 1.5, 1.5, 0.75, 1.3333, 1.0];
-const PINS = [["#FBF8F2", "#D6CFC3", "#8C8478"], ["#7A7F87", "#3A3D43", "#141518"], ["#EE7A62", "#B8392A", "#5E150C"]];
+const PINS = ["ivory", "graphite", "red"];
 const rnd = s => { const x = Math.sin(s * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
 const zclamp = z => Math.max(0.3, Math.min(2.8, z));
 const pad2 = n => String(n).padStart(2, "0");
 const pad3 = n => String(n).padStart(3, "0");
+const SILVER = [214, 221, 230];
+const mixRgb = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
 
 // Grid placements [row, col, rowSpan, colSpan] for each contact-sheet layout.
 function spans(style, rows, cols){
@@ -37,27 +40,21 @@ function spans(style, rows, cols){
   return out;
 }
 
-function Pin({ variant, style, colors }){
-  const tint = colors ? { "--pin-l": colors[0], "--pin-m": colors[1], "--pin-d": colors[2] } : null;
-  return (
-    <div className={"ns-pin ns-pin--" + variant} style={{ ...style, ...tint }} aria-hidden="true">
-      <span className="ns-pin__shadow" />
-      <span className="ns-pin__base" />
-      <span className="ns-pin__head" />
-      <span className="ns-pin__glint" />
-    </div>
-  );
+// Pin and tape sprites rendered in Blender (see art/). Each pin sprite is
+// centred on its needle; each tape sprite is centred on the print's top edge,
+// with its angle to that edge baked in.
+const art = import.meta.glob("./assets/{pins,tape}/*.webp", { eager: true, query: "?url", import: "default" });
+const pinArt = (colour, variant) => art["./assets/pins/pin-" + colour + "-" + variant + ".webp"];
+const tapeArt = variant => art["./assets/tape/tape-" + variant + ".webp"];
+
+function Pin({ colour, variant, style }){
+  return <img className="ns-pin" src={pinArt(colour, variant)} style={style} alt="" draggable={false} aria-hidden="true" />;
 }
 
-function Tape({ width, rot }){
-  return (
-    <div className="ns-tape" style={{ width: width, transform: "translateX(-50%) rotate(" + rot + ")" }} aria-hidden="true">
-      <div className="ns-tape__streaks" />
-      <div className="ns-tape__fibres" />
-      <div className="ns-tape__edge ns-tape__edge--top" />
-      <div className="ns-tape__edge ns-tape__edge--bottom" />
-    </div>
-  );
+// `width` is the length of tape the print wants; the sprite's canvas is a bit
+// wider (84mm of canvas to 70mm of tape).
+function Tape({ variant, width }){
+  return <img className="ns-tape" src={tapeArt(variant)} style={{ width: width * 1.2 + "px" }} alt="" draggable={false} aria-hidden="true" />;
 }
 
 export default class LightTable extends Component {
@@ -116,7 +113,9 @@ export default class LightTable extends Component {
           rot: (rnd(s + 6) * 2 - 1) * 0.4,
           expo: (0.95 + rnd(s + 12) * 0.1).toFixed(3),
           sat: (0.95 + rnd(s + 13) * 0.1).toFixed(3),
-          pin: PINS[rnd(s + 21) < 0.12 ? 2 : rnd(s + 21) < 0.5 ? 1 : 0] });
+          pin: PINS[rnd(s + 21) < 0.12 ? 2 : rnd(s + 21) < 0.5 ? 1 : 0],
+          pinV: 1 + Math.floor(rnd(s + 31) * 3), pinV2: 1 + Math.floor(rnd(s + 37) * 3),
+          tapeV: 1 + Math.floor(rnd(s + 41) * 4) });
         x += w + G;
       });
       y += h + G + 16;
@@ -481,18 +480,32 @@ export default class LightTable extends Component {
         dim: (Math.min(a, 1.8) * 0.32).toFixed(3) });
     });
 
+    // Timeline: one tick per frame, tinted with that frame's photo. Around the
+    // playhead a lens spreads and lifts the ticks (like the macOS Dock), and
+    // colour falls away to silver toward the rail's ends.
+    const LENS = narrow ? 2.2 : 2.8, MAG = narrow ? 1.1 : 1.35;
+    const warp = d => TICK * (d + MAG * LENS * Math.tanh(d / LENS));
+    const ready = () => { this.dirtyNow = true; };
     const ticks = [];
     const tlo = Math.max(0, ci - 90), thi = Math.min(N, ci + 91);
+    let rollLo = Infinity, rollHi = -Infinity;
     for (let i = tlo; i < thi; i++) {
-      const it = this.items[i], a = Math.abs(i - pos);
+      const it = this.items[i], d = i - pos, a = Math.abs(d);
       const g = Math.exp(-a * a / 7), major = it.k % 5 === 0;
-      const h = (it.first ? 30 : major ? 16 : 9) + 14 * g, o0 = it.first ? 0.95 : major ? 0.62 : 0.36;
-      ticks.push({ i: i, s: (h / 46).toFixed(4), o: (o0 + (1 - o0) * g).toFixed(3), cap: it.first, capB: (h + 3).toFixed(1) + "px" });
+      const h = ((it.first ? 30 : major ? 16 : 9) + 22 * g) * (narrow ? 0.78 : 1), o0 = it.first ? 0.95 : major ? 0.7 : 0.48;
+      const tint = tintOf(TH(it.e * 13 + it.k), ready) || SILVER;
+      const c = mixRgb(SILVER, tint, 0.45 + 0.55 * Math.exp(-a * a / 140));
+      if (it.e === cit.e) { rollLo = Math.min(rollLo, d); rollHi = Math.max(rollHi, d); }
+      ticks.push({ i: i, x: warp(d).toFixed(2), s: (h / 58).toFixed(4), w: (1 + 0.9 * g).toFixed(3), o: (o0 + (1 - o0) * g).toFixed(3),
+        c: "rgb(" + c.join(",") + ")", glow: a < 4 ? "0 0 " + (2 + 8 * g).toFixed(1) + "px rgba(" + tint.join(",") + "," + (0.85 * g).toFixed(2) + ")" : "none",
+        cap: it.first, capB: (h + 3).toFixed(1) + "px" });
     }
+    // The current roll is underlined in the colour of the frame being viewed.
+    const span = { x0: warp(rollLo), x1: warp(rollHi), c: (tintOf(TH(cit.e * 13 + cit.k), ready) || SILVER).join(",") };
     let lastX = -1e9; const marks = [];
     this.items.forEach((it, i) => {
       if (!it.first) return;
-      const x = i * TICK, on = it.e === cit.e, MIN = narrow ? 70 : 88;
+      const x = warp(i - pos), on = it.e === cit.e, MIN = narrow ? 70 : 88;
       if (!on && x - lastX < MIN) return;
       if (on) while (marks.length && x - marks[marks.length - 1].x < MIN) marks.pop();
       lastX = x;
@@ -572,8 +585,8 @@ export default class LightTable extends Component {
                   <span>{"Roll " + pad2(this.rolls.length - i)} · Type-400</span>
                   <span>{r.count + " frames · " + (narrow ? "tap to open" : "click a frame to open the board")}</span>
                 </div>
-                <Pin variant="sheet" style={{ left: 22 }} />
-                <Pin variant="sheet" style={{ right: 22 }} />
+                <Pin colour="ivory" variant={1 + (i % 3)} style={{ left: 22, top: 15 }} />
+                <Pin colour="ivory" variant={1 + ((i + 1) % 3)} style={{ left: "calc(100% - 22px)", top: 15 }} />
                 <div className="ns-sheet__dim" style={{ opacity: dim }} />
               </div>
             </div>
@@ -595,10 +608,10 @@ export default class LightTable extends Component {
                     <div className="ns-print__edge" />
                     <div className="ns-print__sheen" />
                   </button>
-                  {it.att === 1 && <Tape width={Math.round(Math.min(120, it.w * 0.4)) + "px"} rot={((it.rot > 0 ? -1 : 1) * (3 + (it.i % 4))) + "deg"} />}
-                  {it.att === 2 && <Pin variant="board" colors={it.pin} style={{ left: 9, top: 9 }} />}
-                  {it.att === 2 && <Pin variant="board" colors={it.pin} style={{ left: "calc(100% - 9px)", top: 9 }} />}
-                  {it.att === 0 && <Pin variant="board" colors={it.pin} style={{ left: "50%", top: 13 }} />}
+                  {it.att === 1 && <Tape variant={it.tapeV} width={Math.round(Math.min(120, it.w * 0.4))} />}
+                  {it.att === 2 && <Pin colour={it.pin} variant={it.pinV} style={{ left: 9, top: 9 }} />}
+                  {it.att === 2 && <Pin colour={it.pin} variant={it.pinV2} style={{ left: "calc(100% - 9px)", top: 9 }} />}
+                  {it.att === 0 && <Pin colour={it.pin} variant={it.pinV} style={{ left: "50%", top: 13 }} />}
                 </div>
               ))}
             </div>
@@ -653,20 +666,22 @@ export default class LightTable extends Component {
           <div className="ns-rail__track">
             <div className="ns-rail__base" />
             <div className="ns-rail__ticks">
-              <div className="ns-rail__reel" style={{ transform: "translateX(" + (-(pos - tlo) * TICK).toFixed(2) + "px)" }}>
+              <div className="ns-rail__reel">
                 {ticks.map(t => (
-                  <div key={t.i} className="ns-tick" style={{ width: TICK + "px" }}>
-                    <div className="ns-tick__bar" style={{ transform: "scaleY(" + t.s + ")", opacity: t.o }} />
+                  <div key={t.i} className="ns-tick" style={{ transform: "translateX(" + t.x + "px)" }}>
+                    <div className="ns-tick__bar" style={{ transform: "scale(" + t.w + "," + t.s + ")", opacity: t.o, backgroundColor: t.c, boxShadow: t.glow }} />
                     <div className="ns-tick__foot" />
                     {t.cap && <div className="ns-tick__cap" style={{ bottom: t.capB }} />}
                   </div>
                 ))}
               </div>
             </div>
+            <div className="ns-rail__aura" style={{ "--tint": span.c }} />
+            <div className="ns-rail__span" style={{ left: "calc(50% + " + span.x0.toFixed(2) + "px)", width: Math.max(0, span.x1 - span.x0).toFixed(2) + "px", "--tint": span.c }} />
             <div className="ns-rail__ruler">
-              <div className="ns-rail__marks" style={{ transform: "translateX(" + (-pos * TICK).toFixed(2) + "px)" }}>
+              <div className="ns-rail__marks">
                 {marks.map(m => (
-                  <div key={m.e} className="ns-rail__label" style={{ left: m.x + "px", color: m.c, opacity: m.o }}>{m.label}</div>
+                  <div key={m.e} className="ns-rail__label" style={{ left: m.x.toFixed(2) + "px", color: m.c, opacity: m.o }}>{m.label}</div>
                 ))}
               </div>
             </div>
