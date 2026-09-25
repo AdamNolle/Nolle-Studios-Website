@@ -305,7 +305,10 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
     const roll = Math.max(0, Math.min(this.rolls.length - 1, e));
     const start = this.items.findIndex(item => item.e === roll);
     if (start < 0) return;
-    this.target = start;
+    // Table navigation skips the intervening photographs. The table itself
+    // still eases into place through the separate epos animation.
+    this.pos = this.target = start;
+    this.vel = 0;
     this.wheelSnap = false;
     this.touch(); this.dirtyNow = true;
   }
