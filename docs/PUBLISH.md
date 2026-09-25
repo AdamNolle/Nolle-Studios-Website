@@ -4,17 +4,16 @@
 
 GitHub Pages serves the static gallery from the root of the `gh-pages` branch. That branch contains the built site and a `CNAME` file with `nollestudios.com`. Cloudflare has DNS-only apex and `www` CNAME records pointing to `adamnolle.github.io`. GitHub Pages has approved the certificate and enabled **Enforce HTTPS**; requests to `http://nollestudios.com/` redirect to `https://nollestudios.com/`.
 
-Cloudflare Pages Git integration returned error `8000011`; the current publishing path is GitHub Pages, not Cloudflare Pages. The source branch does not automatically deploy to `gh-pages`.
+Cloudflare Pages Git integration returned error `8000011`; the current publishing path is GitHub Pages. The `main` source branch does not automatically deploy to `gh-pages`.
 
 ## Updating the static gallery
 
-1. On the source branch, put selected processed photographs in `public/media/` and update `public/media/archive.json`. Keep camera originals, private staging, and credentials out of Git.
+1. On `main`, put selected processed photographs in `public/media/` and update `public/media/archive.json`. Keep camera originals, private staging, and credentials out of Git.
 2. Build from the repository root:
 
    ```powershell
    npm ci
    npm run build:static
-   Set-Content -NoNewline -Path dist/CNAME -Value 'nollestudios.com'
    ```
 
 3. Copy the **contents** of `dist/`, including `CNAME`, to the root of a checkout of `gh-pages`. Replace old generated files so withdrawn photographs and obsolete bundles are not left on the public branch. Review the file changes, then commit and push `gh-pages`.

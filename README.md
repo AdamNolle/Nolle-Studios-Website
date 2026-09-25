@@ -48,7 +48,7 @@ npm run test:cms
 python art/verify_media.py
 ```
 
-The public gallery is a static GitHub Pages deployment from `gh-pages` at `nollestudios.com`. GitHub Pages has approved its certificate, and **Enforce HTTPS** redirects HTTP traffic to `https://nollestudios.com/`. The CMS remains local in WSL; its uploads require a new static build and publication to appear on the public gallery. See [publishing](docs/PUBLISH.md) for the update process and [CMS and deployment](docs/CMS.md) for the later Linux server, PostgreSQL, and optional R2 or B2 setup.
+The public gallery is a static GitHub Pages deployment from `gh-pages` at `nollestudios.com`. The source of truth is `main`; `gh-pages` holds only the generated public site. GitHub Pages has approved its certificate, and **Enforce HTTPS** redirects HTTP traffic to `https://nollestudios.com/`. The CMS remains local in WSL; its uploads require a new static build and publication to appear on the public gallery. See [publishing](docs/PUBLISH.md) for the update process and [CMS and deployment](docs/CMS.md) for the later Linux server, PostgreSQL, and optional R2 or B2 setup.
 
 ## Publishing photographs
 
