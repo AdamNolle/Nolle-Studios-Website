@@ -4,14 +4,16 @@
 
 - The light table is the homepage at `/`; `/archive` is an alias. Public shoots open newest first: 20 September, 19 September, then 9 September 2026. Photos inside each shoot keep their curated sequence.
 - Contact sheets use larger frames across desktop, tablet, and phone sizes. Photo captions, per-photo numbers, and the former index title have been removed from the public interface. Alt text remains on images and controls for assistive technology.
-- The glass transport has previous/next buttons and Blender-rendered reflection textures. The Blender loupe follows the photograph's aspect ratio and actual `object-fit: cover` crop. Corner tape uses two Blender-rendered pieces meeting at 90 degrees.
+- The header and compact floating transport now use separate desktop and mobile optical-glass reflection renders from editable Blender scenes. Their live CSS bodies keep text and controls readable over the photographs.
+- The transport has previous/next buttons and a denser engraved ruler. Minor divisions stay aligned with photo markers as spacing changes with viewport width; a centered shoot/date readout replaces repeated ruler labels. The selected contact-sheet photo has a subtle outline.
+- At widths through 430 px, the board header uses two rows so the full shoot title and date remain visible beside 44 px back and zoom controls. The Blender loupe follows the photograph's aspect ratio and actual `object-fit: cover` crop. Corner tape uses two Blender-rendered pieces meeting at 90 degrees.
 - The CMS editing interface is being brought into the light table's dark photographic visual language. Its photo editing flow omits visible caption controls while retaining alt text.
 
 ## Verified locally
 
-- `npm run typecheck`, `npm run build`, `npm run test:cms`, `python art/verify_media.py`, `node --check server/admin/admin.js`, and `git diff --check` passed after the final caption, tape, and CMS changes. CMS tests cover private staging, metadata removal, publishing, delivery, withdrawal, deletion, sessions, and CSRF behavior.
+- `npm run typecheck`, `npm run build`, `npm run test:cms`, `python art/verify_media.py`, `node --check server/admin/admin.js`, and `git diff --check` passed after the header, transport, ruler, responsive, caption, tape, and CMS changes. CMS tests cover private staging, metadata removal, publishing, delivery, withdrawal, deletion, sessions, and CSRF behavior.
 - The media verifier checked 3 shoots, 17 photographs, and 153 responsive public variants with no private metadata.
-- The public site was inspected in Chromium at 320×700, 390×844, 768×1024, 1024×768, 1440×900, 1920×1080, and 844×390 without document overflow. The 768×1024 six-photo sheet uses two columns and three rows. Short landscape layout retains clearance around the sheet.
+- The public site was inspected in Chromium at 320×700, 390×844, 768×1024, 1024×768, 1440×900, 1920×1080, and 844×390 without document overflow. The 768×1024 six-photo sheet uses two columns and three rows. Short landscape layout retains clearance around the sheet. The final glass header, dense ruler, selected-photo outline, and responsive transport were visually checked at 320×700, 768×1024, 1440×900, and 844×390; the two-row board header was checked at 320 px and 390 px with 44 px controls.
 - Pointer hover, glass slider clicks, previous/next buttons, keyboard arrows, and End changed shoots. Enter opened the board and a print; Escape closed each layer and returned focus to its source control. The loupe appeared over photographs.
 - Preview zoom buttons, wheel zoom, drag pan, Fit, next-photo reset, and the mobile thumbnail strip worked. The same flow worked with reduced motion enabled. A board-resolution image fills the preview while the full-resolution file decodes.
 - Focused navigation did not shift the stage or preview. After advancing a phone preview at 320×700, its scroll position remained zero and its header stayed at the top.
@@ -21,7 +23,7 @@
 
 ## WSL hosting rehearsal
 
-- Ubuntu WSL successfully built and ran the `compose.yaml` plus `compose.wsl.yaml` stack with PostgreSQL, the CMS, and Caddy. Caddy was bound to `127.0.0.1:8080` over HTTP. The site, `/admin/`, `/api/health`, and `/api/site` returned HTTP 200 from Windows.
+- Ubuntu WSL successfully rebuilt and ran the `compose.yaml` plus `compose.wsl.yaml` stack with PostgreSQL, the CMS, and Caddy after the header and transport changes. Caddy was bound to `127.0.0.1:8080` over HTTP. The site, `/admin/`, `/api/health`, and `/api/site` each returned HTTP 200 from Windows.
 - The WSL homepage opened on the newest shoot. Admin sign-in worked, and a draft collection was created with one linked photo. A real image upload through the WSL CMS was staged privately, published to the public catalog and media route, withdrawn, and cleaned up. Private credentials and database files remain outside the repository.
 - This rehearsal does not establish public availability or TLS. `nollestudios.com` is the intended domain; Cloudflare DNS awaits the Linux hosting destination. See [CMS and deployment](CMS.md) for the repeatable commands.
 

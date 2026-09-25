@@ -702,7 +702,6 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
     const W = this.state.w || 1280, H = this.state.h || 800;
     this.lastW = W; this.lastH = H;
     const narrow = W < 760;
-    const compact = W < 350;
     const ci = Math.max(0, Math.min(N - 1, Math.round(pos))), cit = this.items[ci], cur = this.rolls[cit.e];
     const i0 = Math.floor(pos), fr = pos - i0, a0 = this.items[i0] || cit, a1 = this.items[i0 + 1] || a0;
     const within = a0.ef - Math.floor(a0.ef) + (a1.ef - a0.ef) * fr;
@@ -713,6 +712,10 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
     const B = this.state.board, z = this.v.z;
     const TICK = Math.max(narrow ? 12 : 22, Math.min(narrow ? 20 : 62, (W - (narrow ? 80 : 300)) / Math.max(1, N - 1)));
     this.tickSpacing = TICK;
+    // Keep a fine, even engraved scale as the viewport changes. Each photo
+    // interval contains a whole number of minor divisions, so the ruler and
+    // the photograph markers always stay aligned while it moves.
+    const microStep = TICK / Math.max(3, Math.round(TICK / 7.5));
 
     const styleName = String(this.props.tableStyle);
     const style = styleName === "Plate" ? "plate" : styleName === "Mosaic" ? "mosaic" : "sheet";
@@ -765,17 +768,6 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
     let lastInRoll = this.items.length - 1;
     while (lastInRoll > 0 && this.items[lastInRoll].e !== cit.e) lastInRoll--;
     const span = { x0: tickX(firstInRoll - pos), x1: tickX(lastInRoll - pos) };
-    let lastX = -1e9; const marks: { e: number; label: string; x: number; on: boolean }[] = [];
-    this.items.forEach((it, i) => {
-      if (!it.first) return;
-      const x = tickX(i - pos), on = it.e === cit.e, MIN = narrow ? 54 : 82;
-      if (!on && x - lastX < MIN) return;
-      if (on) while (marks.length && x - marks[marks.length - 1].x < MIN) marks.pop();
-      lastX = x;
-      const shortDate = it.date.replace(/\s+\d{4}$/, "");
-      const dup = this.items.some(o => o.first && o.e !== it.e && o.date.replace(/\s+\d{4}$/, "") === shortDate);
-      marks.push({ e: it.e, label: dup ? it.date : shortDate, x: x, on: on });
-    });
 
     // Prints pinned to the board, culled to what's near the viewport.
     const pinned: { it: BoardItem; label: string }[] = [];
@@ -831,8 +823,8 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
                   {plan.slice(0, Math.max(0, r.photos.length - start)).map((sp, slot) => {
                     const k = start + slot;
                     return (
-                      <div key={k} className="ns-frame" style={{ gridArea: sp[0] + " / " + sp[1] + " / span " + sp[2] + " / span " + sp[3] }}>
-                        <button type="button" className="ns-frame__btn" data-shoot-index={i} data-photo-index={k} tabIndex={i === cit.e ? 0 : -1} aria-label={"Open " + r.photos[k].alt} onClick={() => { if (!this.moved) this.openBoard(i, k); }}>
+                      <div key={k} className={`ns-frame${i === cit.e && k === cit.k ? " is-current" : ""}`} style={{ gridArea: sp[0] + " / " + sp[1] + " / span " + sp[2] + " / span " + sp[3] }}>
+                        <button type="button" className="ns-frame__btn" data-shoot-index={i} data-photo-index={k} tabIndex={i === cit.e ? 0 : -1} aria-current={i === cit.e && k === cit.k ? "true" : undefined} aria-label={"Open " + r.photos[k].alt} onClick={() => { if (!this.moved) this.openBoard(i, k); }}>
                           <img className="ns-frame__img" src={this.thumb(i, k)} alt={r.photos[k].alt} draggable={false} loading={i === cit.e && slot === 0 ? "eager" : "lazy"} data-frame="1" data-src={this.mid(i, k)} />
                         </button>
                         <div className="ns-frame__edge" />
@@ -888,13 +880,13 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
           </div>
         </div>
 
-        <header className="ns-bar">
+        <header className={`ns-bar${B !== null ? " ns-bar--board" : ""}`}>
           <div className="ns-bar__sheen" />
           <div className="ns-bar__gloss" />
           <div className="ns-bar__id">
             <div className="ns-bar__text">
               <span className="ns-bar__title">{B === null ? "Nolle Studios" : bName}</span>
-              <span className="ns-bar__meta" aria-live="polite">{B === null ? "Light table · " + cur.name + (compact ? "" : " · " + cur.date) : "Nolle Studios · " + bMeta}</span>
+              <span className="ns-bar__meta" aria-live="polite">{B === null ? "Photographic archive" : "Nolle Studios · " + bMeta}</span>
             </div>
           </div>
           <div className="ns-bar__actions">
@@ -922,7 +914,7 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
           }}>
             <div className="ns-rail__track" aria-hidden="true">
               <div className="ns-rail__base" />
-              <div className="ns-rail__ticks">
+              <div className="ns-rail__ticks" style={{ "--minor-step": microStep.toFixed(2) + "px", "--minor-offset": (-pos * TICK).toFixed(2) + "px" } as CSSProperties}>
                 <div className="ns-rail__reel">
                   {ticks.map(t => (
                     <div key={t.i} className="ns-tick" style={{ transform: "translateX(" + t.x + "px)" }}>
@@ -932,17 +924,11 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
                 </div>
               </div>
               <div className="ns-rail__span" style={{ left: "calc(50% + " + (span.x0 - TICK / 2).toFixed(2) + "px)", width: Math.max(0, span.x1 - span.x0 + TICK).toFixed(2) + "px" }} />
-              <div className="ns-rail__ruler">
-                <div className="ns-rail__marks">
-                  {marks.map(m => (
-                    <div key={m.e} className={`ns-rail__label${m.on ? " is-current" : ""}`} style={{ left: m.x.toFixed(2) + "px" }}>{m.label}</div>
-                  ))}
-                </div>
-              </div>
             </div>
             <div className="ns-playhead" ref={this.setHead} aria-hidden="true">
               <div className="ns-playhead__line" />
             </div>
+            <span className="ns-rail__readout" aria-hidden="true"><strong>{cur.name}</strong><span>{cur.date}</span></span>
           </div>
           <button type="button" className="ns-rail__step ns-rail__step--next" aria-label="Next photograph" disabled={B !== null || ci === N - 1} onClick={() => this.stepTable(1)}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 5.5 6.5 6.5-6.5 6.5" /></svg>
