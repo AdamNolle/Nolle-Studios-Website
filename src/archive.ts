@@ -137,10 +137,12 @@ async function readJson(url: string, timeout = 4000): Promise<unknown> {
 }
 
 export async function loadArchive(): Promise<ArchiveShoot[]> {
-  try {
-    const shoots = normalizedArchive(await readJson(`${BASE}api/site`, 2500));
-    if (shoots) return shoots;
-  } catch { /* Static hosting or local API unavailable. */ }
+  if (import.meta.env.MODE !== "static") {
+    try {
+      const shoots = normalizedArchive(await readJson(`${BASE}api/site`, 2500));
+      if (shoots) return shoots;
+    } catch { /* Local API unavailable. */ }
+  }
   try {
     return normalizedArchive(await readJson(`${BASE}media/archive.json`)) || [];
   } catch {
