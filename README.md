@@ -48,7 +48,7 @@ npm run test:cms
 python art/verify_media.py
 ```
 
-The built `dist/` is served from the domain root. The intended public domain is `nollestudios.com`, but its DNS and public hosting are pending a Linux server setup. No cloud storage vendor is required for local development or the WSL rehearsal. [CMS and deployment](docs/CMS.md) covers PostgreSQL, Docker Compose, Cloudflare DNS, TLS, and optional R2 or B2 storage.
+The static gallery is published from the `gh-pages` branch on GitHub Pages at `nollestudios.com`. It currently serves over HTTP while GitHub provisions the HTTPS certificate. The CMS remains local in WSL; its uploads do not appear on the static site automatically. See [publishing](docs/PUBLISH.md) for the manual update process and [CMS and deployment](docs/CMS.md) for the later Linux server, PostgreSQL, and optional R2 or B2 setup.
 
 ## Publishing photographs
 

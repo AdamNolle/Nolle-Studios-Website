@@ -1,23 +1,29 @@
 # Publishing Nolle Studios
 
-## Public gallery on Cloudflare Pages
+## Current public deployment
 
-The site can be published without a server as a static gallery. Connect this repository to a Cloudflare Pages project and use:
+GitHub Pages serves the static gallery from the root of the `gh-pages` branch. That branch contains the built site and a `CNAME` file with `nollestudios.com`. Cloudflare has DNS-only apex and `www` CNAME records pointing to `adamnolle.github.io`. GitHub Pages reports that the build completed. Its HTTPS certificate is still pending, so verify `https://nollestudios.com/` and a full-resolution photograph before treating the custom-domain launch as complete.
 
-| Setting | Value |
-| --- | --- |
-| Build command | `npm run build:static` |
-| Build output directory | `dist` |
-| Node version | `22` (Pages build image v3 default) |
+Cloudflare Pages Git integration returned error `8000011`; the current publishing path is GitHub Pages, not Cloudflare Pages. The source branch does not automatically deploy to `gh-pages`.
 
-The `build:static` command bundles the React site and copies the curated photographs and `public/media/archive.json` into `dist/`. The static build reads that manifest directly, so it does not wait for a CMS API. Add `nollestudios.com` as a Pages custom domain after the first successful deployment. Configure `www.nollestudios.com` separately if it should resolve or redirect. Verify the domain over HTTPS and check a photograph at full resolution before announcing the site.
+## Updating the static gallery
 
-This deployment serves the public gallery only. It has no `/admin/` CMS, `/api/site`, PostgreSQL, or upload endpoint. Do not expose an admin link on the static site. The CMS running in WSL remains a local editing workspace at `http://127.0.0.1:8080/admin/` while its Compose stack is running.
+1. On the source branch, put selected processed photographs in `public/media/` and update `public/media/archive.json`. Keep camera originals, private staging, and credentials out of Git.
+2. Build from the repository root:
 
-CMS uploads and their publication state live in the local database and media volumes; they are not copied into the Git repository or a Pages build. They will **not** appear on the public site automatically. For a static update, export selected, processed photographs into `public/media/`, update `public/media/archive.json`, then commit and redeploy. Keep originals and private staged files off the public site.
+   ```powershell
+   npm ci
+   npm run build:static
+   Set-Content -NoNewline -Path dist/CNAME -Value 'nollestudios.com'
+   ```
+
+3. Copy the **contents** of `dist/`, including `CNAME`, to the root of a checkout of `gh-pages`. Replace old generated files so withdrawn photographs and obsolete bundles are not left on the public branch. Review the file changes, then commit and push `gh-pages`.
+4. Wait for the GitHub Pages deployment, then check the homepage, `/archive`, and image variants on the custom domain. Confirm HTTPS once GitHub has issued the certificate.
+
+The static build reads the checked-in manifest directly and has no CMS API. It does not serve `/admin/`, PostgreSQL, or an upload endpoint. The CMS in WSL remains a local editing workspace at `http://127.0.0.1:8080/admin/` while its Compose stack runs. CMS uploads and publication state live in local database and media volumes; they are not copied into the repository or the Pages build and will **not** appear publicly by themselves.
 
 ## Moving the CMS online later
 
-When a Linux host is ready, deploy `compose.yaml` with private production secrets and persistent PostgreSQL, staging, and media storage. The bundled Caddy server serves the built site and routes `/api/`, `/admin/`, and uploaded `/media/photos/` to the CMS on the same origin. Point Cloudflare DNS at that host, configure `SITE_DOMAIN=nollestudios.com`, and use HTTPS with Cloudflare **Full (strict)** mode. Follow [CMS deployment](CMS.md) for environment variables, backups, and checks.
+When a Linux host is ready, deploy `compose.yaml` with private production secrets and persistent PostgreSQL, staging, and media storage. Caddy serves the site and routes `/api/`, `/admin/`, and uploaded `/media/photos/` to the CMS on the same origin. Migrate CMS data and uploaded images you intend to retain, switch Cloudflare DNS to the new host, configure `SITE_DOMAIN=nollestudios.com`, and verify HTTPS, the public catalog, and admin sign-in. See [CMS deployment](CMS.md) for configuration and backups.
 
-Local media storage works initially if its volumes are backed up. Cloudflare R2 or Backblaze B2 can later hold published image variants through `STORAGE_DRIVER=s3`, S3 credentials, and an HTTPS `MEDIA_BASE_URL`; PostgreSQL and private staging still need persistent storage. Before switching the live domain from Pages to the Linux host, migrate any CMS data and uploaded images you intend to retain, and verify the public catalog and admin sign-in on the new origin.
+Local media volumes work initially if backed up. Cloudflare R2 or Backblaze B2 can later store published variants through `STORAGE_DRIVER=s3`, S3 credentials, and an HTTPS `MEDIA_BASE_URL`; PostgreSQL and private staging still require persistent storage.
