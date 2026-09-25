@@ -971,7 +971,7 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
           <div className="ns-bar__sheen" />
           <div className="ns-bar__gloss" />
           <div className="ns-bar__id">
-            <img className="ns-bar__logo" src="/nolle-studios-logo.svg" alt="Nolle Studios" width="800" height="500" draggable={false} />
+            <img className="ns-bar__logo" src="/nolle-studios-header-on-dark.svg" alt="Nolle Studios" width="224" height="64" draggable={false} />
             {B !== null && <div className="ns-bar__text">
               <span className="ns-bar__title">{bName}</span>
               <span className="ns-bar__meta" aria-live="polite">{bMeta}</span>
