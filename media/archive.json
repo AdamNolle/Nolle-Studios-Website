@@ -1,0 +1,493 @@
+{
+  "shoots": [
+    {
+      "id": "first-frames",
+      "title": "First Frames",
+      "date": "2026-09-09",
+      "description": "A first evening with the camera: home, a familiar face, and one last swing before dark.",
+      "published": true,
+      "coverUrl": "/media/first-frames/portrait-in-grass-3200.webp",
+      "photos": [
+        {
+          "id": "portrait-in-grass",
+          "alt": "Small curly-haired dog in profile resting in the grass",
+          "caption": "In the grass, late afternoon.",
+          "thumb": "/media/first-frames/portrait-in-grass-640.webp",
+          "mid": "/media/first-frames/portrait-in-grass-1440.webp",
+          "full": "/media/first-frames/portrait-in-grass-3200.webp",
+          "width": 3200,
+          "height": 2133,
+          "formats": {
+            "avif": {
+              "thumb": "/media/first-frames/portrait-in-grass-640.avif",
+              "mid": "/media/first-frames/portrait-in-grass-1440.avif",
+              "full": "/media/first-frames/portrait-in-grass-3200.avif"
+            },
+            "webp": {
+              "thumb": "/media/first-frames/portrait-in-grass-640.webp",
+              "mid": "/media/first-frames/portrait-in-grass-1440.webp",
+              "full": "/media/first-frames/portrait-in-grass-3200.webp"
+            },
+            "jpeg": {
+              "thumb": "/media/first-frames/portrait-in-grass-640.jpg",
+              "mid": "/media/first-frames/portrait-in-grass-1440.jpg",
+              "full": "/media/first-frames/portrait-in-grass-3200.jpg"
+            }
+          }
+        },
+        {
+          "id": "looking-up",
+          "alt": "Close portrait of a curly-haired dog looking into the camera",
+          "caption": "A familiar face, up close.",
+          "thumb": "/media/first-frames/looking-up-640.webp",
+          "mid": "/media/first-frames/looking-up-1440.webp",
+          "full": "/media/first-frames/looking-up-3200.webp",
+          "width": 3200,
+          "height": 2133,
+          "formats": {
+            "avif": {
+              "thumb": "/media/first-frames/looking-up-640.avif",
+              "mid": "/media/first-frames/looking-up-1440.avif",
+              "full": "/media/first-frames/looking-up-3200.avif"
+            },
+            "webp": {
+              "thumb": "/media/first-frames/looking-up-640.webp",
+              "mid": "/media/first-frames/looking-up-1440.webp",
+              "full": "/media/first-frames/looking-up-3200.webp"
+            },
+            "jpeg": {
+              "thumb": "/media/first-frames/looking-up-640.jpg",
+              "mid": "/media/first-frames/looking-up-1440.jpg",
+              "full": "/media/first-frames/looking-up-3200.jpg"
+            }
+          }
+        },
+        {
+          "id": "last-swing",
+          "alt": "Young baseball player swinging a bat on a driveway at dusk",
+          "caption": "One more swing before dark.",
+          "thumb": "/media/first-frames/last-swing-640.webp",
+          "mid": "/media/first-frames/last-swing-1440.webp",
+          "full": "/media/first-frames/last-swing-3200.webp",
+          "width": 3200,
+          "height": 2133,
+          "formats": {
+            "avif": {
+              "thumb": "/media/first-frames/last-swing-640.avif",
+              "mid": "/media/first-frames/last-swing-1440.avif",
+              "full": "/media/first-frames/last-swing-3200.avif"
+            },
+            "webp": {
+              "thumb": "/media/first-frames/last-swing-640.webp",
+              "mid": "/media/first-frames/last-swing-1440.webp",
+              "full": "/media/first-frames/last-swing-3200.webp"
+            },
+            "jpeg": {
+              "thumb": "/media/first-frames/last-swing-640.jpg",
+              "mid": "/media/first-frames/last-swing-1440.jpg",
+              "full": "/media/first-frames/last-swing-3200.jpg"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "september-19",
+      "title": "At the Park",
+      "date": "2026-09-19",
+      "description": "A day of baseball, from small moments before play to the team gathering on the field.",
+      "published": true,
+      "coverUrl": "/media/september-19/at-the-plate-3200.webp",
+      "photos": [
+        {
+          "id": "white-rose",
+          "alt": "White rose in the garden in morning light",
+          "caption": "A quiet detail before the game.",
+          "thumb": "/media/september-19/white-rose-640.webp",
+          "mid": "/media/september-19/white-rose-1440.webp",
+          "full": "/media/september-19/white-rose-3200.webp",
+          "width": 3200,
+          "height": 2133,
+          "formats": {
+            "avif": {
+              "thumb": "/media/september-19/white-rose-640.avif",
+              "mid": "/media/september-19/white-rose-1440.avif",
+              "full": "/media/september-19/white-rose-3200.avif"
+            },
+            "webp": {
+              "thumb": "/media/september-19/white-rose-640.webp",
+              "mid": "/media/september-19/white-rose-1440.webp",
+              "full": "/media/september-19/white-rose-3200.webp"
+            },
+            "jpeg": {
+              "thumb": "/media/september-19/white-rose-640.jpg",
+              "mid": "/media/september-19/white-rose-1440.jpg",
+              "full": "/media/september-19/white-rose-3200.jpg"
+            }
+          }
+        },
+        {
+          "id": "before-the-game",
+          "alt": "Baseball player in a navy jersey and cap before the game",
+          "caption": "Before the first pitch.",
+          "thumb": "/media/september-19/before-the-game-640.webp",
+          "mid": "/media/september-19/before-the-game-1440.webp",
+          "full": "/media/september-19/before-the-game-3200.webp",
+          "width": 3200,
+          "height": 2133,
+          "formats": {
+            "avif": {
+              "thumb": "/media/september-19/before-the-game-640.avif",
+              "mid": "/media/september-19/before-the-game-1440.avif",
+              "full": "/media/september-19/before-the-game-3200.avif"
+            },
+            "webp": {
+              "thumb": "/media/september-19/before-the-game-640.webp",
+              "mid": "/media/september-19/before-the-game-1440.webp",
+              "full": "/media/september-19/before-the-game-3200.webp"
+            },
+            "jpeg": {
+              "thumb": "/media/september-19/before-the-game-640.jpg",
+              "mid": "/media/september-19/before-the-game-1440.jpg",
+              "full": "/media/september-19/before-the-game-3200.jpg"
+            }
+          }
+        },
+        {
+          "id": "waiting-at-the-dugout",
+          "alt": "Baseball player in a helmet waiting beside the dugout fence",
+          "caption": "Waiting by the dugout.",
+          "thumb": "/media/september-19/waiting-at-the-dugout-640.webp",
+          "mid": "/media/september-19/waiting-at-the-dugout-1440.webp",
+          "full": "/media/september-19/waiting-at-the-dugout-3200.webp",
+          "width": 2133,
+          "height": 3200,
+          "formats": {
+            "avif": {
+              "thumb": "/media/september-19/waiting-at-the-dugout-640.avif",
+              "mid": "/media/september-19/waiting-at-the-dugout-1440.avif",
+              "full": "/media/september-19/waiting-at-the-dugout-3200.avif"
+            },
+            "webp": {
+              "thumb": "/media/september-19/waiting-at-the-dugout-640.webp",
+              "mid": "/media/september-19/waiting-at-the-dugout-1440.webp",
+              "full": "/media/september-19/waiting-at-the-dugout-3200.webp"
+            },
+            "jpeg": {
+              "thumb": "/media/september-19/waiting-at-the-dugout-640.jpg",
+              "mid": "/media/september-19/waiting-at-the-dugout-1440.jpg",
+              "full": "/media/september-19/waiting-at-the-dugout-3200.jpg"
+            }
+          }
+        },
+        {
+          "id": "at-the-plate",
+          "alt": "Batter at home plate with catcher and umpire under the afternoon sun",
+          "caption": "At the plate.",
+          "thumb": "/media/september-19/at-the-plate-640.webp",
+          "mid": "/media/september-19/at-the-plate-1440.webp",
+          "full": "/media/september-19/at-the-plate-3200.webp",
+          "width": 3200,
+          "height": 2108,
+          "formats": {
+            "avif": {
+              "thumb": "/media/september-19/at-the-plate-640.avif",
+              "mid": "/media/september-19/at-the-plate-1440.avif",
+              "full": "/media/september-19/at-the-plate-3200.avif"
+            },
+            "webp": {
+              "thumb": "/media/september-19/at-the-plate-640.webp",
+              "mid": "/media/september-19/at-the-plate-1440.webp",
+              "full": "/media/september-19/at-the-plate-3200.webp"
+            },
+            "jpeg": {
+              "thumb": "/media/september-19/at-the-plate-640.jpg",
+              "mid": "/media/september-19/at-the-plate-1440.jpg",
+              "full": "/media/september-19/at-the-plate-3200.jpg"
+            }
+          }
+        },
+        {
+          "id": "race-to-first",
+          "alt": "Runner approaching first base while the fielder stretches for the throw",
+          "caption": "A race to first.",
+          "thumb": "/media/september-19/race-to-first-640.webp",
+          "mid": "/media/september-19/race-to-first-1440.webp",
+          "full": "/media/september-19/race-to-first-3200.webp",
+          "width": 2858,
+          "height": 1905,
+          "formats": {
+            "avif": {
+              "thumb": "/media/september-19/race-to-first-640.avif",
+              "mid": "/media/september-19/race-to-first-1440.avif",
+              "full": "/media/september-19/race-to-first-3200.avif"
+            },
+            "webp": {
+              "thumb": "/media/september-19/race-to-first-640.webp",
+              "mid": "/media/september-19/race-to-first-1440.webp",
+              "full": "/media/september-19/race-to-first-3200.webp"
+            },
+            "jpeg": {
+              "thumb": "/media/september-19/race-to-first-640.jpg",
+              "mid": "/media/september-19/race-to-first-1440.jpg",
+              "full": "/media/september-19/race-to-first-3200.jpg"
+            }
+          }
+        },
+        {
+          "id": "dugout",
+          "alt": "Baseball teammates resting beside the dugout fence",
+          "caption": "The view from the dugout.",
+          "thumb": "/media/september-19/dugout-640.webp",
+          "mid": "/media/september-19/dugout-1440.webp",
+          "full": "/media/september-19/dugout-3200.webp",
+          "width": 3200,
+          "height": 2133,
+          "formats": {
+            "avif": {
+              "thumb": "/media/september-19/dugout-640.avif",
+              "mid": "/media/september-19/dugout-1440.avif",
+              "full": "/media/september-19/dugout-3200.avif"
+            },
+            "webp": {
+              "thumb": "/media/september-19/dugout-640.webp",
+              "mid": "/media/september-19/dugout-1440.webp",
+              "full": "/media/september-19/dugout-3200.webp"
+            },
+            "jpeg": {
+              "thumb": "/media/september-19/dugout-640.jpg",
+              "mid": "/media/september-19/dugout-1440.jpg",
+              "full": "/media/september-19/dugout-3200.jpg"
+            }
+          }
+        },
+        {
+          "id": "follow-through",
+          "alt": "Baseball batter following through on a swing",
+          "caption": "The moment after contact.",
+          "thumb": "/media/september-19/follow-through-640.webp",
+          "mid": "/media/september-19/follow-through-1440.webp",
+          "full": "/media/september-19/follow-through-3200.webp",
+          "width": 3200,
+          "height": 2434,
+          "formats": {
+            "avif": {
+              "thumb": "/media/september-19/follow-through-640.avif",
+              "mid": "/media/september-19/follow-through-1440.avif",
+              "full": "/media/september-19/follow-through-3200.avif"
+            },
+            "webp": {
+              "thumb": "/media/september-19/follow-through-640.webp",
+              "mid": "/media/september-19/follow-through-1440.webp",
+              "full": "/media/september-19/follow-through-3200.webp"
+            },
+            "jpeg": {
+              "thumb": "/media/september-19/follow-through-640.jpg",
+              "mid": "/media/september-19/follow-through-1440.jpg",
+              "full": "/media/september-19/follow-through-3200.jpg"
+            }
+          }
+        },
+        {
+          "id": "in-the-huddle",
+          "alt": "Baseball teammates gathering in the infield",
+          "caption": "Back together on the infield.",
+          "thumb": "/media/september-19/in-the-huddle-640.webp",
+          "mid": "/media/september-19/in-the-huddle-1440.webp",
+          "full": "/media/september-19/in-the-huddle-3200.webp",
+          "width": 3200,
+          "height": 2133,
+          "formats": {
+            "avif": {
+              "thumb": "/media/september-19/in-the-huddle-640.avif",
+              "mid": "/media/september-19/in-the-huddle-1440.avif",
+              "full": "/media/september-19/in-the-huddle-3200.avif"
+            },
+            "webp": {
+              "thumb": "/media/september-19/in-the-huddle-640.webp",
+              "mid": "/media/september-19/in-the-huddle-1440.webp",
+              "full": "/media/september-19/in-the-huddle-3200.webp"
+            },
+            "jpeg": {
+              "thumb": "/media/september-19/in-the-huddle-640.jpg",
+              "mid": "/media/september-19/in-the-huddle-1440.jpg",
+              "full": "/media/september-19/in-the-huddle-3200.jpg"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "september-20",
+      "title": "The Next Inning",
+      "date": "2026-09-20",
+      "description": "Sunday baseball: sharp color, quick reactions, and the rhythm of a team in motion.",
+      "published": true,
+      "coverUrl": "/media/september-20/full-swing-3200.webp",
+      "photos": [
+        {
+          "id": "ready-to-bat",
+          "alt": "Baseball batter in navy standing ready at the plate",
+          "caption": "Ready at the plate.",
+          "thumb": "/media/september-20/ready-to-bat-640.webp",
+          "mid": "/media/september-20/ready-to-bat-1440.webp",
+          "full": "/media/september-20/ready-to-bat-3200.webp",
+          "width": 2134,
+          "height": 3200,
+          "formats": {
+            "avif": {
+              "thumb": "/media/september-20/ready-to-bat-640.avif",
+              "mid": "/media/september-20/ready-to-bat-1440.avif",
+              "full": "/media/september-20/ready-to-bat-3200.avif"
+            },
+            "webp": {
+              "thumb": "/media/september-20/ready-to-bat-640.webp",
+              "mid": "/media/september-20/ready-to-bat-1440.webp",
+              "full": "/media/september-20/ready-to-bat-3200.webp"
+            },
+            "jpeg": {
+              "thumb": "/media/september-20/ready-to-bat-640.jpg",
+              "mid": "/media/september-20/ready-to-bat-1440.jpg",
+              "full": "/media/september-20/ready-to-bat-3200.jpg"
+            }
+          }
+        },
+        {
+          "id": "full-swing",
+          "alt": "Batter finishing a powerful swing as the catcher and umpire watch",
+          "caption": "Full swing.",
+          "thumb": "/media/september-20/full-swing-640.webp",
+          "mid": "/media/september-20/full-swing-1440.webp",
+          "full": "/media/september-20/full-swing-3200.webp",
+          "width": 3200,
+          "height": 2133,
+          "formats": {
+            "avif": {
+              "thumb": "/media/september-20/full-swing-640.avif",
+              "mid": "/media/september-20/full-swing-1440.avif",
+              "full": "/media/september-20/full-swing-3200.avif"
+            },
+            "webp": {
+              "thumb": "/media/september-20/full-swing-640.webp",
+              "mid": "/media/september-20/full-swing-1440.webp",
+              "full": "/media/september-20/full-swing-3200.webp"
+            },
+            "jpeg": {
+              "thumb": "/media/september-20/full-swing-640.jpg",
+              "mid": "/media/september-20/full-swing-1440.jpg",
+              "full": "/media/september-20/full-swing-3200.jpg"
+            }
+          }
+        },
+        {
+          "id": "on-base",
+          "alt": "Baseball runner and fielder waiting together near a base",
+          "caption": "Waiting for the next pitch.",
+          "thumb": "/media/september-20/on-base-640.webp",
+          "mid": "/media/september-20/on-base-1440.webp",
+          "full": "/media/september-20/on-base-3200.webp",
+          "width": 3200,
+          "height": 2220,
+          "formats": {
+            "avif": {
+              "thumb": "/media/september-20/on-base-640.avif",
+              "mid": "/media/september-20/on-base-1440.avif",
+              "full": "/media/september-20/on-base-3200.avif"
+            },
+            "webp": {
+              "thumb": "/media/september-20/on-base-640.webp",
+              "mid": "/media/september-20/on-base-1440.webp",
+              "full": "/media/september-20/on-base-3200.webp"
+            },
+            "jpeg": {
+              "thumb": "/media/september-20/on-base-640.jpg",
+              "mid": "/media/september-20/on-base-1440.jpg",
+              "full": "/media/september-20/on-base-3200.jpg"
+            }
+          }
+        },
+        {
+          "id": "defensive-set",
+          "alt": "Runner and infielder ready near a base before the next pitch",
+          "caption": "Ready for the next pitch.",
+          "thumb": "/media/september-20/defensive-set-640.webp",
+          "mid": "/media/september-20/defensive-set-1440.webp",
+          "full": "/media/september-20/defensive-set-3200.webp",
+          "width": 3200,
+          "height": 2052,
+          "formats": {
+            "avif": {
+              "thumb": "/media/september-20/defensive-set-640.avif",
+              "mid": "/media/september-20/defensive-set-1440.avif",
+              "full": "/media/september-20/defensive-set-3200.avif"
+            },
+            "webp": {
+              "thumb": "/media/september-20/defensive-set-640.webp",
+              "mid": "/media/september-20/defensive-set-1440.webp",
+              "full": "/media/september-20/defensive-set-3200.webp"
+            },
+            "jpeg": {
+              "thumb": "/media/september-20/defensive-set-640.jpg",
+              "mid": "/media/september-20/defensive-set-1440.jpg",
+              "full": "/media/september-20/defensive-set-3200.jpg"
+            }
+          }
+        },
+        {
+          "id": "rounding-third",
+          "alt": "Baseball player running toward a base",
+          "caption": "In motion.",
+          "thumb": "/media/september-20/rounding-third-640.webp",
+          "mid": "/media/september-20/rounding-third-1440.webp",
+          "full": "/media/september-20/rounding-third-3200.webp",
+          "width": 3200,
+          "height": 2133,
+          "formats": {
+            "avif": {
+              "thumb": "/media/september-20/rounding-third-640.avif",
+              "mid": "/media/september-20/rounding-third-1440.avif",
+              "full": "/media/september-20/rounding-third-3200.avif"
+            },
+            "webp": {
+              "thumb": "/media/september-20/rounding-third-640.webp",
+              "mid": "/media/september-20/rounding-third-1440.webp",
+              "full": "/media/september-20/rounding-third-3200.webp"
+            },
+            "jpeg": {
+              "thumb": "/media/september-20/rounding-third-640.jpg",
+              "mid": "/media/september-20/rounding-third-1440.jpg",
+              "full": "/media/september-20/rounding-third-3200.jpg"
+            }
+          }
+        },
+        {
+          "id": "team-walk",
+          "alt": "Four baseball teammates walking across the field together",
+          "caption": "Walking off together.",
+          "thumb": "/media/september-20/team-walk-640.webp",
+          "mid": "/media/september-20/team-walk-1440.webp",
+          "full": "/media/september-20/team-walk-3200.webp",
+          "width": 3200,
+          "height": 2133,
+          "formats": {
+            "avif": {
+              "thumb": "/media/september-20/team-walk-640.avif",
+              "mid": "/media/september-20/team-walk-1440.avif",
+              "full": "/media/september-20/team-walk-3200.avif"
+            },
+            "webp": {
+              "thumb": "/media/september-20/team-walk-640.webp",
+              "mid": "/media/september-20/team-walk-1440.webp",
+              "full": "/media/september-20/team-walk-3200.webp"
+            },
+            "jpeg": {
+              "thumb": "/media/september-20/team-walk-640.jpg",
+              "mid": "/media/september-20/team-walk-1440.jpg",
+              "full": "/media/september-20/team-walk-3200.jpg"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
