@@ -9,8 +9,9 @@ const db = await openDatabase(config);
 const seeded = await seedFromManifest(db, path.join(config.root, 'public/media/archive.json'));
 if (!seeded.absent) console.log(`Media manifest available: ${seeded.shoots} shoots, ${seeded.photos} photos`);
 const app = createApp({ db, settings: config });
-const server = app.listen(config.port, '0.0.0.0', () => {
-  console.log(`Nolle CMS listening on http://localhost:${config.port}`);
+const listenHost = config.production ? '0.0.0.0' : '127.0.0.1';
+const server = app.listen(config.port, listenHost, () => {
+  console.log(`Nolle CMS listening on http://${listenHost}:${config.port}`);
 });
 
 async function shutdown() {

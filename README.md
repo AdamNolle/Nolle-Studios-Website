@@ -1,12 +1,12 @@
 # Nolle Studios
 
-An interactive photographic light table built with React, TypeScript, and Vite. The table is the homepage at `/`; `/archive` remains an alias. Visitors move from the newest shoot to the oldest, inspect contact sheets, open a shoot's pinned prints, and zoom into individual photographs. The public work is drawn from selected, processed camera images.
+An interactive photographic light table built with React, TypeScript, and Vite. The light table is the homepage at `/`; `/archive` remains an alias. Visitors browse shoots from newest to oldest, inspect contact sheets, open pinned prints, and zoom into individual photographs. Photographs carry no visible captions or frame numbers. Accessible image descriptions remain available to assistive technology.
 
-A private CMS at `/admin/` manages uploads, shoots, collections, order, captions, cover images, and publishing. Camera RAWs, master edits, videos, and project files remain on private storage.
+The private CMS at `/admin/` manages image uploads, shoots, collections, order, cover images, alt text, and publishing. Camera RAWs, master edits, original videos, and project files stay on private storage. Only selected, processed images are published.
 
 ## Run locally
 
-Requires Node.js 26 and Python 3 with Pillow for the optional media workshop.
+Requires Node.js 26. Python 3 with Pillow is needed only for the optional media workshop.
 
 ```powershell
 npm install
@@ -21,7 +21,23 @@ In another terminal:
 npm run dev
 ```
 
-Open the Vite URL for the light table and `/admin/` for the CMS. Local development uses SQLite and filesystem media storage. The site falls back to `public/media/archive.json` when the CMS API is unavailable; uploads require the CMS server.
+Open the Vite URL for the site and its `/admin/` path for the CMS. Local development uses SQLite and filesystem media storage. When the CMS API is unavailable, the public site falls back to `public/media/archive.json`; uploads require the CMS server. Keep `.env` private.
+
+## Rehearse the Linux deployment in WSL
+
+The included `compose.wsl.yaml` override runs PostgreSQL, the CMS, and Caddy through Docker Compose. It binds the site to `http://127.0.0.1:8080/` on this machine. This rehearsal has been run and the site, CMS, and API health endpoint were checked locally.
+
+From an Ubuntu WSL shell with Docker Compose available, create a private environment file **outside this repository** containing `POSTGRES_PASSWORD`, `CMS_ADMIN_PASSWORD_HASH`, `CMS_SESSION_SECRET`, `SITE_DOMAIN=:80`, and `STORAGE_DRIVER=local`. Generate a password hash with `npm run cms:hash` and random secrets with `openssl rand -hex 32`. Then run:
+
+```bash
+cd /mnt/c/Users/adamm/Desktop/Code/Nolle-Studios-Website
+docker compose --env-file /path/to/private/compose.env \
+  -f compose.yaml -f compose.wsl.yaml -p nolle-wsl up -d --build
+docker compose --env-file /path/to/private/compose.env \
+  -f compose.yaml -f compose.wsl.yaml -p nolle-wsl ps
+```
+
+Open `http://127.0.0.1:8080/`, `http://127.0.0.1:8080/admin/`, and `http://127.0.0.1:8080/api/health`. Replace the example environment path with your actual private file. See [CMS and deployment](docs/CMS.md) for setup details and the distinction between this HTTP rehearsal and a public TLS deployment.
 
 ## Check and build
 
@@ -32,11 +48,11 @@ npm run test:cms
 python art/verify_media.py
 ```
 
-`dist/` is served from the domain root. The included Caddy configuration routes the CMS API and serves the client routes. The intended public domain is `nollestudios.com`; see [the deployment guide](docs/CMS.md) for its Cloudflare DNS setup, PostgreSQL, Docker Compose, TLS, and R2 or B2 compatible object storage. No storage vendor is required for local development.
+The built `dist/` is served from the domain root. The intended public domain is `nollestudios.com`, but its DNS and public hosting are pending a Linux server setup. No cloud storage vendor is required for local development or the WSL rehearsal. [CMS and deployment](docs/CMS.md) covers PostgreSQL, Docker Compose, Cloudflare DNS, TLS, and optional R2 or B2 storage.
 
 ## Publishing photographs
 
-The checked in `public/media` directory contains selected, metadata stripped public derivatives. To curate another camera export, follow [the media workshop](art/README.md). The CMS accepts edited JPEG, PNG, TIFF, WebP, AVIF, or HEIF files, stages generated 640–3200 px AVIF, WebP, and JPEG variants privately, and publishes only the photos you select. Static curated photographs are managed through the manifest and a redeploy; CMS uploaded photographs can be published and withdrawn in the admin UI.
+`public/media` contains selected public derivatives with private metadata removed. Follow [the media workshop](art/README.md) to curate another camera export. The CMS accepts edited JPEG, PNG, TIFF, WebP, AVIF, or HEIF files, stages generated 640–3200 px AVIF, WebP, and JPEG variants privately, and publishes only the photos you select. CMS uploads can be published or withdrawn in the admin UI. Static curated photographs are managed through the manifest and require a redeploy to withdraw.
 
 The loupe, push pins, tape, cork, badge, and glass transport reflections have editable Blender sources in `art/`.
 
@@ -44,8 +60,8 @@ The loupe, push pins, tape, cork, badge, and glass transport reflections have ed
 
 | View | Controls |
 | --- | --- |
-| Table | Use the glass slider or its previous/next buttons, or press ← / → to browse; Home / End jump; hover for the loupe on fine pointers. |
-| Shoot board | Drag to pan; scroll or pinch to zoom; arrows pan; + / − adjust; Esc returns. |
-| Print preview | Use the zoom controls, wheel, pinch, or double click to zoom; drag a zoomed print to pan; previous/next buttons or ← / → change photos; Esc closes. |
+| Table | Use the glass slider or its previous/next buttons; press ← / → to browse and Home / End to jump. A loupe appears on fine pointer hover. |
+| Shoot board | Drag to pan; scroll or pinch to zoom; use arrows to pan and + / − to adjust; Esc returns. |
+| Print preview | Use zoom controls, wheel, pinch, or double click to zoom; drag a zoomed print to pan. Previous/next buttons or ← / → change photos; Esc closes. |
 
-The table stays still by default and supports reduced motion. See [release checks](docs/QA.md) for tested layouts and current limits.
+The table supports reduced motion. See [release checks](docs/QA.md) for tested layouts and current limits.

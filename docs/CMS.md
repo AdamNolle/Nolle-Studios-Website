@@ -1,46 +1,79 @@
 # Nolle Studios content room
 
-The site has a private CMS at `/admin/`. It organizes photographs into shoots and collections, controls each item's visibility, and serves a public read-only catalog at `/api/site`. The admin API is same-origin, password protected, and uses revocable sessions with a CSRF token.
+The private CMS at `/admin/` organizes photographs into shoots and collections, controls publication and ordering, and serves the read-only public catalog at `/api/site`. Its editor uses the same dark photographic visual language as the light table. The public site shows photographs without captions or frame numbers. The CMS keeps alt text for accessible image descriptions; this text is not a visible caption.
 
-## Local development without cloud services
+The admin API is same-origin, password protected, and uses revocable sessions with a CSRF token. Camera originals, master edits, original videos, and project files belong on private storage. Upload only selected image exports.
+
+## Local development
 
 1. Install Node.js 26 and run `npm install`.
 2. Copy `.env.example` to `.env`. Set `CMS_ADMIN_PASSWORD` to a unique password of at least 12 characters. Keep `.env` private.
-3. In one terminal, run `npm run dev:cms`. In another, run `npm run dev`.
-4. Open the Vite URL, then open its `/admin/` path and sign in.
+3. Run `npm run dev:cms` in one terminal and `npm run dev` in another.
+4. Open the Vite URL and its `/admin/` path, then sign in.
 
-The local CMS stores metadata in `.local/cms.sqlite`, private generated variants in `.local/staging`, and published variants in `.local/media`. These paths are gitignored. The Vite development server proxies `/api`, `/admin`, and uploaded `/media/photos` to the CMS; curated `/media/<shoot>` files and `/media/archive.json` come from Vite's static `public` directory. The server syncs curated `public/media/archive.json` on startup; `npm run cms:seed` also syncs it on demand. Sync uses IDs, preserves CMS edits to retained items, and withdraws imported frames removed from the manifest. CMS uploads are untouched.
+The local CMS stores metadata in `.local/cms.sqlite`, private generated variants in `.local/staging`, and published variants in `.local/media`. These paths are ignored by Git. Vite proxies `/api`, `/admin`, and uploaded `/media/photos` requests to the CMS. Curated `/media/<shoot>` files and `/media/archive.json` come from Vite's static `public` directory.
 
-Each shoot in the curated manifest must have `published: true` to enter the public catalog. Manifest paths must be site paths under `/media/`; local camera or NAS paths are rejected. The manifest and its processed assets are intentionally part of the public site. Curated photos and their shoots are **read-only for publication in the CMS**: the admin UI and API do not offer unpublish or delete for them. To retract a curated file, remove it from `public/media`, update the manifest, rebuild, and redeploy. The manifest sync removes withdrawn entries from `/api/site`; removing the asset from the new build removes the public file. Old deployments and caches may retain it until replaced or expired.
+The server syncs `public/media/archive.json` on startup; `npm run cms:seed` also syncs it on demand. Sync uses stable IDs, preserves CMS edits to retained items, and withdraws imported frames removed from the manifest. CMS uploads are unaffected. Each curated shoot needs `published: true` to appear in the public catalog. Manifest paths must be site paths under `/media/`; local camera and NAS paths are rejected.
 
-## Upload and publish workflow
+Curated photos and shoots are read-only for publication in the CMS. To withdraw a curated item, remove it from `public/media`, update the manifest, rebuild, and redeploy. The CMS can publish and withdraw its own uploaded items.
 
-Export selected edited JPEG, PNG, TIFF, WebP, AVIF, or HEIF images from the private editing machine. Original RAWs, original videos, master edits, and project files stay on private storage. The CMS accepts one image per upload, up to 50 MB and 80 megapixels. It creates 640, 960, 1600, 2400, and 3200 pixel wide AVIF, WebP, and JPEG variants without upscaling. Sharp applies orientation and strips EXIF, GPS, XMP, and other input metadata from every generated copy.
+## Image workflow
 
-New uploads and generated variants stay in the private staging volume. Publish an individual photo to copy its variants to the public media store. Unpublish it to delete its public copies. The private generated variants remain available for a later republish. Publishing a CMS-created shoot controls whether its published photos appear in the public catalog. Collections can include photos from multiple shoots; only published collections and photos appear through the public API.
+The CMS accepts edited JPEG, PNG, TIFF, WebP, AVIF, and HEIF files up to 50 MB and 80 megapixels. Sharp applies orientation and creates 640, 960, 1600, 2400, and 3200 pixel-wide AVIF, WebP, and JPEG variants without upscaling. It strips EXIF, GPS, XMP, and other input metadata from every generated copy.
 
-Use meaningful alt text before publishing. The CMS cannot edit RAW files or alter the private NAS; it receives selected exports only. Video encoding and HLS are outside the current CMS image workflow.
+New variants stay in private staging. Publishing a photo copies its variants to public storage; withdrawing it removes those public copies. The private staged variants remain available for later republication. A CMS-created shoot must be published for its published photos to appear in the public catalog. Collections may contain photos from multiple shoots; only published collections and photos appear through the public API.
 
-## VPS deployment
+Write useful alt text for each published photograph. The site does not show a caption below photos, and the CMS does not need a separate caption field in its editing flow. Video encoding and HLS are outside the current image CMS.
 
-The intended public domain is `nollestudios.com`. In Cloudflare DNS, point the apex A record at the VPS; add an AAAA record only if the VPS has working IPv6. Point `www` at the same site if you want that hostname. Allow inbound ports 80 and 443. If Cloudflare proxies the records, use SSL/TLS mode **Full (strict)**. Set `SITE_DOMAIN=nollestudios.com` in the VPS `.env` file so Caddy can issue and renew its certificate.
+## WSL Docker Compose rehearsal
 
-The included `compose.yaml` runs PostgreSQL, the Node CMS, and Caddy in front of the built site. Caddy routes `/api`, `/admin`, and uploaded `/media/photos` to the CMS, serves curated media as static files, falls back to `index.html` for client routes such as `/archive`, and obtains TLS certificates automatically for a public `SITE_DOMAIN`. PostgreSQL contains the catalog; PostGIS is not required because the site does not publish location coordinates.
+The Linux rehearsal has been run in Ubuntu WSL on this machine. `compose.yaml` starts PostgreSQL, the Node CMS, and Caddy; `compose.wsl.yaml` binds Caddy only to `127.0.0.1:8080`. The site, admin sign-in, health endpoint, public catalog, and a draft collection with a linked photo were checked through that stack. It runs over local HTTP and does not touch Cloudflare DNS or issue a public TLS certificate.
 
-1. Point your domain's A/AAAA records to the VPS and allow inbound ports 80 and 443.
-2. Copy `.env.example` to `.env` on the VPS. Set `SITE_DOMAIN`, `POSTGRES_PASSWORD`, `CMS_SESSION_SECRET`, and `CMS_ADMIN_PASSWORD_HASH`. Generate the hash with `npm run cms:hash` on a trusted machine; it prompts without echoing the password. In the Compose `.env`, wrap the hash in single quotes so its `$` characters stay literal.
-3. Choose `STORAGE_DRIVER=local` for a single VPS with persistent `media_data` and `staging_data` volumes, or configure the S3-compatible settings below.
-4. Run `docker compose up -d --build`. Visit `https://<SITE_DOMAIN>/api/health`, then `/admin/`.
+Use an environment file outside the repository containing these names and your own private values:
 
-Do not commit `.env`. Back up the PostgreSQL database, the private `staging_data` volume, and the published `media_data` volume when using local storage. The CMS image has the curated `public/media` files from the repository. `docker compose` was not available on the original Windows development host, so this Compose deployment needs validation on the VPS before production use.
+```dotenv
+POSTGRES_PASSWORD=<unique database password>
+CMS_ADMIN_PASSWORD_HASH='<output from npm run cms:hash>'
+CMS_SESSION_SECRET=<at least 32 random bytes, encoded as hex>
+SITE_DOMAIN=:80
+STORAGE_DRIVER=local
+```
 
-### Cloudflare R2 or Backblaze B2
+Generate random values with `openssl rand -hex 32`; `npm run cms:hash` prompts for the admin password and emits its scrypt hash. Keep the single quotes around the hash so Compose treats its `$` characters literally. Keep the environment file private. From an Ubuntu WSL shell with Docker Compose available:
 
-Set `STORAGE_DRIVER=s3` and fill in `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_ENDPOINT`, `S3_REGION`, and `MEDIA_BASE_URL`. `MEDIA_BASE_URL` must be an HTTPS URL from which anonymous visitors can read the published bucket. The API writes objects only on publish, with unique names under `photos/<photo-id>/`. Give its key access only to that bucket. Keep the private staging volume on the VPS and include it in backups; it is needed to republish without reuploading. On unpublish, the CMS deletes each object at the bucket origin. Published objects use `Cache-Control: public, max-age=300, must-revalidate`, so browsers and CDNs honoring that header may serve cached copies for up to five minutes. A provider's custom cache rules can extend this; purge its CDN cache when immediate URL revocation matters. Copies already downloaded by visitors cannot be recalled.
+```bash
+cd /mnt/c/Users/adamm/Desktop/Code/Nolle-Studios-Website
+docker compose --env-file /path/to/private/compose.env \
+  -f compose.yaml -f compose.wsl.yaml -p nolle-wsl up -d --build
+docker compose --env-file /path/to/private/compose.env \
+  -f compose.yaml -f compose.wsl.yaml -p nolle-wsl ps
+curl -f http://127.0.0.1:8080/api/health
+```
 
-For R2, use the account's `https://<account-id>.r2.cloudflarestorage.com` endpoint, `S3_REGION=auto`, and a public custom domain for `MEDIA_BASE_URL`. For B2, use its region's S3 endpoint and region code, and a public bucket URL or custom domain. `S3_FORCE_PATH_STYLE` is available if the provider requires it. Neither provider is mandatory for local development.
+Replace the example environment path with the file you created. Open `http://127.0.0.1:8080/` and `http://127.0.0.1:8080/admin/` in a browser. To stop the rehearsal while retaining its database and media volumes:
 
-## API summary
+```bash
+docker compose --env-file /path/to/private/compose.env \
+  -f compose.yaml -f compose.wsl.yaml -p nolle-wsl down
+```
+
+## Public Linux deployment
+
+`nollestudios.com` is the intended domain, but the Linux host and live DNS have not been set up. Once the host exists, point a Cloudflare apex A record to its public address; add AAAA only if IPv6 works. Point `www` to the same site if desired, and allow inbound ports 80 and 443. If Cloudflare proxies the records, use **Full (strict)** SSL/TLS mode.
+
+Set `SITE_DOMAIN=nollestudios.com` in a private production environment file so Caddy can issue and renew its certificate. Set unique `POSTGRES_PASSWORD`, `CMS_SESSION_SECRET`, and `CMS_ADMIN_PASSWORD_HASH` values. With `STORAGE_DRIVER=local`, back up the PostgreSQL database and the private `staging_data` and published `media_data` volumes. Then run `docker compose --env-file /path/to/private/compose.env up -d --build` using only `compose.yaml`. Check `https://nollestudios.com/api/health` and `/admin/` after DNS and TLS are live.
+
+Caddy routes `/api`, `/admin`, and uploaded `/media/photos` to the CMS, serves curated media as static files, and serves `index.html` for client routes such as `/archive`. PostgreSQL stores the catalog. PostGIS is not required because the site does not publish location coordinates.
+
+### Optional Cloudflare R2 or Backblaze B2
+
+Set `STORAGE_DRIVER=s3` and provide `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_ENDPOINT`, `S3_REGION`, and `MEDIA_BASE_URL`. The media base URL must be an HTTPS address from which anonymous visitors can read the published bucket. Grant the key access only to that bucket. Keep and back up the private staging volume because it is needed to republish without reuploading.
+
+For R2, use the account's `https://<account-id>.r2.cloudflarestorage.com` endpoint, `S3_REGION=auto`, and a public custom domain for `MEDIA_BASE_URL`. For B2, use its regional S3 endpoint and region code with a public bucket URL or custom domain. Set `S3_FORCE_PATH_STYLE` if the provider requires it. Neither provider is required for local or WSL use.
+
+On withdrawal, the CMS deletes the public object at its origin. Published objects use `Cache-Control: public, max-age=300, must-revalidate`, so browsers and CDNs honoring that header may serve cached copies for up to five minutes. Custom cache rules can extend that window. Already downloaded copies cannot be recalled.
+
+## API
 
 | Endpoint | Purpose |
 | --- | --- |
@@ -48,9 +81,9 @@ For R2, use the account's `https://<account-id>.r2.cloudflarestorage.com` endpoi
 | `GET /api/admin/session` | Current admin session and CSRF token |
 | `POST /api/admin/login` / `logout` | Password login and session revocation |
 | `GET /api/admin/content` | Full private catalog |
-| `/api/admin/shoots` | Create, edit, publish, order, or delete shoots |
-| `/api/admin/photos/upload` and `/api/admin/photos/:id` | Upload, edit, publish, unpublish, or delete photos |
+| `/api/admin/shoots` | Create, edit, publish, order, or delete CMS shoots |
+| `/api/admin/photos/upload` and `/api/admin/photos/:id` | Upload, edit, publish, withdraw, or delete CMS photos |
 | `/api/admin/collections` | Create, edit, publish, order, or delete collections |
 | `/api/admin/collections/:id/photos/:photoId` | Add or remove a photo from a collection |
 
-Admin writes require the session cookie and `X-CSRF-Token` from `/api/admin/session`. Uploaded photographs begin as drafts. `/api/site` never includes drafts.
+Admin writes require a session cookie and the `X-CSRF-Token` value from `/api/admin/session`. Uploaded photographs begin as drafts. `/api/site` never includes drafts.

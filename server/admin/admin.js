@@ -1,11 +1,20 @@
 const $ = selector => document.querySelector(selector);
 const h = value => String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
 const photoCount = count => `${count} photograph${count === 1 ? '' : 's'}`;
+const datedShoots = shoots => shoots.map((shoot, index) => ({
+  shoot, index,
+  time: /^\d{4}-\d{2}-\d{2}/.test(shoot.date || '') ? Date.parse(shoot.date) : Number.NaN,
+})).sort((a, b) => {
+  const aTime = Number.isFinite(a.time) ? a.time : Number.NEGATIVE_INFINITY;
+  const bTime = Number.isFinite(b.time) ? b.time : Number.NEGATIVE_INFINITY;
+  return bTime - aTime || a.index - b.index;
+}).map(({ shoot }) => shoot);
 let csrf = '';
 let content = { shoots: [], photos: [], collections: [] };
 let selected = { type: 'shoot', id: '' };
 let createType = 'shoot';
 let collectionQuery = '';
+let uploadPreviewUrl = '';
 
 function notice(message, error = false) {
   const el = $('#save-state');
@@ -29,13 +38,17 @@ async function load() {
   if (selected.id && !(selected.type === 'shoot' ? content.shoots : content.collections).some(item => item.id === selected.id)) selected.id = '';
   if (!selected.id) {
     selected.type = 'shoot';
-    selected.id = content.shoots[0]?.id || '';
+    selected.id = datedShoots(content.shoots)[0]?.id || '';
   }
   render();
 }
 
 function render() {
-  $('#shoot-list').innerHTML = content.shoots.map(shoot => `
+  if (uploadPreviewUrl) {
+    URL.revokeObjectURL(uploadPreviewUrl);
+    uploadPreviewUrl = '';
+  }
+  $('#shoot-list').innerHTML = datedShoots(content.shoots).map(shoot => `
     <button class="nav-item ${selected.type === 'shoot' && selected.id === shoot.id ? 'active' : ''}" data-select-shoot="${h(shoot.id)}" aria-current="${selected.type === 'shoot' && selected.id === shoot.id ? 'page' : 'false'}">
       ${shoot.coverUrl ? `<img class="nav-thumb" src="${h(shoot.coverUrl)}" alt="">` : '<span class="nav-monogram">N</span>'}
       <span class="nav-copy"><strong>${h(shoot.title)}</strong><small>${h(shoot.date || photoCount(shoot.photos.length))}</small></span>
@@ -71,21 +84,21 @@ function renderShoot() {
   }
   const photos = content.photos.filter(photo => photo.shootId === shoot.id);
   $('#editor').innerHTML = `
-    <div class="panel details-panel"><div class="panel-head"><div><span class="section-label">Shoot details</span><p class="panel-subtitle">The context shown alongside this work.</p></div><span class="pill ${shoot.published ? 'live' : ''}">${shoot.published ? 'Live' : 'Draft'}</span></div>
+    <div class="panel details-panel"><div class="panel-head"><div><span class="section-label">Shoot details</span><p class="panel-subtitle">Organize this shoot in the archive.</p></div><span class="pill ${shoot.published ? 'live' : ''}">${shoot.published ? 'Live' : 'Draft'}</span></div>
       <div class="panel-body"><form id="shoot-form" class="form-grid">
         <label class="field"><span class="field-label">Title</span><input name="title" value="${h(shoot.title)}" required maxlength="140"></label>
-        <label class="field"><span class="field-label">Date or label</span><input name="date" value="${h(shoot.date)}" maxlength="80" placeholder="12 Sep 2026"></label>
+        <label class="field"><span class="field-label">Shoot date</span><input name="date" value="${h(shoot.date)}" maxlength="80" placeholder="YYYY-MM-DD"></label>
         <label class="field"><span class="field-label">Location</span><input name="location" value="${h(shoot.location)}" maxlength="180"></label>
         <label class="field"><span class="field-label">Display order</span><input name="sortOrder" type="number" value="${shoot.sortOrder}"></label>
-        <label class="field wide"><span class="field-label">Story or description</span><textarea name="description" maxlength="3000">${h(shoot.description)}</textarea></label>
+        <label class="field wide"><span class="field-label">Archive notes</span><textarea name="description" maxlength="3000">${h(shoot.description)}</textarea></label>
         ${shoot.curated ? '<p class="hint field wide">This curated shoot is published from the site’s media manifest. Its visibility is managed with a redeploy.</p>' : ''}
         <div class="field wide toolbar">${shoot.curated ? '' : `<label class="check"><input name="published" type="checkbox" ${shoot.published ? 'checked' : ''}> Publish shoot</label><button class="danger" type="button" id="delete-shoot">Delete shoot</button>`}<button class="primary" type="submit">Save changes</button></div>
       </form></div></div>
     <div class="panel upload-panel"><div class="panel-head"><div><span class="section-label">Add photographs</span><p class="panel-subtitle">Edited exports only. RAWs stay private.</p></div></div><div class="panel-body">
       <form id="upload-form" class="upload">
         <label><span class="field-label">Image · up to 50 MB</span><input name="image" type="file" accept="image/jpeg,image/png,image/tiff,image/webp,image/avif,image/heic" required></label>
+        <div id="upload-preview" class="upload-preview" hidden><img id="upload-preview-image" alt="Selected image preview"><div><strong id="upload-preview-name"></strong><small>Ready to process</small></div></div>
         <label><span class="field-label">Alt text</span><input name="alt" required placeholder="Describe what the photograph shows"></label>
-        <label><span class="field-label">Caption <span class="optional">Optional</span></span><input name="caption" placeholder="A line for this frame"></label>
         <button class="primary" type="submit">Process image <span aria-hidden="true">↗</span></button>
       </form><p class="hint">The CMS makes responsive AVIF, WebP, and JPEG copies and removes private camera metadata. Uploads stay private until you publish each photo.</p>
     </div></div>
@@ -99,7 +112,6 @@ function renderPhoto(photo) {
     <form class="photo-form" data-photo-id="${h(photo.id)}">
       <div class="photo-meta">${photo.width} × ${photo.height} <span class="pill ${photo.published ? 'live' : ''}">${photo.curated ? 'Curated static' : photo.published ? 'Live' : 'Draft'}</span></div>
       <label>Alt text<input name="alt" value="${h(photo.alt)}" maxlength="400" required></label>
-      <label>Caption<textarea name="caption" maxlength="1500">${h(photo.caption)}</textarea></label>
       <label>Order<input name="sortOrder" type="number" value="${photo.sortOrder}"></label>
       ${photo.curated ? '<p class="hint">This curated photograph is published from the site’s media manifest.</p>' : ''}
       <div class="inline-switches">${photo.curated ? '' : `<label class="check"><input name="published" type="checkbox" ${photo.published ? 'checked' : ''}> Publish</label>`}<label class="check"><input name="isCover" type="checkbox" ${photo.isCover ? 'checked' : ''}> Cover</label></div>
@@ -111,11 +123,11 @@ function renderCollection() {
   const collection = content.collections.find(item => item.id === selected.id);
   $('#page-title').textContent = collection?.title || 'Collections';
   if (!collection) return;
-  $('#editor').innerHTML = `<div class="panel details-panel"><div class="panel-head"><div><span class="section-label">Collection details</span><p class="panel-subtitle">Give this edit a name and context.</p></div><span class="pill ${collection.published ? 'live' : ''}">${collection.published ? 'Live' : 'Draft'}</span></div>
+  $('#editor').innerHTML = `<div class="panel details-panel"><div class="panel-head"><div><span class="section-label">Collection details</span><p class="panel-subtitle">Set the title, order, and visibility.</p></div><span class="pill ${collection.published ? 'live' : ''}">${collection.published ? 'Live' : 'Draft'}</span></div>
     <div class="panel-body"><form id="collection-form" class="form-grid">
       <label class="field"><span class="field-label">Title</span><input name="title" value="${h(collection.title)}" required maxlength="140"></label>
       <label class="field"><span class="field-label">Display order</span><input name="sortOrder" type="number" value="${collection.sortOrder}"></label>
-      <label class="field wide"><span class="field-label">Description</span><textarea name="description" maxlength="3000">${h(collection.description)}</textarea></label>
+      <label class="field wide"><span class="field-label">Archive notes</span><textarea name="description" maxlength="3000">${h(collection.description)}</textarea></label>
       <div class="field wide toolbar"><label class="check"><input name="published" type="checkbox" ${collection.published ? 'checked' : ''}> Publish collection</label><button class="danger" type="button" id="delete-collection">Delete collection</button><button class="primary" type="submit">Save changes</button></div>
     </form></div></div>
     <div class="panel collection-panel"><div class="panel-head"><div><span class="section-label">Select photographs <span class="count">${collection.photoIds.length}</span></span><p class="panel-subtitle">A photograph can be in more than one collection.</p></div></div><div class="panel-body">
@@ -136,6 +148,37 @@ function values(form) {
   if (form.elements.published) data.published = form.elements.published.checked;
   if (form.elements.isCover) data.isCover = form.elements.isCover.checked;
   return data;
+}
+
+function previewUpload(input) {
+  const file = input.files?.[0];
+  const preview = $('#upload-preview');
+  if (uploadPreviewUrl) URL.revokeObjectURL(uploadPreviewUrl);
+  uploadPreviewUrl = '';
+  preview.hidden = !file;
+  if (!file) return;
+  if (!/^image\/(jpeg|png|tiff|webp|avif|heic)$/.test(file.type) && !/\.(jpe?g|png|tiff?|webp|avif|heic)$/i.test(file.name)) {
+    input.value = '';
+    preview.hidden = true;
+    notice('Choose a JPEG, PNG, TIFF, WebP, AVIF, or HEIC image.', true);
+    return;
+  }
+  if (file.size > 50 * 1024 * 1024) {
+    input.value = '';
+    preview.hidden = true;
+    notice('Choose an image under 50 MB.', true);
+    return;
+  }
+  const image = $('#upload-preview-image');
+  const canPreview = /^image\/(jpeg|png|webp|avif)$/.test(file.type);
+  preview.classList.toggle('no-image', !canPreview);
+  if (canPreview) {
+    image.onload = () => preview.classList.remove('no-image');
+    image.onerror = () => preview.classList.add('no-image');
+    uploadPreviewUrl = URL.createObjectURL(file);
+    image.src = uploadPreviewUrl;
+  } else image.removeAttribute('src');
+  $('#upload-preview-name').textContent = `${file.name} · ${(file.size / 1048576).toFixed(1)} MB`;
 }
 
 async function submit(action) {
@@ -170,8 +213,8 @@ function openCreateDialog(type) {
   createType = type;
   $('#create-title').textContent = type === 'shoot' ? 'New shoot' : 'New collection';
   $('#create-description').textContent = type === 'shoot'
-    ? 'Give the shoot a name. You can add its story and photographs next.'
-    : 'Name the edit. You can choose its photographs next.';
+    ? 'Name the shoot. Add photographs and set their order next.'
+    : 'Name the collection. Select its photographs next.';
   $('#create-name').value = '';
   $('#create-error').textContent = '';
   $('#create-dialog').showModal();
@@ -237,9 +280,39 @@ document.addEventListener('submit', event => {
 });
 
 document.addEventListener('change', event => {
+  if (event.target.matches('#upload-form input[name="image"]')) {
+    previewUpload(event.target);
+    return;
+  }
   const control = event.target.closest('[data-collection-photo]');
   if (!control) return;
   submit(() => api(`/collections/${selected.id}/photos/${control.dataset.collectionPhoto}`, { method: control.checked ? 'PUT' : 'DELETE', body: control.checked ? '{}' : undefined }));
+});
+
+document.addEventListener('dragover', event => {
+  const panel = event.target.closest('.upload-panel');
+  if (!panel) return;
+  event.preventDefault();
+  panel.classList.add('is-dragging');
+});
+
+document.addEventListener('dragleave', event => {
+  const panel = event.target.closest('.upload-panel');
+  if (panel && !panel.contains(event.relatedTarget)) panel.classList.remove('is-dragging');
+});
+
+document.addEventListener('drop', event => {
+  const panel = event.target.closest('.upload-panel');
+  if (!panel) return;
+  event.preventDefault();
+  panel.classList.remove('is-dragging');
+  const file = [...(event.dataTransfer?.files || [])][0];
+  if (!file) return;
+  const input = panel.querySelector('input[name="image"]');
+  const transfer = new DataTransfer();
+  transfer.items.add(file);
+  input.files = transfer.files;
+  previewUpload(input);
 });
 
 document.addEventListener('input', event => {

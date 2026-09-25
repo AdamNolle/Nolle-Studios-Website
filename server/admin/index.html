@@ -5,28 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Content room — Nolle Studios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=JetBrains+Mono:wght@400;500&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/admin/admin.css">
   <script type="module" src="/admin/admin.js"></script>
 </head>
 <body>
   <main id="login" class="login" hidden>
     <div class="login-card">
-      <div class="login-mark" aria-hidden="true">N<span>·</span></div>
-      <div class="eyebrow">NOLLE STUDIOS / PRIVATE</div>
-      <h1>Content room<span class="period">.</span></h1>
-      <p>Prepare photographs, shape collections, and publish the work.</p>
-      <form id="login-form">
-        <label for="password">Password</label>
-        <input id="password" type="password" name="password" autocomplete="current-password" required>
-        <button type="submit">Enter the room <span aria-hidden="true">↗</span></button>
-      </form>
-      <p id="login-message" class="message" role="status" aria-live="polite"></p>
+      <div class="login-contact" aria-hidden="true">
+        <img src="/media/september-20/full-swing-1440.webp" alt="">
+        <img src="/media/september-19/white-rose-1440.webp" alt="">
+        <img src="/media/first-frames/portrait-in-grass-1440.webp" alt="">
+        <img src="/media/september-20/team-walk-1440.webp" alt="">
+      </div>
+      <div class="login-content">
+        <div class="login-mark" aria-hidden="true">N<span>·</span></div>
+        <div class="eyebrow">NOLLE STUDIOS / PRIVATE</div>
+        <h1>Content room<span class="period">.</span></h1>
+        <p>Prepare photographs, shape collections, and publish the work.</p>
+        <form id="login-form">
+          <label for="password">Password</label>
+          <input id="password" type="password" name="password" autocomplete="current-password" required>
+          <button type="submit">Enter the room <span aria-hidden="true">↗</span></button>
+        </form>
+        <p id="login-message" class="message" role="status" aria-live="polite"></p>
+      </div>
     </div>
   </main>
   <div id="app" hidden>
     <header class="topbar">
-      <a class="brand" href="/">NOLLE <span>STUDIOS</span></a>
-      <span class="topbar-label">CONTENT ROOM <span class="topbar-separator">/</span> PRIVATE</span>
+      <a class="brand" href="/">Nolle Studios <span>THE EDITING ROOM</span></a>
+      <span class="topbar-label">THE ARCHIVE <span class="topbar-separator">/</span> PRIVATE</span>
       <div class="top-actions"><a href="/" target="_blank" rel="noopener">View site <span aria-hidden="true">↗</span></a><button id="logout" type="button">Sign out</button></div>
     </header>
     <div class="layout">
@@ -50,7 +61,7 @@
     <form id="create-form">
       <div class="dialog-eyebrow">NEW ARCHIVE ITEM</div>
       <h2 id="create-title">New shoot</h2>
-      <p id="create-description">Give the shoot a name. You can add its story and photographs next.</p>
+      <p id="create-description">Name the shoot. Add photographs and set their order next.</p>
       <label for="create-name">Name</label>
       <input id="create-name" name="title" maxlength="140" required autocomplete="off">
       <p id="create-error" class="message" role="status" aria-live="polite"></p>

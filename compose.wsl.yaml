@@ -1,0 +1,6 @@
+# Local Linux deployment rehearsal. Run with -f compose.yaml -f compose.wsl.yaml.
+# Production ports and TLS remain defined in compose.yaml.
+services:
+  web:
+    ports: !override
+      - "127.0.0.1:8080:80"

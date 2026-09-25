@@ -70,8 +70,7 @@ function spans(style: "sheet" | "plate" | "mosaic", rows: number, cols: number):
 }
 
 // Pin and tape sprites rendered in Blender (see art/). Each pin sprite is
-// centred on its needle; each tape sprite is centred on the print's top edge,
-// with its angle to that edge baked in.
+// centred on its needle; tape sprites are rendered with translucent edges.
 const art = import.meta.glob<string>("./assets/{pins,tape}/*.webp", { eager: true, query: "?url", import: "default" });
 const pinArt = (colour: PinColor, variant: number) => art["./assets/pins/pin-" + colour + "-" + variant + ".webp"];
 const tapeArt = (variant: number) => art["./assets/tape/tape-" + variant + ".webp"];
@@ -88,7 +87,11 @@ function Tape({ variant, width }: { variant: number; width: number }){
 }
 
 function CornerTape({ variant, side, width }: { variant: number; side: string; width: number }){
-  return <img className={`ns-tape-corner ns-tape-corner--${side}`} src={cornerTapeArt(variant)} style={{ width: `${width}px` }} alt="" draggable={false} aria-hidden="true" />;
+  const second = variant === 1 ? 2 : 1;
+  return <span className={`ns-tape-corner ns-tape-corner--${side}`} style={{ width: `${width}px`, height: `${width}px` }} aria-hidden="true">
+    <img className="ns-tape-corner__piece ns-tape-corner__piece--horizontal" src={cornerTapeArt(variant)} alt="" draggable={false} />
+    <img className="ns-tape-corner__piece ns-tape-corner__piece--vertical" src={cornerTapeArt(second)} alt="" draggable={false} />
+  </span>;
 }
 
 export default class LightTable extends Component<LightTableProps, LightTableState> {
@@ -149,6 +152,7 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
   mouse = false;
   lastW?: number;
   lastH?: number;
+  boardFitted = false;
   lastDetent?: number;
   lastClick?: number;
   actx?: AudioContext;
@@ -232,6 +236,7 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
     this._be = key; this._bi = out; return out;
   }
   openBoard(e: number, k: number){
+    this.boardFitted = false;
     this.preBoardFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     this.preBoard = { e, k: k || 0 };
     const its = this.boardItems(e), it = its[Math.min(its.length - 1, Math.max(0, k || 0))];
@@ -277,6 +282,7 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
     if (!document.hidden) this.raf = requestAnimationFrame(this.loop);
   }
   componentDidUpdate(_prevProps: Readonly<LightTableProps>, prevState: Readonly<LightTableState>){
+    if (this.boardFitted && this.state.board !== null && (prevState.w !== this.state.w || prevState.h !== this.state.h)) this.fitBoard();
     this.syncLift();
     if (prevState.lifted?.e !== this.state.lifted?.e || prevState.lifted?.k !== this.state.lifted?.k) this.fitPreview();
     if (!prevState.lifted && this.state.lifted) {
@@ -328,6 +334,7 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
     }
     ev.preventDefault(); this.touch();
     if (this.state.board !== null) {
+      this.boardFitted = false;
       const s = this.rect();
       const sx = ev.clientX - s.left, sy = ev.clientY - s.top;
       const dm = ev.deltaMode === 1 ? 16 : 1, ax = sx - s.width / 2, ay = sy - s.height / 2;
@@ -366,6 +373,7 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
     this.px = ev.clientX; this.py = ev.clientY; this.mouse = ev.pointerType === "mouse";
     if (this.ptrs.has(ev.pointerId)) this.ptrs.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
     if (this.pinch && this.ptrs.size >= 2) {
+      this.boardFitted = false;
       const [a, b] = [...this.ptrs.values()], p = this.pinch;
       const z1 = zclamp(p.z * (Math.hypot(a.x - b.x, a.y - b.y) / p.d));
       const wx = p.vx + (p.mx - p.rect.width / 2) / p.z, wy = p.vy + (p.my - p.rect.height / 2) / p.z;
@@ -382,6 +390,7 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
       const now = performance.now(), mdt = Math.max(1, now - (this.drag.mt || now)), k = Math.min(1, mdt / 40);
       this.drag.mt = now; this.drag.px = ev.clientX; this.drag.py = ev.clientY;
       if (this.drag.b) {
+        if (this.moved) this.boardFitted = false;
         const z = this.v.z;
         this.v = { z: z, x: this.drag.vx - dx / z, y: this.drag.vy - dy / z };
         this.vt = { z: this.vt.z, x: this.v.x, y: this.v.y };
@@ -526,6 +535,7 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
     } catch (e) {}
   }
   zoomBy(f: number){
+    this.boardFitted = false;
     this.anchor = null;
     this.vt = { x: this.vt.x, y: this.vt.y, z: zclamp(this.vt.z * f) }; this.touch();
   }
@@ -538,6 +548,7 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
     const W = this.lastW || 1280, H = this.lastH || 800;
     const z = Math.max(0.3, Math.min(1.4, Math.min((W - 80) / (x1 - x0), (H - 260) / (y1 - y0))));
     this.vt = { x: (x0 + x1) / 2, y: (y0 + y1) / 2, z: z }; this.touch();
+    this.boardFitted = true;
   }
   previewLimits(scale: number){
     const stage = this.liftStageEl, figure = this.liftFigureEl;
@@ -716,7 +727,7 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
     const topPad = narrow ? 86 : 108, botPad = narrow ? 104 : 132;
     const band = Math.max(200, H - topPad - botPad);
     const chrome = (narrow ? 30 : 34) + 24 + pad * 2 + 16 + gap;
-    const frameAspect = narrow && style === "sheet" ? 1.36 : 1.5;
+    const frameAspect = narrow && style === "sheet" ? 1.24 : 1.45;
     const rowsToShow = mobileFeature ? 3 : featureSheet || tabletFeature ? 2 : Math.min(maxRows, Math.max(1, Math.ceil(cur.count / cols)));
     const heightBudget = H < 520 && !narrow ? Math.max(165, H - 190) : band - 28;
     const sheetHeightCap = style === "sheet" && (H >= 520 || !narrow)
@@ -778,20 +789,19 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
         pinned.push({ it: it, label: "Open " + br.photos[it.i].alt });
       });
       bName = br.name;
-      bMeta = br.date + " · " + br.count + " photographs";
+      bMeta = br.date;
     }
 
     const ox = W / 2 - this.v.x * z, oy = H / 2 - this.v.y * z;
     const L = this.state.lifted, lr = L ? this.rolls[L.e] : null;
     const strip = [];
     if (L) {
-      const n = this.boardItems(L.e).length, span = Math.min(n, W < 380 ? 3 : narrow ? 5 : 9), first = -Math.floor(span / 2);
+      const n = this.boardItems(L.e).length, span = Math.min(n, narrow ? 3 : 9), first = -Math.floor(span / 2);
       for (let j = 0; j < span; j++) {
         const d = first + j;
         strip.push({ d, k: (L.k + d + n * 2) % n });
       }
     }
-    const specs = L && lr ? [{ k: "Date", v: lr.date }] : [];
     const showStrip = !!L && H > 560;
     const bt = narrow ? 10 : 16, lbh = narrow ? 48 : 54;
     const corkTone = this.props.corkTone;
@@ -829,9 +839,6 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
                       </div>
                     );
                   })}
-                </div>
-                <div className="ns-sheet__foot">
-                  <span>{narrow ? "Tap a photograph to explore" : r.description}</span>
                 </div>
                 <div className="ns-sheet__dim" style={{ opacity: dim }} />
               </div>
@@ -970,7 +977,6 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
               <div className="ns-liftbar__id">
                 <div className="ns-liftbar__text">
                   <span className="ns-liftbar__title">{lr.name}</span>
-                  <span className="ns-liftbar__meta">{lr.photos[L.k].caption || lr.date + " · " + lr.count + " photographs"}</span>
                 </div>
               </div>
               <div className="ns-liftbar__actions">
@@ -982,14 +988,6 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
             {showStrip && (
               <div className="ns-glass ns-strip">
                 <div className="ns-glass__sheen" />
-                <div className="ns-specs ns-wide">
-                  {specs.map(sp => (
-                    <div key={sp.k} className="ns-spec">
-                      <span className="ns-spec__k">{sp.k}</span>
-                      <span className="ns-spec__v">{sp.v}</span>
-                    </div>
-                  ))}
-                </div>
                 <div className="ns-strip__reel">
                   {strip.map(({ d, k }) => {
                     const on = d === 0;
@@ -1002,7 +1000,6 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
                     );
                   })}
                 </div>
-                <span className="ns-strip__hint ns-wide">← → frame · esc close</span>
               </div>
             )}
           </div>
