@@ -1,87 +1,51 @@
-# Nolle Studios — The Archive
+# Nolle Studios
 
-The studio's portfolio laid out as a light table: every shoot is a contact
-sheet pinned to cork, a film-rail timeline scrubs through the rolls, and a
-loupe magnifies whatever frame is under the cursor. Click a frame to open that
-roll as a pannable, zoomable board of prints, then click a print to lift it
-into a full-screen preview.
+An interactive photographic light table built with React, TypeScript, and Vite. The table is the homepage at `/`; `/archive` remains an alias. Visitors move from the newest shoot to the oldest, inspect contact sheets, open a shoot's pinned prints, and zoom into individual photographs. The public work is drawn from selected, processed camera images.
 
-Implemented from the Claude Design file `06 Light Table.dc.html`.
+A private CMS at `/admin/` manages uploads, shoots, collections, order, captions, cover images, and publishing. Camera RAWs, master edits, videos, and project files remain on private storage.
 
-## Running it
+## Run locally
 
-```sh
+Requires Node.js 26 and Python 3 with Pillow for the optional media workshop.
+
+```powershell
 npm install
-npm run dev       # local dev server
-npm run build     # static site in dist/
-npm run preview   # serve the build
+Copy-Item .env.example .env
+# Set a unique CMS_ADMIN_PASSWORD in .env.
+npm run dev:cms
 ```
 
-The build uses relative asset paths, so `dist/` can be hosted from any path
-(GitHub Pages, Netlify, S3, …).
+In another terminal:
 
-## Adding shoots and photos
-
-Everything on the table comes from `src/archive.js`:
-
-- `EVENTS` lists one roll per shoot, newest first, as `[name, date, frames shot]`.
-- `PHOTOS` is the image set that frames cycle through. Each photo has a
-  thumbnail (~420px wide, used on sheets and prints) and a mid-size image
-  (~1500px wide, used by the loupe, the preview and Download) in `public/photos/`.
-
-The images in `public/photos/` now are soft-focus placeholders. Replace them
-with real exports that use the same file names, or point `PHOTOS` at new files.
-
-## Cork, pins and tape
-
-The cork tile, push pins and tape are Blender (Cycles) renders, made by the
-scripts in `art/`. To re-render them (Blender 4.2+ on the `PATH`, Pillow for
-the finishing scripts):
-
-```sh
-blender -b -P art/cork.py  -- out=/tmp/cork.png size=1536 samples=128
-python3 art/finish_cork.py /tmp/cork.png src/assets/cork-tile.webp
-
-blender -b -P art/pins.py  -- outdir=/tmp/pins samples=256
-python3 art/finish_sprites.py /tmp/pins src/assets/pins 192 0.85
-
-blender -b -P art/tape.py  -- outdir=/tmp/tape samples=256
-python3 art/finish_sprites.py /tmp/tape src/assets/tape 768 0.9
+```powershell
+npm run dev
 ```
 
-- **Cork** is procedural: layered Voronoi granules with real displacement and
-  a low sun, sampled on a flat torus so the tile repeats seamlessly.
-  `finish_cork.py` grades it to the design's cork tone.
-- **Pins** come in ivory, graphite and red, three leans each. They're rendered
-  over a shadow catcher, and `finish_sprites.py` re-tints the shadow to a warm
-  brown.
-- **Tape** is frosted film bridging a print's top edge, with dispenser-cut
-  ends, creases and air bubbles. Each variant bakes in its own angle.
+Open the Vite URL for the light table and `/admin/` for the CMS. Local development uses SQLite and filesystem media storage. The site falls back to `public/media/archive.json` when the CMS API is unavailable; uploads require the CMS server.
 
-Everything is lit from the upper left, so the CSS drop shadows fall down and
-to the right to match.
+## Check and build
 
-## Controls
+```powershell
+npm run typecheck
+npm run build
+npm run test:cms
+python art/verify_media.py
+```
 
-| Where          | Input                                                        |
-| -------------- | ------------------------------------------------------------ |
-| Table          | drag, scroll, or ← → to scrub · Home / End · hover to loupe |
-| Board          | drag to pan · scroll or pinch to zoom · arrows pan · + / − · Esc back |
-| Preview        | ← → previous / next frame · Esc close                         |
+`dist/` is served from the domain root. The included Caddy configuration routes the CMS API and serves the client routes. The intended public domain is `nollestudios.com`; see [the deployment guide](docs/CMS.md) for its Cloudflare DNS setup, PostgreSQL, Docker Compose, TLS, and R2 or B2 compatible object storage. No storage vendor is required for local development.
 
-The table drifts forward slowly after five seconds of inactivity. It stays
-still when the visitor prefers reduced motion.
+## Publishing photographs
 
-## Tuning
+The checked in `public/media` directory contains selected, metadata stripped public derivatives. To curate another camera export, follow [the media workshop](art/README.md). The CMS accepts edited JPEG, PNG, TIFF, WebP, AVIF, or HEIF files, stages generated 640–3200 px AVIF, WebP, and JPEG variants privately, and publishes only the photos you select. Static curated photographs are managed through the manifest and a redeploy; CMS uploaded photographs can be published and withdrawn in the admin UI.
 
-`LightTable` takes the design's adjustable props (defaults in
-`LightTable.defaultProps`):
+The loupe, push pins, tape, cork, badge, and glass transport reflections have editable Blender sources in `art/`.
 
-| Prop        | Default           | Notes                                   |
-| ----------- | ----------------- | --------------------------------------- |
-| `tableStyle`| `"Contact sheet"` | also `"Plate"` or `"Mosaic"`            |
-| `loupeZoom` | `2.8`             | 1.6 – 4.5                               |
-| `corkTone`  | `"#C8813F"`       | multiply tint over the cork             |
-| `haptics`   | `true`            | vibration on frame detents (mobile)     |
-| `tickSound` | `false`           | synthesized shutter tick while scrubbing|
-| `drift`     | `true`            | idle auto-advance                       |
+## Light table controls
+
+| View | Controls |
+| --- | --- |
+| Table | Use the glass slider or its previous/next buttons, or press ← / → to browse; Home / End jump; hover for the loupe on fine pointers. |
+| Shoot board | Drag to pan; scroll or pinch to zoom; arrows pan; + / − adjust; Esc returns. |
+| Print preview | Use the zoom controls, wheel, pinch, or double click to zoom; drag a zoomed print to pan; previous/next buttons or ← / → change photos; Esc closes. |
+
+The table stays still by default and supports reduced motion. See [release checks](docs/QA.md) for tested layouts and current limits.

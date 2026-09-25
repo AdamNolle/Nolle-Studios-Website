@@ -6,14 +6,29 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev:cms": "node server/index.js",
+    "cms:seed": "node server/seed.js",
+    "cms:hash": "node server/hash-password.js",
+    "test:cms": "node --test server/*.test.js",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1140.0",
+    "dotenv": "^18.0.3",
+    "express": "^5.2.1",
+    "multer": "^2.4.0",
+    "pg": "^8.23.0",
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "sharp": "^0.35.4"
   },
   "devDependencies": {
+    "@types/node": "^26.6.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
+    "typescript": "^6.0.3",
     "vite": "^8.3.1"
   }
 }
