@@ -1,87 +1,67 @@
-# Nolle Studios — The Archive
+# Nolle Studios
 
-The studio's portfolio laid out as a light table: every shoot is a contact
-sheet pinned to cork, a film-rail timeline scrubs through the rolls, and a
-loupe magnifies whatever frame is under the cursor. Click a frame to open that
-roll as a pannable, zoomable board of prints, then click a print to lift it
-into a full-screen preview.
+An interactive photographic light table built with React, TypeScript, and Vite. The light table is the homepage at `/`; `/archive` remains an alias. Visitors browse shoots from newest to oldest, inspect contact sheets, open pinned prints, and zoom into individual photographs. Photographs carry no visible captions or frame numbers. Accessible image descriptions remain available to assistive technology.
 
-Implemented from the Claude Design file `06 Light Table.dc.html`.
+The private CMS at `/admin/` manages image uploads, shoots, collections, order, cover images, alt text, and publishing. Camera RAWs, master edits, original videos, and project files stay on private storage. Only selected, processed images are published.
 
-## Running it
+## Run locally
 
-```sh
+Requires Node.js 26. Python 3 with Pillow is needed only for the optional media workshop.
+
+```powershell
 npm install
-npm run dev       # local dev server
-npm run build     # static site in dist/
-npm run preview   # serve the build
+Copy-Item .env.example .env
+# Set a unique CMS_ADMIN_PASSWORD in .env.
+npm run dev:cms
 ```
 
-The build uses relative asset paths, so `dist/` can be hosted from any path
-(GitHub Pages, Netlify, S3, …).
+In another terminal:
 
-## Adding shoots and photos
-
-Everything on the table comes from `src/archive.js`:
-
-- `EVENTS` lists one roll per shoot, newest first, as `[name, date, frames shot]`.
-- `PHOTOS` is the image set that frames cycle through. Each photo has a
-  thumbnail (~420px wide, used on sheets and prints) and a mid-size image
-  (~1500px wide, used by the loupe, the preview and Download) in `public/photos/`.
-
-The images in `public/photos/` now are soft-focus placeholders. Replace them
-with real exports that use the same file names, or point `PHOTOS` at new files.
-
-## Cork, pins and tape
-
-The cork tile, push pins and tape are Blender (Cycles) renders, made by the
-scripts in `art/`. To re-render them (Blender 4.2+ on the `PATH`, Pillow for
-the finishing scripts):
-
-```sh
-blender -b -P art/cork.py  -- out=/tmp/cork.png size=1536 samples=128
-python3 art/finish_cork.py /tmp/cork.png src/assets/cork-tile.webp
-
-blender -b -P art/pins.py  -- outdir=/tmp/pins samples=256
-python3 art/finish_sprites.py /tmp/pins src/assets/pins 192 0.85
-
-blender -b -P art/tape.py  -- outdir=/tmp/tape samples=256
-python3 art/finish_sprites.py /tmp/tape src/assets/tape 768 0.9
+```powershell
+npm run dev
 ```
 
-- **Cork** is procedural: layered Voronoi granules with real displacement and
-  a low sun, sampled on a flat torus so the tile repeats seamlessly.
-  `finish_cork.py` grades it to the design's cork tone.
-- **Pins** come in ivory, graphite and red, three leans each. They're rendered
-  over a shadow catcher, and `finish_sprites.py` re-tints the shadow to a warm
-  brown.
-- **Tape** is frosted film bridging a print's top edge, with dispenser-cut
-  ends, creases and air bubbles. Each variant bakes in its own angle.
+Open the Vite URL for the site and its `/admin/` path for the CMS. Local development uses SQLite and filesystem media storage. When the CMS API is unavailable, the public site falls back to `public/media/archive.json`; uploads require the CMS server. Keep `.env` private.
 
-Everything is lit from the upper left, so the CSS drop shadows fall down and
-to the right to match.
+## Rehearse the Linux deployment in WSL
 
-## Controls
+The included `compose.wsl.yaml` override runs PostgreSQL, the CMS, and Caddy through Docker Compose. It binds the site to `http://127.0.0.1:8080/` on this machine. This rehearsal has been run and the site, CMS, and API health endpoint were checked locally.
 
-| Where          | Input                                                        |
-| -------------- | ------------------------------------------------------------ |
-| Table          | drag, scroll, or ← → to scrub · Home / End · hover to loupe |
-| Board          | drag to pan · scroll or pinch to zoom · arrows pan · + / − · Esc back |
-| Preview        | ← → previous / next frame · Esc close                         |
+From an Ubuntu WSL shell with Docker Compose available, create a private environment file **outside this repository** containing `POSTGRES_PASSWORD`, `CMS_ADMIN_PASSWORD_HASH`, `CMS_SESSION_SECRET`, `SITE_DOMAIN=:80`, and `STORAGE_DRIVER=local`. Generate a password hash with `npm run cms:hash` and random secrets with `openssl rand -hex 32`. Then run:
 
-The table drifts forward slowly after five seconds of inactivity. It stays
-still when the visitor prefers reduced motion.
+```bash
+cd /mnt/c/Users/adamm/Desktop/Code/Nolle-Studios-Website
+docker compose --env-file /path/to/private/compose.env \
+  -f compose.yaml -f compose.wsl.yaml -p nolle-wsl up -d --build
+docker compose --env-file /path/to/private/compose.env \
+  -f compose.yaml -f compose.wsl.yaml -p nolle-wsl ps
+```
 
-## Tuning
+Open `http://127.0.0.1:8080/`, `http://127.0.0.1:8080/admin/`, and `http://127.0.0.1:8080/api/health`. Replace the example environment path with your actual private file. See [CMS and deployment](docs/CMS.md) for setup details and the distinction between this HTTP rehearsal and a public TLS deployment.
 
-`LightTable` takes the design's adjustable props (defaults in
-`LightTable.defaultProps`):
+## Check and build
 
-| Prop        | Default           | Notes                                   |
-| ----------- | ----------------- | --------------------------------------- |
-| `tableStyle`| `"Contact sheet"` | also `"Plate"` or `"Mosaic"`            |
-| `loupeZoom` | `2.8`             | 1.6 – 4.5                               |
-| `corkTone`  | `"#C8813F"`       | multiply tint over the cork             |
-| `haptics`   | `true`            | vibration on frame detents (mobile)     |
-| `tickSound` | `false`           | synthesized shutter tick while scrubbing|
-| `drift`     | `true`            | idle auto-advance                       |
+```powershell
+npm run typecheck
+npm run build
+npm run test:cms
+python art/verify_media.py
+```
+
+The public gallery is a static GitHub Pages deployment from `gh-pages` at `nollestudios.com`. The source of truth is `main`; `gh-pages` holds only the generated public site. GitHub Pages has approved its certificate, and **Enforce HTTPS** redirects HTTP traffic to `https://nollestudios.com/`. The CMS remains local in WSL; its uploads require a new static build and publication to appear on the public gallery. See [publishing](docs/PUBLISH.md) for the update process and [CMS and deployment](docs/CMS.md) for the later Linux server, PostgreSQL, and optional R2 or B2 setup.
+
+## Publishing photographs
+
+`public/media` contains selected public derivatives with private metadata removed. Follow [the media workshop](art/README.md) to curate another camera export. The CMS accepts edited JPEG, PNG, TIFF, WebP, AVIF, or HEIF files, stages generated 640–3200 px AVIF, WebP, and JPEG variants privately, and publishes only the photos you select. CMS uploads can be published or withdrawn in the admin UI. Static curated photographs are managed through the manifest and require a redeploy to withdraw.
+
+The loupe, push pins, tape, cork, badge, and glass transport reflections have editable Blender sources in `art/`.
+
+## Light table controls
+
+| View | Controls |
+| --- | --- |
+| Table | Scroll, swipe, or click the tabletop to move between shoots. The glass ticker and its arrows select tables by date; ← / → and Home / End work from the keyboard. Click a photograph to open its shoot board. A loupe appears on fine pointer hover. |
+| Shoot board | Drag to pan; scroll or pinch to zoom; use arrows to pan and + / − to adjust; Esc returns. |
+| Print preview | Use zoom controls, wheel, pinch, or double click to zoom; drag a zoomed print to pan. Previous/next buttons or ← / → change photos; Esc closes. |
+
+The table supports reduced motion. See [release checks](docs/QA.md) for tested layouts and current limits.

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Content room — Nolle Studios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=JetBrains+Mono:wght@400;500&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/admin.css">
+  <script type="module" src="/admin/admin.js"></script>
+</head>
+<body>
+  <main id="login" class="login" hidden>
+    <div class="login-card">
+      <div class="login-contact" aria-hidden="true">
+        <img src="/media/september-20/full-swing-1440.webp" alt="">
+        <img src="/media/september-19/white-rose-1440.webp" alt="">
+        <img src="/media/first-frames/portrait-in-grass-1440.webp" alt="">
+        <img src="/media/september-20/team-walk-1440.webp" alt="">
+      </div>
+      <div class="login-content">
+        <div class="login-mark" aria-hidden="true">N<span>·</span></div>
+        <div class="eyebrow">NOLLE STUDIOS / PRIVATE</div>
+        <h1>Content room<span class="period">.</span></h1>
+        <p>Prepare photographs, shape collections, and publish the work.</p>
+        <form id="login-form">
+          <label for="password">Password</label>
+          <input id="password" type="password" name="password" autocomplete="current-password" required>
+          <button type="submit">Enter the room <span aria-hidden="true">↗</span></button>
+        </form>
+        <p id="login-message" class="message" role="status" aria-live="polite"></p>
+      </div>
+    </div>
+  </main>
+  <div id="app" hidden>
+    <header class="topbar">
+      <a class="brand" href="/">Nolle Studios <span>THE EDITING ROOM</span></a>
+      <span class="topbar-label">THE ARCHIVE <span class="topbar-separator">/</span> PRIVATE</span>
+      <div class="top-actions"><a href="/" target="_blank" rel="noopener">View site <span aria-hidden="true">↗</span></a><button id="logout" type="button">Sign out</button></div>
+    </header>
+    <div class="layout">
+      <aside class="sidebar" aria-label="Archive navigation">
+        <div class="sidebar-heading"><h2>Shoots</h2><button id="new-shoot" type="button" aria-label="Create a shoot">+ New</button></div>
+        <div id="shoot-list" class="nav-list" aria-label="Shoots"></div>
+        <div class="sidebar-heading collections-heading"><h2>Collections</h2><button id="new-collection" type="button" aria-label="Create a collection">+ New</button></div>
+        <div id="collection-list" class="nav-list" aria-label="Collections"></div>
+        <p class="sidebar-note">A private place for the work in progress. Only published photographs appear on the site.</p>
+      </aside>
+      <section class="workspace">
+        <div class="workspace-head">
+          <div class="workspace-identity"><img id="cover-preview" class="cover-preview" alt="" hidden><div><div id="selection-type" class="eyebrow">THE ARCHIVE / EDIT</div><h1 id="page-title">Content room</h1><p id="context-meta" class="context-meta"></p></div></div>
+          <div id="save-state" class="save-state" role="status" aria-live="polite"></div>
+        </div>
+        <div id="editor"></div>
+      </section>
+    </div>
+  </div>
+  <dialog id="create-dialog" class="create-dialog" aria-labelledby="create-title">
+    <form id="create-form">
+      <div class="dialog-eyebrow">NEW ARCHIVE ITEM</div>
+      <h2 id="create-title">New shoot</h2>
+      <p id="create-description">Name the shoot. Add photographs and set their order next.</p>
+      <label for="create-name">Name</label>
+      <input id="create-name" name="title" maxlength="140" required autocomplete="off">
+      <p id="create-error" class="message" role="status" aria-live="polite"></p>
+      <div class="dialog-actions"><button id="create-cancel" class="quiet" type="button">Cancel</button><button class="primary" type="submit">Create</button></div>
+    </form>
+  </dialog>
+</body>
+</html>

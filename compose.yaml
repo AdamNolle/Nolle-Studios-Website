@@ -1,0 +1,77 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: nolle
+      POSTGRES_USER: nolle
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nolle -d nolle"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  cms:
+    build:
+      context: .
+      dockerfile: infra/cms.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      CMS_PORT: 8787
+      PGHOST: db
+      PGPORT: 5432
+      PGUSER: nolle
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      PGDATABASE: nolle
+      CMS_ADMIN_PASSWORD_HASH: ${CMS_ADMIN_PASSWORD_HASH:?Set CMS_ADMIN_PASSWORD_HASH in .env}
+      CMS_SESSION_SECRET: ${CMS_SESSION_SECRET:?Set CMS_SESSION_SECRET in .env}
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
+      LOCAL_MEDIA_DIR: /app/.local/media
+      STAGING_DIR: /app/.local/staging
+      MEDIA_BASE_URL: ${MEDIA_BASE_URL:-/media}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_REGION: ${S3_REGION:-auto}
+      S3_BUCKET: ${S3_BUCKET:-}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
+      S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-false}
+    volumes:
+      - media_data:/app/.local/media
+      - staging_data:/app/.local/staging
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:8787/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: infra/web.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      cms:
+        condition: service_healthy
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:-localhost}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  postgres_data:
+  media_data:
+  staging_data:
+  caddy_data:
+  caddy_config:
