@@ -86,6 +86,22 @@ function Tape({ variant, width }: { variant: number; width: number }){
   return <img className="ns-tape" src={tapeArt(variant)} style={{ width: width * 1.2 + "px" }} alt="" draggable={false} aria-hidden="true" />;
 }
 
+// Fill the last row of a contact sheet without leaving an empty black cell.
+// Twelve tracks divide evenly into two, three, or four frames per row.
+function balancedSheetSpans(count: number, cols: number): Span[]{
+  const out: Span[] = [];
+  let used = 0, row = 1;
+  while (used < count) {
+    const remaining = count - used;
+    const inRow = remaining === cols + 1 ? Math.ceil(remaining / 2) : Math.min(cols, remaining);
+    const width = 12 / inRow;
+    for (let col = 0; col < inRow; col++) out.push([row, 1 + col * width, 1, width]);
+    used += inRow;
+    row++;
+  }
+  return out;
+}
+
 function CornerTape({ variant, side, width }: { variant: number; side: string; width: number }){
   const second = variant === 1 ? 2 : 1;
   return <span className={`ns-tape-corner ns-tape-corner--${side}`} style={{ width: `${width}px`, height: `${width}px` }} aria-hidden="true">
@@ -106,6 +122,7 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
 
   declare rolls: Roll[];
   declare items: TimelineItem[];
+  declare rollStarts: number[];
   declare pos: number;
   declare target: number;
   declare vel: number;
@@ -147,6 +164,9 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
   epos?: number;
   wheelAt?: number;
   wheelSnap = false;
+  wheelGestureAt = 0;
+  wheelGestureDelta = 0;
+  wheelGestureUsed = false;
   px: number | null = null;
   py: number | null = null;
   mouse = false;
@@ -170,11 +190,14 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
       date: shoot.displayDate,
     }));
     const items: TimelineItem[] = [];
+    const rollStarts: number[] = [];
     this.rolls.forEach((roll, ei) => {
+      rollStarts.push(items.length);
       const n = roll.photos.length;
       for (let k = 0; k < n; k++) items.push({ e: ei, k, first: k === 0, ef: ei + k / n, date: roll.date });
     });
     this.items = items;
+    this.rollStarts = rollStarts;
     this.state = { board: null, lifted: null, w: window.innerWidth, h: window.innerHeight };
     this.pos = 0; this.target = 0; this.vel = 0; this.drag = null; this.moved = false; this.last = Date.now();
     this.ptrs = new Map(); this.pinch = null; this.fling = 0;
@@ -194,6 +217,22 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
   get narrow(){ return (this.lastW || this.state.w || 1280) < 760; }
   get reduce(){ return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); }
   clampPos(v: number){ return Math.max(0, Math.min(this.items.length - 1, v)); }
+  tableProgress(pos: number){
+    const starts = this.rollStarts;
+    if (starts.length <= 1) return 0;
+    const p = this.clampPos(pos);
+    for (let e = 0; e < starts.length - 1; e++) {
+      if (p < starts[e + 1]) return e + (p - starts[e]) / (starts[e + 1] - starts[e]);
+    }
+    return starts.length - 1;
+  }
+  photoPositionAtTable(value: number){
+    const starts = this.rollStarts;
+    const t = Math.max(0, Math.min(starts.length - 1, value));
+    if (starts.length <= 1) return starts[0] || 0;
+    const e = Math.min(starts.length - 2, Math.floor(t));
+    return starts[e] + (t - e) * (starts[e + 1] - starts[e]);
+  }
   touch(){ this.last = Date.now(); }
 
   boardItems(e: number): BoardItem[]{
@@ -258,7 +297,16 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
   }
   stepTable(k: number){
     if (this.state.board !== null || this.state.lifted) return;
-    this.target = this.clampPos(Math.round(this.target) + k);
+    const item = this.items[Math.round(this.clampPos(this.target))];
+    this.goToRoll((item?.e ?? 0) + k);
+  }
+  goToRoll(e: number){
+    if (this.state.board !== null || this.state.lifted) return;
+    const roll = Math.max(0, Math.min(this.rolls.length - 1, e));
+    const start = this.items.findIndex(item => item.e === roll);
+    if (start < 0) return;
+    this.target = start;
+    this.wheelSnap = false;
     this.touch(); this.dirtyNow = true;
   }
 
@@ -344,10 +392,21 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
       this.vt = { z: z1, x: wx - ax / z1, y: wy - ay / z1 };
       return;
     }
+    const now = performance.now();
+    if (now - this.wheelGestureAt > 240) {
+      this.wheelGestureDelta = 0;
+      this.wheelGestureUsed = false;
+    }
+    this.wheelGestureAt = now;
+    this.wheelAt = now;
+    if (this.wheelGestureUsed) return;
     const dm = ev.deltaMode === 1 ? 16 : ev.deltaMode === 2 ? 400 : 1;
-    const d = (Math.abs(ev.deltaX) > Math.abs(ev.deltaY) ? ev.deltaX : ev.deltaY) * dm * 0.0055;
-    this.target = this.clampPos(this.target + Math.max(-1.2, Math.min(1.2, d)));
-    this.wheelAt = performance.now(); this.wheelSnap = true;
+    const axis = Math.abs(ev.deltaX) > Math.abs(ev.deltaY) ? ev.deltaX : ev.deltaY;
+    this.wheelGestureDelta += axis * dm;
+    if (Math.abs(this.wheelGestureDelta) >= 28) {
+      this.stepTable(Math.sign(this.wheelGestureDelta));
+      this.wheelGestureUsed = true;
+    }
   };
   onDown = (ev: PointerEvent) => {
     if (ev.target instanceof Element && ev.target.closest(".ns-rail__step")) return;
@@ -398,10 +457,15 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
         this.drag.my = this.drag.my * (1 - k) + (-instY / z / mdt) * k;
         this.bv = { x: 0, y: 0, z: this.bv.z };
       } else {
-        const unit = this.drag.rail ? (this.tickSpacing || 20) : 140;
-        this.target = this.clampPos(this.drag.t - dx / unit);
+        if (this.drag.rail) {
+          const table = this.tableProgress(this.drag.t) - dx / (this.tickSpacing || 50);
+          this.target = this.photoPositionAtTable(table);
+          this.fling = 0;
+        } else {
+          this.target = this.clampPos(this.drag.t - dx / 140);
+          this.fling = this.fling * (1 - k) + (-inst / 140 / mdt * 1000) * k;
+        }
         this.pos = this.target; this.vel = 0;
-        this.fling = this.fling * (1 - k) + (-inst / unit / mdt * 1000) * k;
       }
       this.dirtyNow = true;
       this.touch();
@@ -416,9 +480,25 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
     if (!d0) return;
     const stale = performance.now() - (d0.mt || 0) > 90;
     if (!d0.b && this.state.board === null) {
-      const f = stale ? 0 : Math.max(-60, Math.min(60, this.fling));
-      this.vel = f; this.target = this.clampPos(Math.round(this.pos + f * 0.22));
-      this.fling = 0; this.touch();
+      if (d0.rail) {
+        const dx = ev.clientX - d0.x;
+        const original = Math.round(this.tableProgress(d0.t));
+        let selected = Math.round(this.tableProgress(this.pos));
+        if (selected === original && Math.abs(dx) >= 24) selected += dx < 0 ? 1 : -1;
+        this.vel = 0; this.fling = 0;
+        this.goToRoll(selected);
+      } else if (this.moved) {
+        const dx = ev.clientX - d0.x;
+        const start = this.items[Math.round(this.clampPos(d0.t))]?.e ?? 0;
+        this.goToRoll(start + (Math.abs(dx) >= 35 ? (dx < 0 ? 1 : -1) : 0));
+        this.vel = 0; this.fling = 0;
+      } else if (ev.target instanceof Element && this.stageEl?.contains(ev.target) &&
+        !ev.target.closest("button, a, input, select, textarea, [role='button'], [role='slider'], .ns-bar, .ns-rail")) {
+        const sheet = ev.target.closest<HTMLElement>(".ns-sheet");
+        const selected = sheet ? Number(sheet.dataset.shootIndex) : NaN;
+        const current = this.items[Math.round(this.clampPos(this.target))]?.e ?? 0;
+        this.goToRoll(Number.isInteger(selected) && selected !== current ? selected : current + 1);
+      }
     } else if (d0.b && !stale) {
       const mx = d0.mx * 1000, my = d0.my * 1000;
       this.bv = { x: mx, y: my, z: this.bv.z };
@@ -455,11 +535,10 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
       if (ev.key === "-") this.vt = { x: this.vt.x, y: this.vt.y, z: zclamp(this.vt.z / 1.25) };
       return;
     }
-    const N = this.items.length;
-    if (ev.key === "ArrowRight") { ev.preventDefault(); this.touch(); this.target = this.clampPos(Math.round(this.target) + 1); }
-    if (ev.key === "ArrowLeft") { ev.preventDefault(); this.touch(); this.target = this.clampPos(Math.round(this.target) - 1); }
-    if (ev.key === "Home") { this.touch(); this.target = 0; }
-    if (ev.key === "End") { this.touch(); this.target = N - 1; }
+    if (ev.key === "ArrowRight") { ev.preventDefault(); this.stepTable(1); }
+    if (ev.key === "ArrowLeft") { ev.preventDefault(); this.stepTable(-1); }
+    if (ev.key === "Home") { ev.preventDefault(); this.goToRoll(0); }
+    if (ev.key === "End") { ev.preventDefault(); this.goToRoll(this.rolls.length - 1); }
   };
   onLeave = () => { this.px = null; this.fadeLoupe(0); };
 
@@ -698,7 +777,7 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
   };
 
   render(){
-    const pos = this.pos, N = this.items.length;
+    const pos = this.pos, N = this.items.length, tableCount = this.rolls.length;
     const W = this.state.w || 1280, H = this.state.h || 800;
     this.lastW = W; this.lastH = H;
     const narrow = W < 760;
@@ -710,13 +789,10 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
     this.epos += Math.abs(de) < 0.0008 ? de : de * (this.reduce ? 1 : 0.135);
     const ef = this.epos;
     const B = this.state.board, z = this.v.z;
-    const TICK = Math.max(narrow ? 12 : 22, Math.min(narrow ? 20 : 62, (W - (narrow ? 80 : 300)) / Math.max(1, N - 1)));
+    const TICK = narrow
+      ? Math.max(40, Math.min(58, (W - 126) / (Math.max(1, tableCount - 1) * 2)))
+      : Math.max(76, Math.min(180, (Math.min(W, 1040) - 190) / (Math.max(1, tableCount - 1) * 2)));
     this.tickSpacing = TICK;
-    // Keep a fine, even engraved scale as the viewport changes. Each photo
-    // interval contains a whole number of minor divisions, so the ruler and
-    // the photograph markers always stay aligned while it moves.
-    const microStep = TICK / Math.max(3, Math.round(TICK / 7.5));
-
     const styleName = String(this.props.tableStyle);
     const style = styleName === "Plate" ? "plate" : styleName === "Mosaic" ? "mosaic" : "sheet";
     const mobileFeature = style === "sheet" && narrow && H >= 600 && cur.count === 3;
@@ -751,23 +827,34 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
       : spans(style, ROWS, cols);
 
     // Contact sheets within reach of the current roll, fanned out either side.
-    const sheets: { i: number; r: Roll; start: number; t: string; dim: string }[] = [];
+    const sheets: { i: number; r: Roll; start: number; t: string; dim: string; layout: Span[]; gridCols: number }[] = [];
     if (B === null) this.rolls.forEach((r, i) => {
       const d = i - ef, a = Math.abs(d);
       if (a > 1.6) return;
-      sheets.push({ i: i, r: r, start: i === cit.e ? Math.min(Math.floor(cit.k / plan.length) * plan.length, Math.max(0, r.count - plan.length)) : 0,
+      const start = i === cit.e ? Math.min(Math.floor(cit.k / plan.length) * plan.length, Math.max(0, r.count - plan.length)) : 0;
+      const visible = Math.min(plan.length, Math.max(0, r.count - start));
+      const balanced = style === "sheet" && visible >= 4 && (cols === 2 || cols === 3 || cols === 4);
+      sheets.push({ i: i, r: r, start, layout: balanced ? balancedSheetSpans(visible, cols) : plan.slice(0, visible), gridCols: balanced ? 12 : cols,
         t: "translate(-50%,-50%) translateX(" + (d * CELL + (i === cit.e ? -within * 14 : 0)).toFixed(2) + "px) translateY(" + ((i % 2 ? 1 : -1) * 7) + "px) rotate(" + (d * 0.45).toFixed(2) + "deg) scale(" + (1 - Math.min(a, 2) * 0.035).toFixed(4) + ")",
         dim: (Math.min(a, 1.8) * 0.32).toFixed(3) });
     });
 
-    // Glass graduations travel behind a stationary viewing index.
-    const tickX = (d: number) => TICK * d;
-    const ticks: { i: number; x: string; kind: "boundary" | "major" | "minor"; active: boolean }[] = [];
-    this.items.forEach((it, i) => ticks.push({ i, x: tickX(i - pos).toFixed(2), kind: it.first ? "boundary" : it.k % 5 === 0 ? "major" : "minor", active: i === ci }));
-    const firstInRoll = this.items.findIndex(it => it.e === cit.e);
-    let lastInRoll = this.items.length - 1;
-    while (lastInRoll > 0 && this.items[lastInRoll].e !== cit.e) lastInRoll--;
-    const span = { x0: tickX(firstInRoll - pos), x1: tickX(lastInRoll - pos) };
+    // Only shoot boundaries are navigation stops; fine divisions are a visual scale.
+    const tablePos = this.tableProgress(pos);
+    const divisions = narrow ? 4 : 8;
+    const smallStep = TICK / divisions;
+    const ticks: { i: number; x: string; kind: "boundary" | "medium" | "minor"; outside: boolean }[] = [];
+    const bleed = Math.ceil(W / (2 * smallStep)) + 2;
+    for (let i = -bleed; i <= (tableCount - 1) * divisions + bleed; i++) {
+      const table = i / divisions;
+      const outside = table < 0 || table > tableCount - 1;
+      ticks.push({
+        i,
+        x: ((table - tablePos) * TICK).toFixed(2),
+        kind: !outside && i % divisions === 0 ? "boundary" : i % divisions === divisions / 2 ? "medium" : "minor",
+        outside,
+      });
+    }
 
     // Prints pinned to the board, culled to what's near the viewport.
     const pinned: { it: BoardItem; label: string }[] = [];
@@ -810,8 +897,8 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
         </div>
 
         <div className="ns-table" style={{ top: Math.round(topPad + band / 2) + "px", opacity: B !== null ? 0 : 1 }}>
-          {sheets.map(({ i, r, t, dim, start }) => (
-            <div key={i} className="ns-sheet" style={{ width: sheetW + "px", transform: t }}>
+      {sheets.map(({ i, r, t, dim, start, layout, gridCols }) => (
+            <div key={i} className="ns-sheet" data-shoot-index={i} style={{ width: sheetW + "px", transform: t }}>
               <div className="ns-sheet__shadow" />
               <div className="ns-sheet__body" style={{ padding: (pad + 16) + "px " + pad + "px " + pad + "px" }}>
                 <div className="ns-sheet__sheen" />
@@ -819,8 +906,8 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
                   <h2 className="ns-sheet__title">{r.name}</h2>
                   <span className="ns-sheet__date">{r.date}</span>
                 </div>
-                <div className="ns-sheet__grid" style={{ gap: gap + "px", gridTemplateColumns: "repeat(" + cols + ",1fr)", gridAutoRows: RU.toFixed(2) + "px" }}>
-                  {plan.slice(0, Math.max(0, r.photos.length - start)).map((sp, slot) => {
+            <div className="ns-sheet__grid" style={{ gap: gap + "px", gridTemplateColumns: "repeat(" + gridCols + ",1fr)", gridAutoRows: RU.toFixed(2) + "px" }}>
+              {layout.map((sp, slot) => {
                     const k = start + slot;
                     return (
                       <div key={k} className={`ns-frame${i === cit.e && k === cit.k ? " is-current" : ""}`} style={{ gridArea: sp[0] + " / " + sp[1] + " / span " + sp[2] + " / span " + sp[3] }}>
@@ -880,14 +967,15 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
           </div>
         </div>
 
-        <header className={`ns-bar${B !== null ? " ns-bar--board" : ""}`}>
+      <header className={`ns-bar${B !== null ? " ns-bar--board" : " ns-bar--table"}`}>
           <div className="ns-bar__sheen" />
           <div className="ns-bar__gloss" />
           <div className="ns-bar__id">
-            <div className="ns-bar__text">
-              <span className="ns-bar__title">{B === null ? "Nolle Studios" : bName}</span>
-              <span className="ns-bar__meta" aria-live="polite">{B === null ? "Photographic archive" : "Nolle Studios · " + bMeta}</span>
-            </div>
+            <img className="ns-bar__logo" src="/nolle-studios-logo.svg" alt="Nolle Studios" width="800" height="500" draggable={false} />
+            {B !== null && <div className="ns-bar__text">
+              <span className="ns-bar__title">{bName}</span>
+              <span className="ns-bar__meta" aria-live="polite">{bMeta}</span>
+            </div>}
           </div>
           <div className="ns-bar__actions">
             {B !== null && (
@@ -902,35 +990,31 @@ export default class LightTable extends Component<LightTableProps, LightTableSta
           </div>
         </header>
 
-        {B === null && <div className="ns-rail" role="group" aria-label="Photograph navigation">
-          <button type="button" className="ns-rail__step ns-rail__step--previous" aria-label="Previous photograph" disabled={B !== null || ci === 0} onClick={() => this.stepTable(-1)}>
+        {B === null && <div className="ns-rail" role="group" aria-label="Table navigation">
+          <button type="button" className="ns-rail__step ns-rail__step--previous" aria-label="Previous table" disabled={cit.e === 0} onClick={() => this.stepTable(-1)}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5.5-6.5 6.5 6.5 6.5" /></svg>
           </button>
-          <div className="ns-rail__slider" role="slider" tabIndex={B === null ? 0 : -1} aria-label="Browse photographs" aria-valuemin={1} aria-valuemax={N} aria-valuenow={ci + 1} aria-valuetext={`${cur.name}, photograph ${ci + 1} of ${N}`} ref={el => { this.railEl = el; }} onClick={ev => {
+          <div className="ns-rail__slider" role="slider" tabIndex={B === null ? 0 : -1} aria-label="Browse tables by date" aria-valuemin={1} aria-valuemax={tableCount} aria-valuenow={cit.e + 1} aria-valuetext={`${cur.date}, table ${cit.e + 1} of ${tableCount}`} ref={el => { this.railEl = el; }} onClick={ev => {
             if (B !== null || this.moved || !this.railEl) return;
             const rect = this.railEl.getBoundingClientRect();
-            this.target = this.clampPos(Math.round(this.pos + (ev.clientX - rect.left - rect.width / 2) / TICK));
-            this.touch(); this.dirtyNow = true;
+            this.goToRoll(Math.round(this.tableProgress(this.pos) + (ev.clientX - rect.left - rect.width / 2) / TICK));
           }}>
             <div className="ns-rail__track" aria-hidden="true">
               <div className="ns-rail__base" />
-              <div className="ns-rail__ticks" style={{ "--minor-step": microStep.toFixed(2) + "px", "--minor-offset": (-pos * TICK).toFixed(2) + "px" } as CSSProperties}>
+              <div className="ns-rail__ticks">
                 <div className="ns-rail__reel">
                   {ticks.map(t => (
-                    <div key={t.i} className="ns-tick" style={{ transform: "translateX(" + t.x + "px)" }}>
-                      <div className={`ns-tick__bar ns-tick__bar--${t.kind}${t.active ? " is-active" : ""}`} />
+                    <div key={t.i} className={`ns-tick${t.outside ? " ns-tick--outside" : ""}`} style={{ transform: "translateX(" + t.x + "px)" }}>
+                      <div className={`ns-tick__bar ns-tick__bar--${t.kind}`} />
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="ns-rail__span" style={{ left: "calc(50% + " + (span.x0 - TICK / 2).toFixed(2) + "px)", width: Math.max(0, span.x1 - span.x0 + TICK).toFixed(2) + "px" }} />
             </div>
-            <div className="ns-playhead" ref={this.setHead} aria-hidden="true">
-              <div className="ns-playhead__line" />
-            </div>
-            <span className="ns-rail__readout" aria-hidden="true"><strong>{cur.name}</strong><span>{cur.date}</span></span>
+            <div className="ns-playhead" ref={this.setHead} aria-hidden="true" />
+            <span className="ns-rail__readout" aria-hidden="true">{cur.date}</span>
           </div>
-          <button type="button" className="ns-rail__step ns-rail__step--next" aria-label="Next photograph" disabled={B !== null || ci === N - 1} onClick={() => this.stepTable(1)}>
+          <button type="button" className="ns-rail__step ns-rail__step--next" aria-label="Next table" disabled={cit.e === this.rolls.length - 1} onClick={() => this.stepTable(1)}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 5.5 6.5 6.5-6.5 6.5" /></svg>
           </button>
         </div>}

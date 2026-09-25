@@ -48,7 +48,7 @@ npm run test:cms
 python art/verify_media.py
 ```
 
-The static gallery is published from the `gh-pages` branch on GitHub Pages at `nollestudios.com`. It currently serves over HTTP while GitHub provisions the HTTPS certificate. The CMS remains local in WSL; its uploads do not appear on the static site automatically. See [publishing](docs/PUBLISH.md) for the manual update process and [CMS and deployment](docs/CMS.md) for the later Linux server, PostgreSQL, and optional R2 or B2 setup.
+The public gallery is a static GitHub Pages deployment from `gh-pages` at `nollestudios.com`. GitHub Pages has approved its certificate, and **Enforce HTTPS** redirects HTTP traffic to `https://nollestudios.com/`. The CMS remains local in WSL; its uploads require a new static build and publication to appear on the public gallery. See [publishing](docs/PUBLISH.md) for the update process and [CMS and deployment](docs/CMS.md) for the later Linux server, PostgreSQL, and optional R2 or B2 setup.
 
 ## Publishing photographs
 
@@ -60,7 +60,7 @@ The loupe, push pins, tape, cork, badge, and glass transport reflections have ed
 
 | View | Controls |
 | --- | --- |
-| Table | Use the glass slider or its previous/next buttons; press ← / → to browse and Home / End to jump. A loupe appears on fine pointer hover. |
+| Table | Scroll, swipe, or click the tabletop to move between shoots. The glass ticker and its arrows select tables by date; ← / → and Home / End work from the keyboard. Click a photograph to open its shoot board. A loupe appears on fine pointer hover. |
 | Shoot board | Drag to pan; scroll or pinch to zoom; use arrows to pan and + / − to adjust; Esc returns. |
 | Print preview | Use zoom controls, wheel, pinch, or double click to zoom; drag a zoomed print to pan. Previous/next buttons or ← / → change photos; Esc closes. |
 

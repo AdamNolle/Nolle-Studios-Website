@@ -2,7 +2,7 @@
 
 ## Current public deployment
 
-GitHub Pages serves the static gallery from the root of the `gh-pages` branch. That branch contains the built site and a `CNAME` file with `nollestudios.com`. Cloudflare has DNS-only apex and `www` CNAME records pointing to `adamnolle.github.io`. GitHub Pages reports that the build completed. Its HTTPS certificate is still pending, so verify `https://nollestudios.com/` and a full-resolution photograph before treating the custom-domain launch as complete.
+GitHub Pages serves the static gallery from the root of the `gh-pages` branch. That branch contains the built site and a `CNAME` file with `nollestudios.com`. Cloudflare has DNS-only apex and `www` CNAME records pointing to `adamnolle.github.io`. GitHub Pages has approved the certificate and enabled **Enforce HTTPS**; requests to `http://nollestudios.com/` redirect to `https://nollestudios.com/`.
 
 Cloudflare Pages Git integration returned error `8000011`; the current publishing path is GitHub Pages, not Cloudflare Pages. The source branch does not automatically deploy to `gh-pages`.
 
@@ -18,9 +18,9 @@ Cloudflare Pages Git integration returned error `8000011`; the current publishin
    ```
 
 3. Copy the **contents** of `dist/`, including `CNAME`, to the root of a checkout of `gh-pages`. Replace old generated files so withdrawn photographs and obsolete bundles are not left on the public branch. Review the file changes, then commit and push `gh-pages`.
-4. Wait for the GitHub Pages deployment, then check the homepage, `/archive`, and image variants on the custom domain. Confirm HTTPS once GitHub has issued the certificate.
+4. Wait for the GitHub Pages deployment, then check the homepage, `/archive`, and image variants on the HTTPS custom domain. Confirm that HTTP redirects to HTTPS once **Enforce HTTPS** is enabled.
 
-The static build reads the checked-in manifest directly and has no CMS API. It does not serve `/admin/`, PostgreSQL, or an upload endpoint. The CMS in WSL remains a local editing workspace at `http://127.0.0.1:8080/admin/` while its Compose stack runs. CMS uploads and publication state live in local database and media volumes; they are not copied into the repository or the Pages build and will **not** appear publicly by themselves.
+The static build reads the checked-in manifest directly and has no CMS API. It does not serve `/admin/`, PostgreSQL, or an upload endpoint. The CMS in WSL remains a local editing workspace at `http://127.0.0.1:8080/admin/` while its Compose stack runs. CMS uploads and publication state live in local database and media volumes; they are not copied into the repository or the Pages build. Selected images must be exported into `public/media/`, added to the manifest, rebuilt, and republished to appear in the public gallery.
 
 ## Moving the CMS online later
 

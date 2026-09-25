@@ -45,7 +45,7 @@ button { font: inherit; }
 .ns-sheet { position: absolute; left: 0; top: 0; transform-origin: 50% 34%; will-change: transform; }
 .ns-sheet__shadow { position: absolute; left: 10px; right: 10px; bottom: -14px; height: 24px; border-radius: 50%; background: rgba(34,14,2,.45); filter: blur(12px); }
 .ns-sheet__body {
-  position: relative; border-radius: 2px; border: 1px solid rgba(222,228,235,.22);
+  position: relative; border-radius: 2px; border: 1px solid rgba(222,228,235,.22); cursor: pointer;
   background: linear-gradient(176deg, #14161B 0%, #0C0E11 54%, #090A0C 100%);
   box-shadow: 0 26px 48px rgba(30,13,2,.52), 0 4px 10px rgba(30,13,2,.44), inset 0 1px 0 rgba(255,255,255,.11), inset 0 0 0 1px rgba(0,0,0,.45);
 }
@@ -138,6 +138,9 @@ button { font: inherit; }
 .ns-bar__gloss { position: absolute; left: 0; right: 0; top: 0; height: 42%; pointer-events: none; background: linear-gradient(180deg, rgba(255,255,255,.06), transparent); }
 @media (max-width: 599.98px) { .ns-bar__sheen { background-image: url(./assets/glass/header-reflection-mobile.webp); } }
 .ns-bar__id { position: relative; display: flex; align-items: center; gap: 12px; min-width: 0; }
+.ns-bar__logo { display: block; flex: none; width: 116px; height: auto; aspect-ratio: 8 / 5; }
+.ns-bar--table { left: 16px; width: auto; transform: none; padding-right: 16px; background: #000; }
+.ns-bar__logo { mix-blend-mode: screen; }
 .ns-bar__text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .ns-bar__title { font-family: var(--serif); font-size: 23px; line-height: 1.05; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ns-bar__meta { font-family: var(--mono); font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: rgba(238,242,247,.8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -265,87 +268,62 @@ button { font: inherit; }
   right: 0;
   top: var(--base-y);
   height: 1px;
-  background: rgba(232,240,248,.25);
+  background: rgba(232,240,248,.31);
 }
 .ns-rail__ticks { position: absolute; inset: 0 0 auto; height: var(--base-y); overflow: hidden; }
-.ns-rail__ticks::before {
-  content: "";
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  height: 8px;
-  opacity: .84;
-  background-image: linear-gradient(90deg, rgba(220,234,245,.54) 0 1px, transparent 1px);
-  background-size: var(--minor-step, 12px) 100%;
-  background-position: var(--minor-offset, 0px) 0;
-  background-repeat: repeat-x;
-}
 .ns-rail__reel { position: absolute; left: 50%; bottom: 0; width: 0; height: 100%; }
 .ns-tick { position: absolute; left: 0; bottom: 0; width: 0; height: 100%; }
+.ns-tick--outside { opacity: .32; }
 .ns-tick__bar {
   position: absolute;
   bottom: 0;
   left: -.5px;
   width: 1px;
-  height: 12px;
-  border-radius: 1px;
-  background: rgba(222,234,244,.66);
-  opacity: .78;
+  height: 6px;
+  background: rgba(226,237,246,.55);
 }
-.ns-tick__bar--major { height: 18px; opacity: .88; }
-.ns-tick__bar--boundary { left: -1px; width: 2px; height: 24px; background: rgba(244,249,255,.91); opacity: 1; }
-.ns-tick__bar.is-active { background: #fff; opacity: 1; box-shadow: 0 0 7px rgba(233,245,255,.46); }
-.ns-rail__span {
-  position: absolute;
-  top: var(--base-y);
-  height: 2px;
-  pointer-events: none;
-  background: rgba(223,238,249,.6);
-  box-shadow: 0 0 6px rgba(220,238,252,.32);
-}
+.ns-tick__bar--medium { height: 11px; background: rgba(231,240,248,.73); }
+.ns-tick__bar--boundary { height: 22px; background: rgba(246,250,255,.93); }
 .ns-playhead {
   position: absolute;
   left: 50%;
-  top: 3px;
-  width: 8px;
-  height: 29px;
-  margin-left: -4px;
-  pointer-events: none;
-  border: 1px solid rgba(255,255,255,.85);
-  border-radius: 6px;
-  background: linear-gradient(90deg, rgba(250,253,255,.42), rgba(255,255,255,.08) 48%, rgba(238,248,255,.44));
-  box-shadow: 0 1px 5px rgba(7,14,22,.35), 0 0 7px rgba(234,247,255,.25), inset 0 1px 0 rgba(255,255,255,.85);
-}
-.ns-playhead::before { content: ""; position: absolute; left: 50%; top: -6px; transform: translateX(-50%); border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid #f3e8d8; }
-.ns-playhead__line {
-  position: absolute;
-  top: 3px;
-  bottom: 3px;
-  left: 50%;
+  top: 2px;
   width: 1px;
+  height: calc(var(--base-y) - 2px);
+  margin-left: -.5px;
+  pointer-events: none;
+  background: rgba(255,255,255,.98);
+  box-shadow: 0 0 4px rgba(224,242,255,.75);
+}
+.ns-playhead::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -1px;
+  width: 5px;
+  height: 5px;
   transform: translateX(-50%);
-  border-radius: 1px;
-  background: rgba(255,255,255,.92);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 5px rgba(233,246,255,.65);
 }
 .ns-rail__readout {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 6px;
+  bottom: 8px;
   z-index: 2;
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 8px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   text-align: center;
   pointer-events: none;
-  color: rgba(247,250,253,.96);
+  color: rgba(247,250,253,.94);
   text-shadow: 0 1px 5px rgba(0,0,0,.5);
+  font: 500 11px/1 var(--mono);
+  letter-spacing: .17em;
+  text-transform: uppercase;
 }
-.ns-rail__readout strong { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 400 14px/1 var(--serif); }
-.ns-rail__readout span { flex: none; color: rgba(232,241,249,.78); font: 500 10px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
 @media (max-width: 759.98px) {
   .ns-rail::after { background-image: url(./assets/glass/transport-reflection-mobile.webp); }
 }
@@ -424,6 +402,8 @@ button { font: inherit; }
 /* Must match `narrow` (stage width < 760) in LightTable.tsx. */
 @media (max-width: 759.98px) {
   .ns-bar { top: 10px; width: calc(100% - 20px); padding: 8px 8px 8px 12px; border-radius: 4px; }
+  .ns-bar--table { left: 10px; width: auto; padding-right: 12px; }
+  .ns-bar__logo { width: 90px; }
   .ns-bar__title { font-size: 19px; }
   .ns-sheet__title { font-size: clamp(20px, 5.5vw, 23px); }
   .ns-sheet__date { font-size: 9.5px; letter-spacing: .06em; }
@@ -553,11 +533,11 @@ button { font: inherit; }
   }
   .ns-rail__step { width: 44px; height: 44px; border-radius: 14px; }
   .ns-rail__slider { height: 52px; border-radius: 14px; }
-  .ns-tick__bar { height: 10px; }
-  .ns-tick__bar--major { height: 15px; }
-  .ns-tick__bar--boundary { height: 20px; }
-  .ns-playhead { top: 3px; height: 25px; }
-  .ns-rail__readout { bottom: 5px; gap: 6px; }
+  .ns-tick__bar { height: 5px; }
+  .ns-tick__bar--medium { height: 9px; }
+  .ns-tick__bar--boundary { height: 19px; }
+  .ns-playhead { height: 23px; }
+  .ns-rail__readout { bottom: 7px; font-size: 10px; letter-spacing: .12em; }
 }
 @media (max-height: 520px) and (min-width: 760px) {
   .ns-rail {
@@ -572,14 +552,14 @@ button { font: inherit; }
   }
   .ns-rail__step { width: 44px; height: 44px; border-radius: 14px; }
   .ns-rail__slider { height: 48px; border-radius: 13px; }
-  .ns-tick__bar { height: 9px; }
-  .ns-tick__bar--major { height: 14px; }
-  .ns-tick__bar--boundary { height: 19px; }
-  .ns-playhead { top: 3px; height: 23px; }
-  .ns-rail__readout { bottom: 5px; gap: 6px; }
+  .ns-tick__bar { height: 5px; }
+  .ns-tick__bar--medium { height: 9px; }
+  .ns-tick__bar--boundary { height: 17px; }
+  .ns-playhead { height: 21px; }
+  .ns-rail__readout { bottom: 6px; font-size: 10px; letter-spacing: .12em; }
 }
 @media (forced-colors: active) {
   .ns-rail, .ns-rail__step, .ns-rail__slider, .ns-playhead { border: 1px solid CanvasText; }
   .ns-rail__step { color: ButtonText; }
-  .ns-tick__bar, .ns-playhead__line { background: CanvasText; }
+  .ns-tick__bar, .ns-playhead { background: CanvasText; }
 }
