@@ -1,7 +1,7 @@
 import { batch, createMemo, createRoot, createSignal } from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
 import type { AdminContent, AltTextStatus, CollectionDto, PhotoDto, ShootDto } from "../shared/api";
-import { api } from "./api";
+import { api, signedIn } from "./api";
 
 // One reactive copy of the Content Room's catalog. Reloads reconcile by id,
 // so an edit only touches the rows that changed instead of rebuilding screens.
@@ -36,6 +36,8 @@ export const previewUrl = (shootId: string) => siteUrl(`?preview=1&shoot=${encod
 
 let toastTimer = 0;
 export function notice(text: string, error = false) {
+  // A lapsed session returns to sign-in, which explains itself.
+  if (error && signedIn() === false) return;
   clearTimeout(toastTimer);
   setToast({ text, error });
   toastTimer = window.setTimeout(() => setToast(null), error ? 7000 : 4000);
