@@ -77,7 +77,9 @@ export function refract(el: HTMLElement, options: { strength?: number; frost?: n
   if (!supported) return;
   const id = `ns-glass-${++count}`;
   const host = document.createElementNS(SVG, "g");
-  host.innerHTML = filterMarkup(id, options.strength ?? 28, options.frost ?? 1.6);
+  // On a thin bar the shoulder covers much of its height, so a strong bend
+  // squeezes the backdrop into streaks; 16 px reads as clear, bent glass.
+  host.innerHTML = filterMarkup(id, options.strength ?? 16, options.frost ?? 0.8);
   filterDefs().append(host);
   const filter = host.firstElementChild as SVGFilterElement, feImage = filter.querySelector("feImage")!;
   let frame = 0, last = "";

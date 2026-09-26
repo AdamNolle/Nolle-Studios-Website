@@ -224,10 +224,10 @@ export default function Preview(props: PreviewProps) {
         </Show>
       </figure>
     </div>
-    <button type="button" class="ns-glass ns-nav ns-nav--prev" ref={el => refract(el, { strength: 22 })} aria-label="Previous photograph" onClick={() => go(-1)}><Arrow back /></button>
-    <button type="button" class="ns-glass ns-nav ns-nav--next" ref={el => refract(el, { strength: 22 })} aria-label="Next photograph" onClick={() => go(1)}><Arrow /></button>
+    <button type="button" class="ns-glass ns-nav ns-nav--prev" ref={el => refract(el, { strength: 12 })} aria-label="Previous photograph" onClick={() => go(-1)}><Arrow back /></button>
+    <button type="button" class="ns-glass ns-nav ns-nav--next" ref={el => refract(el, { strength: 12 })} aria-label="Next photograph" onClick={() => go(1)}><Arrow /></button>
     <Show when={!isVideo()}>
-      <div class="ns-glass ns-preview-zoom" ref={el => refract(el, { strength: 22 })} role="group" aria-label="Photo preview zoom">
+      <div class="ns-glass ns-preview-zoom" ref={el => refract(el, { strength: 12 })} role="group" aria-label="Photo preview zoom">
         <button type="button" aria-label="Zoom photo out" onClick={() => zoomAt(0.8)}>−</button>
         <output ref={pct} aria-label="Photo zoom level">100%</output>
         <button type="button" aria-label="Zoom photo in" onClick={() => zoomAt(1.25)}>+</button>

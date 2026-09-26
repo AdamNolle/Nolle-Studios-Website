@@ -151,7 +151,7 @@ export function Transport(props: TransportProps) {
 // ---- Idle hint ----------------------------------------------------------------
 
 export function Hint(props: { on: boolean; narrow: boolean; onDismiss(): void }) {
-  return <div class="ns-hint ns-glass" ref={el => refract(el, { strength: 24 })} classList={{ "is-on": props.on }} aria-hidden={!props.on}>
+  return <div class="ns-hint ns-glass" ref={el => refract(el, { strength: 12 })} classList={{ "is-on": props.on }} aria-hidden={!props.on}>
     <For each={props.narrow ? HINTS_TOUCH : HINTS_DESKTOP}>{([key, label]) =>
       <span class="ns-hint__item"><kbd>{key}</kbd>{label}</span>}</For>
     <button type="button" class="ns-hint__close" aria-label="Dismiss hints" tabIndex={props.on ? 0 : -1} onClick={() => props.onDismiss()}>×</button>
