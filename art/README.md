@@ -36,31 +36,22 @@ python art/verify_media.py
 
 The exporter writes 640, 1440, and 3200 pixel maximum-side AVIF, WebP, and JPEG versions to `public/media/<shoot-id>/`, plus a public `archive.json` for the site and CMS seed. It applies orientation, converts color to sRGB when a profile exists, and rebuilds each output from pixel data so EXIF, GPS, XMP, IPTC, and maker notes never enter the published files. Run the verifier before deploying. Review the actual pictures and captions as a separate editorial step.
 
-## Blender pins and tape
+## Blender materials for the light table
 
-`pins.py` models the coloured injection-moulded pin head, brushed steel neck, and flange. `tape.py` models thin, torn translucent film with irregular dispenser cuts, small trapped-air lifts, and a ridge where a strip crosses a print edge. Both scripts render transparent PNG masters with Blender 5.1. They use OptiX when available and fall back to CPU Cycles.
+Every texture and sprite on the table is made here: nothing is a stock or downloaded image. All renders use Cycles on the GPU: Metal on Apple silicon, then OptiX, CUDA, HIP or oneAPI, falling back to the CPU (`use_gpu` in `common.py`). On an M1 Pro each asset renders in seconds to a couple of minutes. Run from the repository root with Blender 5.2:
 
-From the repository root on Windows:
-
-```powershell
-& 'C:\Program Files\Blender Foundation\Blender 5.1\blender.exe' -b -P art/pins.py -- outdir=art/renders/pins size=384 samples=96
-& 'C:\Program Files\Blender Foundation\Blender 5.1\blender.exe' -b -P art/tape.py -- outdir=art/renders/tape samples=128
-python art/finish_sprites.py pins art/renders/pins src/assets/pins
-python art/finish_sprites.py tape art/renders/tape src/assets/tape
-python art/preview_sprites.py
+```bash
+blender -b -P art/cork.py -- out=art/renders/cork.png size=1536 samples=128
+python3 art/finish_cork.py art/renders/cork.png src/assets/cork-tile.webp   # also writes the AVIF
+blender -b -P art/liquid_glass.py        # src/assets/glass/liquid-glass.webp and liquid-glass-normal.png
+blender -b -P art/preview_loupe.py       # src/assets/loupe/preview-loupe.webp
+blender -b -P art/pins.py                # src/assets/pins/pin-<colour>-<1|2>.webp
+blender -b -P art/tape.py -- outdir=art/renders/tape samples=128
+python3 art/finish_tape.py art/renders/tape src/assets/tape
 ```
 
-`finish_sprites.py` adds warm, compact shadows without baking any photo or cork pixels into the transparent WebP. It writes nine 256×256 pin sprites, four 768×274 edge tape sprites, and two 512×256 corner tape sprites. `preview_sprites.py` writes `art/renders/proof.png`, a display-scale composite on a real site photo and cork. The PNG masters and proof in `art/renders/` are ignored by Git; the source scripts and WebP outputs are versioned.
-
-## Glass transport reflections
-
-`glass_transport.py` models an optical-glass capsule, bevels its edges, gives it minute surface roughness, and renders studio light reflections in Blender. Its final WebP has a clear center and a maximum opacity of about 12%, so the browser's live glass backdrop and control labels remain legible. Rebuild both responsive assets from the repository root:
-
-```powershell
-& 'C:\Program Files\Blender Foundation\Blender 5.1\blender.exe' -b -P art/glass_transport.py
-$env:NOLLE_GLASS_VARIANT='mobile'
-& 'C:\Program Files\Blender Foundation\Blender 5.1\blender.exe' -b -P art/glass_transport.py
-Remove-Item Env:NOLLE_GLASS_VARIANT
-```
-
-The editable scenes are `art/glass_transport.blend` and `art/glass_transport_mobile.blend`; the RGBA overlays are `src/assets/glass/transport-reflection.webp` (1600×220) and `src/assets/glass/transport-reflection-mobile.webp` (900×200). Place an overlay above the rail's backdrop and below interactive content. Stretch each matching variant across the rail with `background-size: 100% 100%` and `pointer-events: none`. Render masters and proofs under `art/renders/` remain local.
+- **Cork** (`cork.py`, `finish_cork.py`): a procedural board of layered Voronoi granules with true displacement, sampled on a torus so the tile repeats seamlessly. The finishing step grades it to the table's tone and writes WebP and AVIF.
+- **Liquid glass** (`liquid_glass.py`): a thick glass slab with a pillowed shoulder, lit by Blender's bundled CC0 studio HDRI and one lamp to the upper left. Only the shoulder keeps its reflections, so the rim carries a bright line along the top that rolls around the corner rather than an even outline. CSS lays it over every bar and panel as a nine-slice `border-image`. The same outline, cut from a deep block with a round shoulder, is rendered a second time as a surface-normal map; `src/table/glass.ts` nine-slices it to each bar and feeds it to an SVG `feDisplacementMap`, so in Chromium the cork and photographs bend at the rim like real glass.
+- **Loupe** (`preview_loupe.py`): a stand loupe seen from overhead, with a clear acrylic light-collecting skirt, a black anodised barrel with turned machining, and a brushed aluminium bezel. The aperture stays transparent for the live magnified crop.
+- **Push pins** (`pins.py`): moulded push pins (dished flare, fluted grip, thumb disc, steel needle) in red, blue, green, yellow, and white, each at two leans. Reflections come from Blender's CC0 interior HDRI, and a shadow catcher records each pin's real shadow on the print.
+- **Tape** (`tape.py`, `finish_tape.py`): thin, torn, translucent film as short corner pieces and longer strips. The board hangs each print by tape in one of four placements (all corners, top corners, a diagonal pair, or one strip across the top) or by one, two, or four pins, and neighbouring prints never repeat.

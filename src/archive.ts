@@ -10,6 +10,9 @@ export interface ArchivePhoto {
   mid: string;
   full: string;
   formats: PhotoFormats;
+  kind?: "image" | "video";
+  duration?: number;
+  video?: { mp4?: string; mp4_720?: string; webm?: string };
   width?: number;
   height?: number;
 }
@@ -38,7 +41,7 @@ function formatValue(photo: Record<string, unknown>, format: string, size: strin
   return isRecord(sizes) ? stringValue(sizes[size]) : "";
 }
 
-export function mediaUrl(value: unknown): string {
+function mediaUrl(value: unknown): string {
   const url = stringValue(value);
   if (!url) return "";
   if (/^(https?:)?\/\//i.test(url) || url.startsWith("data:")) return url;
@@ -46,15 +49,16 @@ export function mediaUrl(value: unknown): string {
   return BASE + url.replace(/^\.\//, "");
 }
 
+const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+
+/** "2026-09-20" → "20 SEP 2026", the form printed on the contact sheets. */
 export function displayDate(value: unknown): string {
   const dateString = stringValue(value);
   if (!dateString) return "DATE UNKNOWN";
   const match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (!match) return dateString.toUpperCase();
-  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
-  return new Intl.DateTimeFormat("en-US", {
-    day: "2-digit", month: "short", year: "numeric", timeZone: "UTC",
-  }).format(date).replace(",", "").toUpperCase();
+  const month = match ? MONTHS[Number(match[2]) - 1] : undefined;
+  if (!match || !month) return dateString.toUpperCase();
+  return `${match[3]} ${month} ${match[1]}`;
 }
 
 function normalizeFormats(value: unknown): PhotoFormats {
@@ -64,15 +68,19 @@ function normalizeFormats(value: unknown): PhotoFormats {
     if (!isRecord(rawSizes)) continue;
     const sizes: Record<string, string> = {};
     for (const [size, rawUrl] of Object.entries(rawSizes)) {
-      const url = mediaUrl(rawUrl);
-      if (url) sizes[size] = url;
+      // CMS uploads also list every width: { widths: { "640": url, … } }.
+      const entries = size === "widths" && isRecord(rawUrl) ? Object.entries(rawUrl) : [[size, rawUrl] as const];
+      for (const [key, value] of entries) {
+        const url = mediaUrl(value);
+        if (url) sizes[key] = url;
+      }
     }
     formats[format] = sizes;
   }
   return formats;
 }
 
-export function normalizedArchive(data: unknown): ArchiveShoot[] | null {
+function normalizedArchive(data: unknown): ArchiveShoot[] | null {
   if (!isRecord(data) || !Array.isArray(data.shoots)) return null;
   const shoots = data.shoots.flatMap((rawShoot: unknown, index: number): ArchiveShoot[] => {
     if (!isRecord(rawShoot)) return [];
@@ -93,6 +101,13 @@ export function normalizedArchive(data: unknown): ArchiveShoot[] | null {
         mid: mediaUrl(rawMid || formatValue(rawPhoto, "jpeg", "mid") || rawFull || rawThumb),
         full: mediaUrl(rawFull || formatValue(rawPhoto, "jpeg", "full") || rawMid || rawThumb),
         formats: normalizeFormats(rawPhoto.formats),
+        kind: rawPhoto.kind === "video" ? "video" : "image",
+        duration: typeof rawPhoto.duration === "number" ? rawPhoto.duration : 0,
+        video: isRecord(rawPhoto.video) ? {
+          mp4: mediaUrl(rawPhoto.video.mp4),
+          mp4_720: mediaUrl(rawPhoto.video.mp4_720),
+          webm: mediaUrl(rawPhoto.video.webm),
+        } : undefined,
       };
       if (typeof rawPhoto.width === "number" && Number.isFinite(rawPhoto.width)) photo.width = rawPhoto.width;
       if (typeof rawPhoto.height === "number" && Number.isFinite(rawPhoto.height)) photo.height = rawPhoto.height;
@@ -136,16 +151,18 @@ async function readJson(url: string, timeout = 4000): Promise<unknown> {
   }
 }
 
-export async function loadArchive(): Promise<ArchiveShoot[]> {
+export async function loadArchive(privatePreview = false): Promise<ArchiveShoot[]> {
+  if (privatePreview) {
+    const shoots = normalizedArchive(await readJson(`${BASE}api/admin/preview`));
+    if (!shoots) throw new Error("Private preview is unavailable");
+    return shoots;
+  }
   if (import.meta.env.MODE !== "static") {
-    try {
-      const shoots = normalizedArchive(await readJson(`${BASE}api/site`, 2500));
-      if (shoots) return shoots;
-    } catch { /* Local API unavailable. */ }
+    const shoots = normalizedArchive(await readJson(`${BASE}api/site`, 2500));
+    if (!shoots) throw new Error("Site catalog is unavailable");
+    return shoots;
   }
-  try {
-    return normalizedArchive(await readJson(`${BASE}media/archive.json`)) || [];
-  } catch {
-    return [];
-  }
+  const shoots = normalizedArchive(await readJson(`${BASE}media/archive.json`));
+  if (!shoots) throw new Error("Static archive is unavailable");
+  return shoots;
 }

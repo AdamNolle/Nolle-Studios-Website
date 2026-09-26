@@ -1,8 +1,11 @@
 node_modules
 dist
+dist-admin
 .git
 .local
 .env
 .env.*
 !.env.example
 *.log
+art
+docs

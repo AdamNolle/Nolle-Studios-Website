@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="224" height="64" viewBox="0 0 224 64" role="img" aria-labelledby="header-title header-desc">
   <title id="header-title">Nolle Studios</title>
-  <desc id="header-desc">Three bright blue, green, and red squares beside the Nolle Studios wordmark.</desc>
-  <g id="mark">
-    <rect width="64" height="64" fill="#000"/>
-    <path fill="#2a35ff" d="M32 4h28v28H32z"/>
-    <path fill="#5ef50d" d="M4 32h28v28H4z"/>
-    <path fill="#ff1818" d="M32 32h28v28H32z"/>
+  <desc id="header-desc">A four-square black, blue, green, and red mark beside the Nolle Studios wordmark.</desc>
+  <g id="mark" shape-rendering="crispEdges">
+    <path fill="#000" d="M0 0h32v32H0z"/>
+    <path fill="#2a35ff" d="M32 0h32v32H32z"/>
+    <path fill="#5ef50d" d="M0 32h32v32H0z"/>
+    <path fill="#ff1818" d="M32 32h32v32H32z"/>
   </g>
   <g id="nolle" fill="#fff" transform="matrix(0.02832031 0 0 -0.02832031 78.3291 44.2432)">
     <path transform="translate(0.0000)" d="M1155 1262 975 1288V1341H1432V1288L1260 1262V0H1163L336 1206V80L516 53V0H59V53L231 80V1262L59 1288V1341H465L1155 348Z"/>

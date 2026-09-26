@@ -2,9 +2,12 @@
 #
 #   python3 art/finish_cork.py <cork render.png> src/assets/cork-tile.webp
 #
+# Writes the WebP and an AVIF beside it.
+#
 # The target is the mean and spread of the cork texture in the original
 # Light Table design, which the site's overlays were balanced against.
 import sys
+from pathlib import Path
 
 from PIL import Image, ImageStat
 
@@ -17,4 +20,6 @@ mean = ImageStat.Stat(im).mean
 bands = [b.point(lambda v, m=m, t=t: round((v - m) * CONTRAST + t)) for b, m, t in zip(im.split(), mean, TARGET_MEAN)]
 out = Image.merge("RGB", bands)
 out.save(dst, quality=76, method=6)
+# The site prefers AVIF, about half the size of the WebP at the same look.
+out.save(Path(dst).with_suffix(".avif"), quality=45, speed=4)
 print(dst, [round(x) for x in ImageStat.Stat(out).mean], [round(x) for x in ImageStat.Stat(out).stddev])

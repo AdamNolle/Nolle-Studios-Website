@@ -21,14 +21,30 @@ def reset():
     return bpy.context.scene
 
 
-def cycles(scene, size, samples, transparent=False):
-    prefs = bpy.context.preferences.addons["cycles"].preferences
-    prefs.compute_device_type = "METAL"
-    prefs.get_devices()
-    for d in prefs.devices:
-        d.use = d.type == "METAL"
+def use_gpu(scene):
+    """Render Cycles on the GPU: Metal (Apple), OptiX, CUDA, HIP or oneAPI, else the CPU."""
     scene.render.engine = "CYCLES"
-    scene.cycles.device = "GPU"
+    prefs = bpy.context.preferences.addons["cycles"].preferences
+    for backend in ("METAL", "OPTIX", "CUDA", "HIP", "ONEAPI"):
+        try:
+            prefs.compute_device_type = backend
+        except TypeError:
+            continue
+        prefs.get_devices()
+        gpus = [d for d in prefs.devices if d.type == backend]
+        if gpus:
+            for device in prefs.devices:
+                device.use = device.type == backend
+            scene.cycles.device = "GPU"
+            print(f"Rendering on {backend}: {', '.join(d.name for d in gpus)}")
+            return backend
+    scene.cycles.device = "CPU"
+    print("No GPU backend found; rendering on the CPU")
+    return "CPU"
+
+
+def cycles(scene, size, samples, transparent=False):
+    use_gpu(scene)
     scene.cycles.samples = samples
     scene.cycles.use_denoising = True
     scene.cycles.denoiser = "OPENIMAGEDENOISE"

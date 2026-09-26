@@ -1,12 +1,14 @@
-"""Render translucent torn cellulose tape for print edges and corners.
+"""Render the clear tape that holds prints to the board.
 
-Blender 5.1:
+Blender 5.2 (Cycles on the GPU):
   blender -b -P art/tape.py -- outdir=art/renders/tape samples=128
+  python3 art/finish_tape.py art/renders/tape src/assets/tape
 
-Four slightly skewed, longer strips straddle photograph top edges. Two short
-strips are centred on photograph corners and rotated in CSS. All are rendered
-over transparency so the actual photograph or cork remains visible through
-the film. finish_sprites.py adds soft contact shadows and exports WebP.
+Thin, torn, translucent film in two shapes: short pieces laid diagonally
+across a photograph corner, and longer strips that straddle an edge. CSS
+rotates and places them. Everything renders over transparency so the
+photograph or cork shows through the film; finish_tape.py adds a soft
+contact shadow and exports WebP.
 """
 
 import math
@@ -17,18 +19,12 @@ import sys
 import bpy
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from common import Nodes, args, reset, srgb, top_camera, world  # noqa: E402
+from common import Nodes, args, reset, srgb, top_camera, use_gpu, world  # noqa: E402
 
 
-TAPE_WIDTH = 19.0  # 3/4-inch real-world tape, in millimetres.
-VARIANTS = [
-    ("tape-1", 69.0, -4.2, 13, False),
-    ("tape-2", 65.0, 3.1, 29, False),
-    ("tape-3", 73.0, -2.0, 43, False),
-    ("tape-4", 67.0, 5.0, 71, False),
-    ("tape-corner-1", 41.0, -1.4, 97, True),
-    ("tape-corner-2", 38.0, 2.4, 131, True),
-]
+TAPE_WIDTH = 19.0  # 3/4-inch tape, in millimetres.
+# (shape, length in millimetres, angle, seed): two cut lengths per shape.
+SHAPES = [("corner", 41.0, -1.4, 97), ("corner", 38.0, 2.4, 131), ("strip", 70.0, -2.2, 13), ("strip", 64.0, 1.6, 29)]
 
 
 def setup_cycles(scene, samples):
@@ -43,18 +39,7 @@ def setup_cycles(scene, samples):
     scene.cycles.samples = samples
     scene.cycles.use_denoising = True
     scene.cycles.denoiser = "OPENIMAGEDENOISE"
-    prefs = bpy.context.preferences.addons["cycles"].preferences
-    try:
-        prefs.compute_device_type = "OPTIX"
-        prefs.get_devices()
-        devices = [d for d in prefs.devices if d.type == "OPTIX"]
-        if not devices:
-            raise RuntimeError("No OptiX device")
-        for device in prefs.devices:
-            device.use = device.type == "OPTIX"
-        scene.cycles.device = "GPU"
-    except Exception:
-        scene.cycles.device = "CPU"
+    use_gpu(scene)
 
 
 def area_light(scene, name, position, energy, size, size_y, rgb):
@@ -70,6 +55,7 @@ def area_light(scene, name, position, energy, size, size_y, rgb):
 
 
 def film_material():
+    """Clear adhesive film: uneven glue, with torn and trapped-air edges that scatter more."""
     material = bpy.data.materials.new("Translucent adhesive film")
     material.use_nodes = True
     material.node_tree.nodes.clear()
@@ -78,7 +64,6 @@ def film_material():
     xyz = n.add("SeparateXYZ", inputs={"Vector": coordinates})
     x, y = xyz.outputs[0], xyz.outputs[1]
     half_length = n.add("Value")
-    body_density = n.add("Value")
     grain = n.add("TexNoise", inputs={"Vector": coordinates, "Scale": 0.9, "Detail": 2.8, "Roughness": 0.64}).outputs["Fac"]
     micro = n.add("TexNoise", inputs={"Vector": coordinates, "Scale": 7.0, "Detail": 1.5}).outputs["Fac"]
     outer_edge = n.add("MapRange", inputs={
@@ -91,9 +76,8 @@ def film_material():
         "From Max": half_length.outputs[0],
         "To Min": 0.0, "To Max": 1.0,
     }).outputs[0]
-    # Uneven adhesive body is subtle; torn edges and trapped-air edges have
-    # more scatter, while most of the photograph stays visible through it.
-    opacity = n.math("ADD", body_density.outputs[0], n.math("MULTIPLY", grain, 0.14))
+    # Most of the photograph stays visible through the film.
+    opacity = n.math("ADD", 0.27, n.math("MULTIPLY", grain, 0.14))
     opacity = n.math("ADD", opacity, n.math("MULTIPLY", outer_edge, 0.21))
     opacity = n.math("ADD", opacity, n.math("MULTIPLY", cut_edge, 0.14))
     roughness = n.math("ADD", 0.24, n.math("MULTIPLY", grain, 0.12))
@@ -109,14 +93,14 @@ def film_material():
     transparent = n.add("BsdfTransparent")
     mix = n.add("MixShader", inputs=[opacity, transparent.outputs[0], body.outputs[0]])
     n.add("OutputMaterial", inputs={"Surface": mix.outputs[0]})
-    return material, half_length, body_density
+    return material, half_length
 
 
 def film_mesh(scene, material, length, angle, seed, corner):
     randomizer = random.Random(seed)
     nx, ny = 140, 42
     creases = []
-    for _ in range(3 if not corner else 2):
+    for _ in range(2 if corner else 3):
         creases.append((randomizer.uniform(-length * 0.40, length * 0.40),
                         randomizer.uniform(-6, 6),
                         randomizer.uniform(-0.8, 0.8),
@@ -141,10 +125,6 @@ def film_mesh(scene, material, length, angle, seed, corner):
             x = left + s * (right - left)
             yy = y + (waviness if j == 0 else -waviness if j == ny else 0)
             z = 0.055
-            if not corner:
-                # The photograph edge lifts the film only a fraction of a
-                # millimetre. It is visible as a raking-light ridge.
-                z += .20 * math.exp(-((yy + .4) / 1.0) ** 2)
             for cx, cy, slant, amp in creases:
                 across = (x - cx) * math.cos(slant) + (yy - cy) * math.sin(slant)
                 along = -(x - cx) * math.sin(slant) + (yy - cy) * math.cos(slant)
@@ -175,22 +155,23 @@ def main():
     scene = reset()
     setup_cycles(scene, a["samples"])
     world(scene, srgb((245, 239, 230)), .8)
-    camera = top_camera(scene, ortho_scale=84, height=75)
+    camera = top_camera(scene, ortho_scale=58, height=75)
     area_light(scene, "Large overhead diffusion", (-15, 14, 30), 750, 25, 18, (255, 251, 243))
     area_light(scene, "Narrow raking reflection", (4, -18, 19), 300, 3.8, 21, (248, 251, 255))
-    material, half_length, body_density = film_material()
+    scene.render.resolution_percentage = 100
 
-    for name, length, angle, seed, corner in VARIANTS:
+    material, half_length = film_material()
+    for index, (shape, length, angle, seed) in enumerate(SHAPES):
+        corner = shape == "corner"
         if corner:
             scene.render.resolution_x, scene.render.resolution_y = 672, 336
             camera.data.ortho_scale = 58
         else:
             scene.render.resolution_x, scene.render.resolution_y = 960, 343
             camera.data.ortho_scale = 84
-        scene.render.resolution_percentage = 100
         half_length.outputs[0].default_value = length / 2
-        body_density.outputs[0].default_value = .27 if corner else .15
-        obj = film_mesh(scene, material, length, angle, seed, corner)
+        obj = film_mesh(scene, material, length, angle, seed + 5, corner)
+        name = f"tape-{shape}-{index % 2 + 1}"
         scene.render.filepath = os.path.abspath(os.path.join(a["outdir"], name + ".png"))
         bpy.ops.render.render(write_still=True)
         bpy.data.objects.remove(obj, do_unlink=True)
