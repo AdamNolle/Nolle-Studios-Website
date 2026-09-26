@@ -1,5 +1,5 @@
 import { For, Show, createEffect, createMemo, createSignal, on, onCleanup, onMount } from "solid-js";
-import type { ArchiveShoot } from "../archive";
+import type { ArchivePhoto, ArchiveShoot } from "../archive";
 import { background, mid, srcset } from "./media";
 import { refract } from "./glass";
 import { DownloadIcon } from "./Chrome";
@@ -48,6 +48,11 @@ export default function Preview(props: PreviewProps) {
   });
   const stageW = () => Math.max(90, props.width - inset().side * 2);
   const stageH = () => Math.max(90, props.height - inset().top - inset().bottom);
+  /** The photograph as large as the stage allows, at its own proportions. */
+  const fitted = (p: ArchivePhoto) => {
+    const a = p.width && p.height ? p.width / p.height : 1.5, w = Math.min(stageW(), stageH() * a);
+    return { width: `${Math.round(w)}px`, height: `${Math.round(w / a)}px` };
+  };
   // Picks the file for the screen; zooming in asks for a larger one.
   const [detail, setDetail] = createSignal(1);
 
@@ -213,7 +218,7 @@ export default function Preview(props: PreviewProps) {
               <source type="image/avif" srcset={srcset(current, "avif")} sizes={`${Math.ceil(stageW() * detail())}px`} />
               <img class="ns-lift__img" src={mid(current)} srcset={srcset(current, "webp")} sizes={`${Math.ceil(stageW() * detail())}px`}
                 alt={current.alt} draggable={false} decoding="async" fetchpriority="high"
-                style={{ "max-width": `${stageW()}px`, "max-height": `${stageH()}px`, "aspect-ratio": current.width && current.height ? `${current.width} / ${current.height}` : undefined }}
+                style={fitted(current)}
                 onLoad={event => { event.currentTarget.classList.add("is-loaded"); apply(); }} />
             </picture>}
         </Show>

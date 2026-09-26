@@ -11,9 +11,11 @@ function widthsOf(photo: ArchivePhoto, format: Format): [string, number][] {
   if (!sizes) return [];
   const listed = Object.entries(sizes).filter(([key]) => /^\d+$/.test(key)).map(([key, url]) => [url, Number(key)] as [string, number]);
   if (listed.length) return listed.sort((a, b) => a[1] - b[1]);
-  // Curated manifest: thumb, mid and full at 640, 1440 and 3200 pixels.
-  const full = Math.min(3200, photo.width || 3200);
-  return ([[sizes.thumb, Math.min(640, full)], [sizes.mid, Math.min(1440, full)], [sizes.full, full]] as [string | undefined, number][])
+  // Curated manifest: thumb, mid and full are 640, 1440 and 3200 pixels on
+  // the long side, so a portrait's files are narrower than those numbers.
+  const w = photo.width || 3200, h = photo.height || w, long = Math.max(w, h);
+  const across = (side: number) => Math.round(w * Math.min(1, side / long));
+  return ([[sizes.thumb, across(640)], [sizes.mid, across(1440)], [sizes.full, across(3200)]] as [string | undefined, number][])
     .filter((entry): entry is [string, number] => !!entry[0])
     .filter((entry, index, all) => all.findIndex(other => other[1] === entry[1]) === index);
 }

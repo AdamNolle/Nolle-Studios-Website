@@ -18,6 +18,7 @@
 - Unknown paths on the static site now show a branded "Nothing on this table" page (GitHub Pages serves it from `404.html`) with a link back to the table, instead of GitHub's default 404. `/archive/` still opens the table.
 - Shared links show a 1200×630 preview of the light table (`og:image`, `summary_large_image`), and `robots.txt` and `sitemap.xml` are published.
 - Keyboard: the header now comes first in the DOM, so Tab reaches the site navigation before the photographs. Focus rings on contact-sheet frames, transport chips, and full-height glass-bar buttons were clipped by their parents and are now drawn inside.
+- Portrait photographs looked small and soft: the curated manifest's `640`/`1440`/`3200` files are sized on the long side, but the srcsets described them as that wide, so the browser thought a portrait's 1440 file was 1440 px across. Srcsets now give real widths (a test covers portrait, landscape, and small originals), and the preview sizes each photograph to fill the stage. A portrait on a 390×844 phone went from 247×370 to 370×555 and loads a sharper file.
 - The liquid-glass rim was re-rendered with the studio HDRI and one lamp, keeping only the shoulder's reflections. In Chromium, a Blender normal map drives an SVG displacement filter, so the backdrop refracts at the rim; Safari and Firefox keep the frosted fallback.
 
 
