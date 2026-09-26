@@ -22,6 +22,15 @@ export const DownloadIcon = () =>
 const Chevron = (props: { back?: boolean }) =>
   <svg viewBox="0 0 24 24" aria-hidden="true"><path d={props.back ? "M15 6l-6 6 6 6" : "M9 6l6 6-6 6"} /></svg>;
 
+/** Fade a scroll area's lower edge while more of it is below, since it has no scroll bar. */
+function fadeWhileScrollable(el: HTMLElement) {
+  const update = () => el.classList.toggle("is-overflowing", el.scrollTop + el.clientHeight < el.scrollHeight - 2);
+  const observer = new ResizeObserver(update);
+  observer.observe(el);
+  el.addEventListener("scroll", update, { passive: true });
+  onCleanup(() => observer.disconnect());
+}
+
 // ---- Header -----------------------------------------------------------------
 
 interface HeaderProps {
@@ -50,7 +59,7 @@ export function Header(props: HeaderProps) {
           <img src="/nolle-studios-mark.svg" alt="" width="38" height="38" draggable={false} />
         </button>
       }>
-        <button type="button" class="ns-pill ns-pill--solid" onClick={() => props.onBack()} aria-label={props.narrow ? "Back to the tables" : undefined}>
+        <button type="button" class="ns-pill ns-pill--solid ns-pill--back" onClick={() => props.onBack()} aria-label={props.narrow ? "Back to the tables" : undefined}>
           <Chevron back /><span class="ns-wide">Tables</span>
         </button>
       </Show>
@@ -183,7 +192,7 @@ export function About(props: { shootCount: number; onClose(): void }) {
         <span id="ns-about-title" class="ns-about__label">About</span>
         <button type="button" class="ns-about__close" aria-label="Close" ref={close} onClick={() => props.onClose()}>×</button>
       </div>
-      <div class="ns-about__body ns-scroll">
+      <div class="ns-about__body ns-scroll" ref={fadeWhileScrollable}>
         <img class="ns-about__logo" src="/nolle-studios-header-on-dark.svg" alt="Nolle Studios" width="210" height="60" draggable={false} />
         <p class="ns-about__lead">Photographs laid out like prints on a table: every shoot, newest first.</p>
         <p class="ns-about__text">For prints, portraits, or a shoot of your own, get in touch.</p>
@@ -207,7 +216,7 @@ export function Keys(props: { onClose(): void }) {
         <h2 id="ns-keys-title">Moving around the table</h2>
         <button type="button" class="ns-keys__esc" ref={close} onClick={() => props.onClose()}>ESC TO CLOSE</button>
       </div>
-      <div class="ns-keys__groups ns-scroll">
+      <div class="ns-keys__groups ns-scroll" ref={fadeWhileScrollable}>
         <For each={KEY_GROUPS}>{group => <section>
           <h3>{group.title}</h3>
           <For each={group.rows}>{([key, label]) => <div class="ns-keys__row"><kbd>{key}</kbd><span>{label}</span></div>}</For>
