@@ -35,11 +35,12 @@ export default function Loupe(props: { stage: () => HTMLElement | undefined; ena
     else { const k = 1 - Math.exp(-dt * 24); lx += (tx - lx) * k; ly += (ty - ly) * k; }
     show(true);
     root.style.transform = `translate3d(${lx.toFixed(2)}px,${ly.toFixed(2)}px,0)`;
-    // Reproduce object-fit: cover inside the lens so the crop matches the frame.
+    // Reproduce object-fit: cover at object-position 50% 30% inside the lens,
+    // so the magnified crop matches the frame.
     const r = img.getBoundingClientRect();
     const cover = Math.max(r.width / img.naturalWidth, r.height / img.naturalHeight);
     const drawnW = img.naturalWidth * cover, drawnH = img.naturalHeight * cover;
-    const cropX = (r.width - drawnW) / 2, cropY = (r.height - drawnH) / 2;
+    const cropX = (r.width - drawnW) * 0.5, cropY = (r.height - drawnH) * 0.3;
     const cx = lx + s.left, cy = ly + s.top;
     const wanted = img.dataset.loupe ?? "";
     if (wanted !== source) { source = wanted; lens.style.backgroundImage = wanted; }
