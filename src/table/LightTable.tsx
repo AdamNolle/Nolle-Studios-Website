@@ -243,6 +243,12 @@ export default function LightTable(props: { shoots: ArchiveShoot[]; initialShoot
       <div class="ns-cork__edge" />
     </div>
 
+    {/* First in the DOM so Tab and screen readers reach the site navigation first. */}
+    <Header narrow={narrow()} board={boardShoot()} zoom={zoom()} atFit={atFit()} overlay={overlay()}
+      onHome={() => go(0)} onBack={closeBoard} onZoom={factor => boardApi?.zoomBy(factor)} onFit={() => boardApi?.fit()}
+      selecting={!!picked()} onSelect={toggleSelecting}
+      onOverlay={which => { touch(); setOverlay(which); }} />
+
     <Show when={!board()}>
       <div class="ns-tabletop" aria-hidden="true" onClick={() => { if (!suppressClick) go((current() + 1) % shoots.length); }} />
       <div class="ns-table" classList={{ "is-dragging": dragX() !== null }} style={{ top: `${tableFrame(narrow(), size().h).centerY}px` }}>
@@ -255,11 +261,6 @@ export default function LightTable(props: { shoots: ArchiveShoot[]; initialShoot
       <Board shoot={shoots[b.e]} seed={b.e} focus={b.k} narrow={narrow()} width={size().w} height={size().h} reduce={reduce()}
         picked={picked()} onOpen={k => picked() ? pick(k) : setLifted(k)} onZoom={(z, fit) => batch(() => { setZoom(z); setAtFit(fit); })} api={api => { boardApi = api; }} />}
     </Show>
-
-    <Header narrow={narrow()} board={boardShoot()} zoom={zoom()} atFit={atFit()} overlay={overlay()}
-      onHome={() => go(0)} onBack={closeBoard} onZoom={factor => boardApi?.zoomBy(factor)} onFit={() => boardApi?.fit()}
-      selecting={!!picked()} onSelect={toggleSelecting}
-      onOverlay={which => { touch(); setOverlay(which); }} />
 
     <Show when={!board()}>
       <Transport shoots={shoots} current={current()} narrow={narrow()} reduce={reduce()} onSelect={go} />

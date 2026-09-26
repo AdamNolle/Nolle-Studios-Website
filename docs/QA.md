@@ -15,6 +15,9 @@
 - The Content Room was checked for clipped text at 1440, 1024, 768, 390, and 320 px across every screen, the inspector, the batch bar, and the ledger. The shoot list's status line now wraps instead of being cut at 1024 px, and phones hide the keyboard-shortcut line.
 - First visit to the static site dropped from 1019 KB to 848 KB: transport chips and the preview strip reuse the 640 px AVIF the contact sheets already fetched instead of a separate WebP, and the loupe's art loads the first time it appears, so touch screens never download it.
 - The Solid Content Room was exercised end to end on the test fixture: a JPEG upload became a private draft (a text file was rejected in place), the background model drafted "A yellow circle centered on a green-to-blue gradient background", the alt-text pass accepted it, approval and showing the hidden shoot queued two changes, Publish made the photo public (media 200), withdrawal removed it (media 404), and the upload was deleted. Collection order changed by Alt+Arrow and by drag, and the server's order matched.
+- Unknown paths on the static site now show a branded "Nothing on this table" page (GitHub Pages serves it from `404.html`) with a link back to the table, instead of GitHub's default 404. `/archive/` still opens the table.
+- Shared links show a 1200×630 preview of the light table (`og:image`, `summary_large_image`), and `robots.txt` and `sitemap.xml` are published.
+- Keyboard: the header now comes first in the DOM, so Tab reaches the site navigation before the photographs. Focus rings on contact-sheet frames, transport chips, and full-height glass-bar buttons were clipped by their parents and are now drawn inside.
 - The liquid-glass rim was re-rendered with the studio HDRI and one lamp, keeping only the shoulder's reflections. In Chromium, a Blender normal map drives an SVG displacement filter, so the backdrop refracts at the rim; Safari and Firefox keep the frosted fallback.
 
 

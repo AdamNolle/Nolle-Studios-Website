@@ -8,7 +8,7 @@ const LightTable = lazy(() => table);
 
 // Loading, empty and unavailable states sit on the same cork, under the same
 // glass header, as the table itself.
-function Status(props: { kind: "loading" | "empty" | "error"; preview: boolean; onRetry?: () => void }) {
+function Status(props: { kind: "loading" | "empty" | "error" | "missing"; preview: boolean; onRetry?: () => void }) {
   const unavailable = () => props.preview ? "Sign in to the Content Room, then try again." :
     import.meta.env.MODE === "static" ? "The photo archive could not be loaded. Try again shortly." :
       "The content server is not responding. Try again shortly.";
@@ -27,10 +27,14 @@ function Status(props: { kind: "loading" | "empty" | "error"; preview: boolean; 
       <div class="ns-status__card">
         <div class="ns-status__body">
           <div class="ns-status__eyebrow">NOLLE STUDIOS / PHOTOGRAPHY</div>
-          <h1>{props.kind === "error" ? (props.preview ? "Preview unavailable." : "The table is unavailable.") : "The table is being prepared."}</h1>
-          <p>{props.kind === "error" ? unavailable() : props.preview ? "No photographs to preview yet." : "No photographs are published yet. Please check back soon."}</p>
+          <h1>{props.kind === "missing" ? "Nothing on this table." : props.kind === "error" ? (props.preview ? "Preview unavailable." : "The table is unavailable.") : "The table is being prepared."}</h1>
+          <p>{props.kind === "missing" ? "There is no page at this address. The photographs are all on the light table." :
+            props.kind === "error" ? unavailable() : props.preview ? "No photographs to preview yet." : "No photographs are published yet. Please check back soon."}</p>
           <Show when={props.kind === "error" && props.onRetry}>
             <button type="button" class="ns-status__retry" onClick={() => props.onRetry?.()}>TRY AGAIN</button>
+          </Show>
+          <Show when={props.kind === "missing"}>
+            <a class="ns-status__retry" href="/">GO TO THE LIGHT TABLE</a>
           </Show>
         </div>
       </div>
@@ -45,7 +49,15 @@ function Status(props: { kind: "loading" | "empty" | "error"; preview: boolean; 
   </main>;
 }
 
+// The table lives at / and its alias /archive/; anything else is a 404,
+// which GitHub Pages serves from 404.html (this same app).
+const KNOWN_PATH = /^\/(archive\/?)?(index\.html)?$/;
+
 export default function Site() {
+  if (!KNOWN_PATH.test(location.pathname)) {
+    document.title = "Not found · Nolle Studios";
+    return <Status kind="missing" preview={false} />;
+  }
   const params = new URLSearchParams(location.search);
   const preview = params.get("preview") === "1";
   const [shoots, { refetch }] = createResource(() => loadArchive(preview));
