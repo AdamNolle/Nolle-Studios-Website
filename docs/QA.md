@@ -8,7 +8,7 @@
 - The keyboard and About panels no longer show scroll bars; on short windows only their contents scroll, and the keys dialog switches to a compact layout.
 - Alt-text drafts moved to Qwen3-VL 8B with a stricter prompt, a 1280 px input, and no shoot title in the prompt. On the 17 curated photographs it stopped inventing frisbees, "fall league" games and dives, and describes poses literally. Drafts are still reviewed before saving.
 - The cork tile was re-rendered from `art/cork.py`: its mean colour and spread match the previous tile exactly, 98% of pixels are within 8 levels, and the AVIF is 246 KB.
-- Push pins were re-rendered with Blender's CC0 interior HDRI and a real cast shadow, and shown smaller (56 px). Prints alternate clear tape (four placements) and pins (one, two, or four, in five colours) so neighbours never match.
+- Push pins were re-rendered with Blender's CC0 interior HDRI and a real cast shadow, and shown smaller (56 px). Prints alternate clear tape (four placements) and push pins (one, two, or four, in blue, yellow, red, and dark green) so neighbours never match. Each pin casts one shadow, and the tape is nearly clear film with glossy edges.
 - The liquid-glass rim was re-rendered with the studio HDRI and one lamp, keeping only the shoulder's reflections. In Chromium, a Blender normal map drives an SVG displacement filter, so the backdrop refracts at the rim; Safari and Firefox keep the frosted fallback.
 
 

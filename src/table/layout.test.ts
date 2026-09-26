@@ -103,6 +103,6 @@ test("neighbouring prints never hang the same way", () => {
   }
   // Every tape placement, pin colour and pin count appears across a dozen prints.
   assert.equal(new Set(taped.map(h => h.kind === "tape" && h.layout)).size, 4);
-  assert.equal(new Set(pinned.map(h => h.kind === "pins" && h.colour)).size, 5);
+  assert.equal(new Set(pinned.map(h => h.kind === "pins" && h.colour)).size, 4);
   assert.equal(new Set(pinned.map(h => h.kind === "pins" && h.count)).size, 3);
 });

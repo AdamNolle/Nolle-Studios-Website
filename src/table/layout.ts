@@ -92,7 +92,7 @@ export function sheetOffsets(widths: number[], current: number, gutter: number):
 // within each, the placement and the number of pieces step through every
 // arrangement, so neighbouring prints never hang the same way.
 const TAPE_LAYOUTS = ["corners", "top-corners", "diagonal", "top-strip"] as const;
-const PIN_COLOURS = ["red", "blue", "green", "yellow", "white"] as const;
+const PIN_COLOURS = ["blue", "yellow", "red", "green"] as const;
 const PIN_COUNTS = [2, 1, 4] as const;
 export type TapeLayout = typeof TAPE_LAYOUTS[number];
 export type PinColour = typeof PIN_COLOURS[number];
@@ -105,8 +105,8 @@ export interface Print { i: number; x: number; y: number; w: number; h: number; 
 function holdFor(i: number, seed: number): Hold {
   const k = i >> 1;
   if (i % 2 === 0) return { kind: "tape", layout: TAPE_LAYOUTS[(k + seed) % 4], variant: rnd(seed * 97 + i * 7 + 41) < 0.5 ? 1 : 2 };
-  // 5 colours and 3 counts share no factor, so both change from print to print.
-  return { kind: "pins", colour: PIN_COLOURS[(k * 2 + seed) % 5], count: PIN_COUNTS[(k + seed) % 3] };
+  // 4 colours and 3 counts share no factor, so both change from print to print.
+  return { kind: "pins", colour: PIN_COLOURS[(k + seed) % 4], count: PIN_COUNTS[(k + seed) % 3] };
 }
 
 export interface BoardView { w: number; h: number; cy: number }

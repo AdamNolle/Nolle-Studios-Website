@@ -24,7 +24,7 @@ def finish(image):
     film = image.getchannel("A")
     shadow = Image.new("L", image.size)
     shadow.paste(film, (max(1, round(w * .002)), max(2, round(h * .017))))
-    shadow = shadow.filter(ImageFilter.GaussianBlur(max(1.2, h * .010))).point(lambda a: round(a * .43))
+    shadow = shadow.filter(ImageFilter.GaussianBlur(max(1.2, h * .010))).point(lambda a: round(a * .3))
     layer = Image.new("RGBA", image.size, SHADOW_COLOR + (0,))
     layer.putalpha(shadow)
     return Image.alpha_composite(layer, image)

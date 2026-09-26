@@ -76,19 +76,21 @@ def film_material():
         "From Max": half_length.outputs[0],
         "To Min": 0.0, "To Max": 1.0,
     }).outputs[0]
-    # Most of the photograph stays visible through the film.
-    opacity = n.math("ADD", 0.27, n.math("MULTIPLY", grain, 0.14))
-    opacity = n.math("ADD", opacity, n.math("MULTIPLY", outer_edge, 0.21))
-    opacity = n.math("ADD", opacity, n.math("MULTIPLY", cut_edge, 0.14))
-    roughness = n.math("ADD", 0.24, n.math("MULTIPLY", grain, 0.12))
-    bump = n.add("Bump", inputs={"Strength": 0.04, "Distance": 0.018, "Height": micro})
+    # Real clear tape is nearly invisible: a faint haze in the body, crisper
+    # long edges, and serrated cut ends that scatter light. What gives it
+    # away is gloss, so the lamp's reflection does most of the work.
+    opacity = n.math("ADD", 0.11, n.math("MULTIPLY", grain, 0.08))
+    opacity = n.math("ADD", opacity, n.math("MULTIPLY", outer_edge, 0.34))
+    opacity = n.math("ADD", opacity, n.math("MULTIPLY", cut_edge, 0.22))
+    roughness = n.math("ADD", 0.08, n.math("MULTIPLY", grain, 0.1))
+    bump = n.add("Bump", inputs={"Strength": 0.06, "Distance": 0.018, "Height": micro})
     body = n.add("BsdfPrincipled", inputs={
         "Base Color": (*srgb((246, 241, 227)), 1),
         "Roughness": roughness,
         "IOR": 1.47,
         "Normal": bump.outputs["Normal"],
-        "Coat Weight": 0.35,
-        "Coat Roughness": 0.19,
+        "Coat Weight": 0.6,
+        "Coat Roughness": 0.06,
     })
     transparent = n.add("BsdfTransparent")
     mix = n.add("MixShader", inputs=[opacity, transparent.outputs[0], body.outputs[0]])
@@ -125,6 +127,10 @@ def film_mesh(scene, material, length, angle, seed, corner):
             x = left + s * (right - left)
             yy = y + (waviness if j == 0 else -waviness if j == ny else 0)
             z = 0.055
+            if not corner:
+                # A strip straddles the print's edge, which lifts the film a
+                # fraction of a millimetre: a ridge the raking light picks out.
+                z += .20 * math.exp(-((yy + .4) / 1.0) ** 2)
             for cx, cy, slant, amp in creases:
                 across = (x - cx) * math.cos(slant) + (yy - cy) * math.sin(slant)
                 along = -(x - cx) * math.sin(slant) + (yy - cy) * math.cos(slant)

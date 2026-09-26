@@ -140,7 +140,6 @@ picture { display: contents; }
    the top) or by pins (push, ball-head or drawing pins; one, two or four).
    All are Blender renders, placed and turned per print from Board.tsx. */
 .ns-tape, .ns-pin { position: absolute; z-index: 5; height: auto; max-width: none; pointer-events: none; }
-.ns-tape { filter: drop-shadow(1px 3px 2px rgba(37,19,7,.26)); }
 .ns-pin { z-index: 6; }
 
 /* ---------- Loupe ----------

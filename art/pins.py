@@ -4,7 +4,7 @@ Blender 5.2 (Cycles on the GPU):
   blender -b -P art/pins.py
   blender -b -P art/pins.py -- samples=384 size=512   # finer
 
-A moulded push pin (dished flare, fluted grip, thumb disc) in five colours,
+A moulded push pin (dished flare, fluted grip, thumb disc) in four colours,
 each at two leans. The room is lit by Blender's bundled CC0 interior HDRI plus
 a lamp over the table, so reflections come from a real room rather than a few
 cards. A shadow catcher records each pin's shadow on the print, so the WebP
@@ -30,8 +30,8 @@ OUT = os.path.join(ROOT, "src", "assets", "pins")
 RENDERS = os.path.join(ROOT, "art", "renders", "pins")
 HDRI = glob.glob(os.path.join(os.path.dirname(bpy.app.binary_path), "..", "Resources", "*", "datafiles", "studiolights", "world", "interior.exr"))
 
-# Moulded plastic, sRGB. Red, blue and green echo the studio's mark.
-PLASTICS = {"red": "#C81E17", "blue": "#1F3FD0", "green": "#3DAE17", "yellow": "#EDB300", "white": "#EFEDE6"}
+# Moulded plastic, sRGB: blue, yellow, red and a dark green.
+PLASTICS = {"blue": "#1F3FD0", "yellow": "#EDB300", "red": "#C81E17", "green": "#15522A"}
 # (lean in degrees, lean direction in degrees): a pin is never perfectly upright.
 LEANS = [(6.0, 140), (9.0, 35)]
 
@@ -62,7 +62,11 @@ def setup(scene, size, samples):
 
 
 def world(scene):
-    """The bundled hotel-room HDRI, warmed to match the lamp over the table."""
+    """The bundled hotel-room HDRI, seen only in reflections.
+
+    Diffuse light and shadows come from an even ambient and the one lamp,
+    so each pin casts a single shadow instead of one per bright window.
+    """
     w = bpy.data.worlds.new("Room")
     w.use_nodes = True
     nodes, links = w.node_tree.nodes, w.node_tree.links
@@ -76,7 +80,13 @@ def world(scene):
         coords = nodes.new("ShaderNodeTexCoord")
         links.new(coords.outputs["Generated"], mapping.inputs["Vector"])
         links.new(mapping.outputs["Vector"], env.inputs["Vector"])
-        links.new(env.outputs["Color"], bg.inputs["Color"])
+        paths = nodes.new("ShaderNodeLightPath")
+        ambient = nodes.new("ShaderNodeMix")
+        ambient.data_type = "RGBA"
+        ambient.inputs[6].default_value = (*srgb("#F2ECE2"), 1)
+        links.new(paths.outputs["Is Glossy Ray"], ambient.inputs[0])
+        links.new(env.outputs["Color"], ambient.inputs[7])
+        links.new(ambient.outputs[2], bg.inputs["Color"])
     else:
         bg.inputs["Color"].default_value = (*srgb("#E9E1D6"), 1)
     scene.world = w
@@ -142,7 +152,7 @@ def plastic(colour, fluted):
     bsdf = nodes["Principled BSDF"]
     bsdf.inputs["Base Color"].default_value = (*srgb(colour), 1)
     bsdf.inputs["IOR"].default_value = 1.49
-    bsdf.inputs["Subsurface Weight"].default_value = 0.3 if colour == PLASTICS["white"] else 0.15
+    bsdf.inputs["Subsurface Weight"].default_value = 0.15
     bsdf.inputs["Subsurface Radius"].default_value = (1.0, 0.5, 0.3)
     bsdf.inputs["Subsurface Scale"].default_value = 0.8
     bsdf.inputs["Coat Weight"].default_value = 0.35
@@ -236,7 +246,7 @@ def main():
     camera(scene)
     # The lamp over the table: a broad key from the upper left throws the
     # shadow down and to the right, matching the prints' own shadows.
-    area(scene, "Table lamp", (-24, 28, 72), 4200, 14, "#FFF3E2")
+    area(scene, "Table lamp", (-24, 28, 72), 7000, 14, "#FFF3E2")
     board()
 
     root, head = build(scene)
