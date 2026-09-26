@@ -217,6 +217,38 @@ span.ns-pill.is-active { cursor: default; }
 .ns-zoom .ns-zoom__fit { padding: 0 12px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; }
 .ns-zoom__pct { min-width: 46px; text-align: center; font: 500 10px/1 var(--mono); letter-spacing: .08em; color: rgba(255,255,255,.82); font-variant-numeric: tabular-nums; }
 
+.ns-bar__tools { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.ns-icon { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.ns-pill--select .ns-icon { margin-left: -2px; }
+
+/* ---------- Picking photographs to download ---------- */
+
+.ns-print.is-picked .ns-print__btn { outline: 3px solid #F4F7FA; outline-offset: 3px; }
+.ns-print__btn.is-selecting { cursor: pointer; }
+.ns-print__btn.is-selecting:hover { transform: none; }
+.ns-print__check {
+  /* Bottom centre: the one spot no tape or pin ever uses. */
+  position: absolute; bottom: 12px; left: 50%; z-index: 7; display: grid; place-items: center; width: 30px; height: 30px; margin-left: -15px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.92); background: rgba(12,10,8,.38); box-shadow: 0 2px 8px rgba(0,0,0,.35); pointer-events: none;
+  transition: background .2s, transform .25s var(--ease-out);
+}
+.ns-print__check svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transition: opacity .2s; }
+.ns-print.is-picked .ns-print__check { background: #F4F7FA; transform: scale(1.06); }
+.ns-print.is-picked .ns-print__check svg { opacity: 1; stroke: #121316; }
+.ns-picker {
+  --rim: 40px;
+  left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 32; max-width: calc(100% - 20px);
+  display: flex; align-items: center; gap: 8px; padding: 7px 7px 7px 20px; border-radius: 24px; transform: translateX(-50%);
+  animation: nsPop .35s var(--ease-out) both;
+}
+.ns-picker__count { min-width: 0; margin-right: 6px; overflow: hidden; font: 500 10px/1 var(--mono); letter-spacing: .14em; color: rgba(255,255,255,.9); white-space: nowrap; text-overflow: ellipsis; text-shadow: 0 1px 4px rgba(0,0,0,.45); }
+.ns-picker .ns-pill { flex: none; height: 44px; }
+.ns-picker__save:disabled { opacity: .45; cursor: default; }
+.ns-picker__close { flex: none; width: 44px; height: 44px; border: 0; border-radius: 14px; background: transparent; color: rgba(255,255,255,.85); font: 400 20px/1 Archivo, sans-serif; cursor: pointer; }
+.ns-picker__close:hover { background: rgba(255,255,255,.1); }
+.ns-liftbar__btn .ns-icon { width: 15px; height: 15px; }
+.ns-liftbar__btn:disabled { opacity: .5; cursor: default; }
+
 /* ---------- Transport: a row of shoot covers ---------- */
 
 .ns-rail {
@@ -462,6 +494,11 @@ span.ns-pill.is-active { cursor: default; }
   .ns-pill--solid svg { margin: 0; }
   .ns-wide { display: none; }
   .ns-zoom__pct, .ns-zoom .ns-zoom__fit { display: none; }
+  .ns-bar__tools { gap: 4px; }
+  .ns-pill--select { width: 44px; justify-content: center; padding: 0; }
+  .ns-pill--select .ns-icon { margin: 0; }
+  .ns-picker { left: 10px; right: 10px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); max-width: none; padding-left: 16px; transform: none; animation-name: nsVeil; }
+  .ns-picker__count { flex: 1; margin-right: 0; }
   .ns-rail { --rim: 40px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); padding: 6px; border-radius: 24px; }
   .ns-chip { height: 42px; }
   .ns-chip__stack { width: 40px; height: 30px; }

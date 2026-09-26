@@ -29,7 +29,7 @@ Every shoot is a contact sheet on a cork board, newest first. Open one and its p
 
 ## What's inside
 
-**The light table.** Contact sheets slide past under a liquid-glass header and a transport of shoot covers. Scroll, swipe, or use the arrow keys to move between shoots; click a frame to open its board. On the board, prints hang by clear tape or push pins, and no two neighbours hang the same way. Drag to pan, and scroll or pinch to zoom from the fitted view down to fine detail. A loupe follows the pointer, and the print preview zooms to full resolution. `?` lists every key.
+**The light table.** Contact sheets slide past under a liquid-glass header and a transport of shoot covers. Scroll, swipe, or use the arrow keys to move between shoots; click a frame to open its board. On the board, prints hang by clear tape or push pins, and no two neighbours hang the same way. Drag to pan, and scroll or pinch to zoom from the fitted view down to fine detail. A loupe follows the pointer, and the print preview zooms to full resolution. Press **Select** (or `S`) to tick several photographs and download them as one ZIP, built in the browser; the preview downloads a single photograph (`D`). `?` lists every key.
 
 **Everything is rendered, nothing is stock.** The cork, the liquid-glass rims, the loupe, the push pins, and the tape are Blender scenes in [`art/`](art/README.md), rendered on the GPU with Cycles. The glass bends what is behind it: a normal map rendered from the same glass slab drives an SVG displacement filter, so the cork and photographs refract at the rim (Chromium; Safari and Firefox show frosted glass).
 

@@ -20,6 +20,9 @@ interface BoardProps {
   width: number;
   height: number;
   reduce: boolean;
+  /** Frames picked for download while selecting; null when not selecting. */
+  picked: ReadonlySet<number> | null;
+  /** A print was clicked: open it, or toggle it while selecting. */
   onOpen(index: number): void;
   /** The camera's zoom, and whether it is as far out as it goes. */
   onZoom(zoom: number, atFit: boolean): void;
@@ -230,15 +233,21 @@ export default function Board(props: BoardProps) {
 
   const PrintView = (p: { print: Print }) => {
     const photo = () => props.shoot.photos[p.print.i];
-    return <div class="ns-print" style={{ left: `${p.print.x}px`, top: `${p.print.y}px`, width: `${p.print.w}px`, height: `${p.print.h}px`, transform: `rotate(${p.print.rot.toFixed(2)}deg)` }}>
+    const selecting = () => props.picked !== null, on = () => !!props.picked?.has(p.print.i);
+    return <div class="ns-print" classList={{ "is-picked": on() }} style={{ left: `${p.print.x}px`, top: `${p.print.y}px`, width: `${p.print.w}px`, height: `${p.print.h}px`, transform: `rotate(${p.print.rot.toFixed(2)}deg)` }}>
       <div class="ns-print__shadow" />
-      <button type="button" class="ns-print__btn" data-print={p.print.i} aria-label={`Open ${photo().alt}`} onClick={() => { if (!moved) props.onOpen(p.print.i); }}>
+      <button type="button" class="ns-print__btn" classList={{ "is-selecting": selecting() }} data-print={p.print.i}
+        aria-label={selecting() ? `Select ${photo().alt}` : `Open ${photo().alt}`} aria-pressed={selecting() ? on() : undefined}
+        onClick={() => { if (!moved) props.onOpen(p.print.i); }}>
         <Picture photo={photo()} class="ns-print__img" alt={photo().alt} eager sizes={`${Math.ceil(p.print.w * restZoom())}px`} />
         <Show when={photo().kind === "video"}>
           <span class="ns-video-badge" aria-hidden="true"><svg viewBox="0 0 10 10" width="8" height="8"><path d="M2 1l7 4-7 4z" fill="currentColor" /></svg>{runtime(photo().duration)}</span>
         </Show>
         <div class="ns-print__edge" />
         <div class="ns-print__sheen" />
+        <Show when={selecting()}>
+          <span class="ns-print__check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 12.5l4 4 8-9" /></svg></span>
+        </Show>
       </button>
       <For each={holdPieces(p.print)}>{piece =>
         <img class={piece.pin ? "ns-pin" : "ns-tape"} src={piece.src} alt="" draggable={false} aria-hidden="true"

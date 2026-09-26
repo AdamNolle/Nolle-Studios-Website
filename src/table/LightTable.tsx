@@ -3,7 +3,7 @@ import type { ArchiveShoot } from "../archive";
 import { runtime, sheetLayout, sheetOffsets, tableFrame } from "./layout";
 import { background } from "./media";
 import Picture from "./Picture";
-import { About, Header, Hint, Keys, Transport } from "./Chrome";
+import { About, Header, Hint, Keys, Picker, Transport } from "./Chrome";
 import Board from "./Board";
 import type { BoardApi } from "./Board";
 import Preview from "./Preview";
@@ -31,6 +31,14 @@ export default function LightTable(props: { shoots: ArchiveShoot[]; initialShoot
   const [dragX, setDragX] = createSignal<number | null>(null);
   const [zoom, setZoom] = createSignal(1);
   const [atFit, setAtFit] = createSignal(true);
+  /** Frames picked for download on the open board; null when not selecting. */
+  const [picked, setPicked] = createSignal<ReadonlySet<number> | null>(null);
+  const toggleSelecting = () => setPicked(picked() ? null : new Set<number>());
+  const pick = (k: number) => {
+    const next = new Set(picked());
+    if (next.has(k)) next.delete(k); else next.add(k);
+    setPicked(next);
+  };
   const motion = matchMedia("(prefers-reduced-motion: reduce)");
   const [reduce, setReduce] = createSignal(motion.matches);
   const narrow = () => size().w < 760;
@@ -58,11 +66,11 @@ export default function LightTable(props: { shoots: ArchiveShoot[]; initialShoot
   }
   function openBoard(e: number, k: number) {
     touch();
-    batch(() => { setZoom(1); setBoard({ e, k }); });
+    batch(() => { setZoom(1); setPicked(null); setBoard({ e, k }); });
   }
   function closeBoard() {
     const b = board();
-    batch(() => { setLifted(null); setBoard(null); });
+    batch(() => { setLifted(null); setPicked(null); setBoard(null); });
     if (b) queueMicrotask(() => stage.querySelector<HTMLElement>(`[data-shoot-index="${b.e}"][data-photo-index="${b.k}"]`)?.focus({ preventScroll: true }));
   }
 
@@ -120,7 +128,8 @@ export default function LightTable(props: { shoots: ArchiveShoot[]; initialShoot
     if (board()) {
       const step = event.shiftKey ? 320 : 140;
       const pan: Record<string, [number, number]> = { ArrowRight: [step, 0], ArrowLeft: [-step, 0], ArrowDown: [0, step], ArrowUp: [0, -step] };
-      if (event.key === "Escape") { event.preventDefault(); closeBoard(); }
+      if (event.key === "Escape") { event.preventDefault(); if (picked()) setPicked(null); else closeBoard(); }
+      else if (event.key.toLowerCase() === "s") { event.preventDefault(); toggleSelecting(); }
       else if (pan[event.key]) { event.preventDefault(); boardApi?.pan(...pan[event.key]); }
       else if (event.key === "+" || event.key === "=") boardApi?.zoomBy(1.25);
       else if (event.key === "-") boardApi?.zoomBy(0.8);
@@ -244,16 +253,21 @@ export default function LightTable(props: { shoots: ArchiveShoot[]; initialShoot
 
     <Show when={board()} keyed>{b =>
       <Board shoot={shoots[b.e]} seed={b.e} focus={b.k} narrow={narrow()} width={size().w} height={size().h} reduce={reduce()}
-        onOpen={k => setLifted(k)} onZoom={(z, fit) => batch(() => { setZoom(z); setAtFit(fit); })} api={api => { boardApi = api; }} />}
+        picked={picked()} onOpen={k => picked() ? pick(k) : setLifted(k)} onZoom={(z, fit) => batch(() => { setZoom(z); setAtFit(fit); })} api={api => { boardApi = api; }} />}
     </Show>
 
     <Header narrow={narrow()} board={boardShoot()} zoom={zoom()} atFit={atFit()} overlay={overlay()}
       onHome={() => go(0)} onBack={closeBoard} onZoom={factor => boardApi?.zoomBy(factor)} onFit={() => boardApi?.fit()}
+      selecting={!!picked()} onSelect={toggleSelecting}
       onOverlay={which => { touch(); setOverlay(which); }} />
 
     <Show when={!board()}>
       <Transport shoots={shoots} current={current()} narrow={narrow()} reduce={reduce()} onSelect={go} />
       <Hint on={hint()} narrow={narrow()} onDismiss={touch} />
+    </Show>
+    <Show when={board() && picked()}>{set =>
+      <Picker shoot={boardShoot()!} picked={set()} narrow={narrow()} onAll={() => setPicked(new Set(boardShoot()!.photos.map((_, i) => i)))}
+        onClear={() => setPicked(new Set<number>())} onDone={() => setPicked(null)} />}
     </Show>
     <div class="ns-sr" aria-live="polite">{board() ? "" : shootAnnouncement()}</div>
 

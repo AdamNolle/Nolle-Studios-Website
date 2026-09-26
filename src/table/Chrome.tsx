@@ -1,7 +1,8 @@
-import { For, Show, createEffect, on, onCleanup, onMount } from "solid-js";
+import { For, Show, createEffect, createSignal, on, onCleanup, onMount } from "solid-js";
 import type { ArchiveShoot } from "../archive";
 import { coverPhoto, thumb } from "./media";
 import { refract } from "./glass";
+import { download } from "./download";
 
 const CONTACT_EMAIL = "hello@nollestudios.com";
 const INSTAGRAM_HANDLE = "@nollestudios";
@@ -11,11 +12,13 @@ const HINTS_DESKTOP = [["← →", "TABLES"], ["CLICK", "OPEN A SHOOT"], ["?", "
 const HINTS_TOUCH = [["SWIPE", "MORE TABLES"], ["TAP", "OPEN A PHOTO"]] as const;
 const KEY_GROUPS = [
   { title: "TABLE", rows: [["← →", "Move between shoots"], ["HOME / END", "Newest or oldest shoot"], ["CLICK", "Open a photograph’s shoot board"], ["SWIPE", "Move between shoots on touch"]] },
-  { title: "SHOOT BOARD", rows: [["DRAG", "Pan the board"], ["SCROLL / PINCH", "Zoom"], ["ARROWS  + −", "Pan and zoom from the keyboard"], ["ESC", "Back to the table"]] },
-  { title: "PRINT PREVIEW", rows: [["← →", "Previous or next photo"], ["DOUBLE CLICK", "Zoom in"], ["SPACE", "Play or pause a video"], ["0 / F", "Fit to screen"], ["ESC", "Close"]] },
+  { title: "SHOOT BOARD", rows: [["DRAG", "Pan the board"], ["SCROLL / PINCH", "Zoom"], ["ARROWS  + −", "Pan and zoom from the keyboard"], ["S", "Select photos to download"], ["ESC", "Back to the table"]] },
+  { title: "PRINT PREVIEW", rows: [["← →", "Previous or next photo"], ["DOUBLE CLICK", "Zoom in"], ["SPACE", "Play or pause a video"], ["0 / F", "Fit to screen"], ["D", "Download this photo"], ["ESC", "Close"]] },
 ] as const;
 
 const frames = (count: number) => `${count} ${count === 1 ? "FRAME" : "FRAMES"}`;
+export const DownloadIcon = () =>
+  <svg viewBox="0 0 24 24" aria-hidden="true" class="ns-icon"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19.5h14" /></svg>;
 const Chevron = (props: { back?: boolean }) =>
   <svg viewBox="0 0 24 24" aria-hidden="true"><path d={props.back ? "M15 6l-6 6 6 6" : "M9 6l6 6-6 6"} /></svg>;
 
@@ -32,6 +35,9 @@ interface HeaderProps {
   onBack(): void;
   onZoom(factor: number): void;
   onFit(): void;
+  /** Whether the board is picking photographs to download. */
+  selecting: boolean;
+  onSelect(): void;
   onOverlay(which: "about" | "help"): void;
 }
 
@@ -59,11 +65,16 @@ export function Header(props: HeaderProps) {
     </div>
     <nav class="ns-bar__end" aria-label="Site">
       <Show when={!props.board} fallback={
+        <div class="ns-bar__tools">
+        <button type="button" class="ns-pill ns-pill--select" classList={{ "is-active": props.selecting }} aria-pressed={props.selecting} onClick={() => props.onSelect()}>
+          <DownloadIcon /><span class="ns-wide">Select</span><span class="ns-sr">photos to download</span>
+        </button>
         <div class="ns-zoom" role="group" aria-label="Board zoom">
           <button type="button" aria-label="Zoom out" disabled={props.atFit} onClick={() => props.onZoom(0.8)}>−</button>
           <span class="ns-zoom__pct" aria-live="polite">{Math.round(props.zoom * 100)}%</span>
           <button type="button" aria-label="Zoom in" onClick={() => props.onZoom(1.25)}>+</button>
           <button type="button" class="ns-zoom__fit" onClick={() => props.onFit()}>Fit</button>
+        </div>
         </div>
       }>
         <Show when={!props.narrow} fallback={
@@ -203,5 +214,45 @@ export function Keys(props: { onClose(): void }) {
         </section>}</For>
       </div>
     </div>
+  </div>;
+}
+
+// ---- Picking photographs to download ----------------------------------------
+
+interface PickerProps {
+  shoot: ArchiveShoot;
+  picked: ReadonlySet<number>;
+  narrow: boolean;
+  onAll(): void;
+  onClear(): void;
+  onDone(): void;
+}
+
+/** The glass bar shown while selecting: count, select all, download. */
+export function Picker(props: PickerProps) {
+  const [busy, setBusy] = createSignal<number | null>(null);
+  const [error, setError] = createSignal("");
+  const count = () => props.picked.size, total = () => props.shoot.photos.length;
+  async function save() {
+    if (!count() || busy() !== null) return;
+    setError("");
+    setBusy(0);
+    try {
+      await download(props.shoot, [...props.picked], done => setBusy(done));
+      props.onDone();
+    } catch (failure) { setError((failure as Error).message); }
+    finally { setBusy(null); }
+  }
+  return <div class="ns-glass ns-picker" ref={el => refract(el)} role="toolbar" aria-label="Download photographs">
+    <span class="ns-picker__count" aria-live="polite">
+      {error() || (busy() !== null ? `PREPARING ${busy()} OF ${count()}` : count() ? `${count()} SELECTED` : "TAP PHOTOS TO SELECT")}
+    </span>
+    <button type="button" class="ns-pill" onClick={() => count() === total() ? props.onClear() : props.onAll()}>
+      {count() === total() ? "Clear" : props.narrow ? "All" : "Select all"}
+    </button>
+    <button type="button" class="ns-pill ns-pill--solid ns-picker__save" disabled={!count() || busy() !== null} onClick={() => void save()}>
+      <DownloadIcon />{count() > 1 ? `Download ${count()}` : "Download"}
+    </button>
+    <button type="button" class="ns-picker__close" aria-label="Stop selecting" onClick={() => props.onDone()}>×</button>
   </div>;
 }

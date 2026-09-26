@@ -22,7 +22,7 @@
     "test": "node --test server/*.test.ts scripts/*.test.ts src/**/*.test.ts",
     "test:cms": "node --test server/*.test.ts",
     "test:static": "node --test scripts/*.test.ts",
-    "typecheck": "tsc -p tsconfig.json && tsc -p server/tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.test.json && tsc -p server/tsconfig.json"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.1",

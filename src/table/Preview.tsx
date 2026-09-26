@@ -2,6 +2,8 @@ import { For, Show, createEffect, createMemo, createSignal, on, onCleanup, onMou
 import type { ArchiveShoot } from "../archive";
 import { background, mid, srcset, thumb } from "./media";
 import { refract } from "./glass";
+import { DownloadIcon } from "./Chrome";
+import { download } from "./download";
 
 export interface PreviewApi {
   /** Handle a key the table forwarded; true when it was used. */
@@ -138,6 +140,14 @@ export default function Preview(props: PreviewProps) {
     zoomAt(Math.exp(-event.deltaY * rate * 0.0015), event.clientX, event.clientY);
   }
 
+  const [saving, setSaving] = createSignal(false);
+  async function save() {
+    if (saving()) return;
+    setSaving(true);
+    try { await download(props.shoot, [props.index]); } catch { /* The button stays available to retry. */ }
+    finally { setSaving(false); }
+  }
+
   props.api({
     key(event) {
       if (event.target instanceof HTMLVideoElement && event.key.startsWith("Arrow")) return false;
@@ -153,6 +163,7 @@ export default function Preview(props: PreviewProps) {
         if (video?.paused) void video.play(); else video?.pause();
         return true;
       }
+      if (event.key.toLowerCase() === "d") { event.preventDefault(); void save(); return true; }
       if (event.key === "ArrowRight") { event.preventDefault(); go(1); return true; }
       if (event.key === "ArrowLeft") { event.preventDefault(); go(-1); return true; }
       if (event.key === "+" || event.key === "=") { event.preventDefault(); zoomAt(1.25); return true; }
@@ -223,6 +234,9 @@ export default function Preview(props: PreviewProps) {
         <span class="ns-liftbar__count" aria-live="polite">{props.index + 1} / {count()}</span>
       </div>
       <div class="ns-liftbar__actions">
+        <button type="button" class="ns-liftbar__btn" aria-label="Download this photo" disabled={saving()} onClick={() => void save()}>
+          <DownloadIcon /><span class="ns-wide">{saving() ? "Saving…" : "Download"}</span>
+        </button>
         <button type="button" class="ns-liftbar__btn ns-liftbar__close" aria-label="Close preview" ref={close} onClick={() => props.onClose()}>
           <span class="ns-wide">Close</span><span class="ns-liftbar__x">×</span>
         </button>
