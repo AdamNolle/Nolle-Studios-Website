@@ -32,8 +32,8 @@ export default function Collections(props: { onCreate(): void }) {
   };
 
   return <div class="collections-page">
-    <aside class="collection-list">
-      <div class="collection-list-head"><h2>Collections</h2><button type="button" onClick={() => props.onCreate()}>+ New</button></div>
+    <aside class="collection-list" aria-label="Collections">
+      <div class="collection-list-head"><h1>Collections</h1><button type="button" onClick={() => props.onCreate()}>+ New</button></div>
       <For each={content.collections} fallback={<p class="empty-copy">No collections yet.</p>}>{collection =>
         <button type="button" classList={{ active: current()?.id === collection.id }} onClick={() => setScopeSignal({ type: "collection", id: collection.id })}>
           <span class="mosaic"><For each={collection.photoIds.slice(0, 4).map(photoOf).filter((p): p is PhotoDto => !!p)}>{photo => <img src={photoSrc(photo)} alt="" loading="lazy" />}</For></span>
@@ -84,7 +84,7 @@ export default function Collections(props: { onCreate(): void }) {
               </div>}</For>
           </div>
         </main>
-        <aside class="collection-add">
+        <aside class="collection-add" aria-label="Add photos">
           <h3>Add photos</h3>
           <select aria-label="Filter by shoot" value={addShoot()} onChange={event => setAddShoot(event.currentTarget.value)}>
             <option value="all">All shoots</option>

@@ -1,4 +1,5 @@
-import { createSignal } from "solid-js";
+import { createSignal, splitProps } from "solid-js";
+import type { JSX } from "solid-js";
 import type { ArchivePhoto } from "../archive";
 import { srcset, thumb } from "./media";
 
@@ -41,5 +42,17 @@ export default function Picture(props: PictureProps) {
       data-loupe={props.loupe}
       onLoad={() => setLoaded(true)}
     />
+  </picture>;
+}
+
+/**
+ * A small preview (transport chips, the preview strip): the 640 px AVIF the
+ * contact sheets already fetched, so it usually comes from the cache.
+ */
+export function Thumb(props: { photo?: ArchivePhoto } & Omit<JSX.ImgHTMLAttributes<HTMLImageElement>, "src">) {
+  const [own, rest] = splitProps(props, ["photo"]);
+  return <picture>
+    <source type="image/avif" srcset={own.photo?.formats.avif?.thumb ?? ""} />
+    <img {...rest} src={thumb(own.photo)} alt="" draggable={false} decoding="async" />
   </picture>;
 }

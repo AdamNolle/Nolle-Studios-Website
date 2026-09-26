@@ -1,9 +1,10 @@
 import { For, Show, createEffect, createMemo, createSignal, on, onCleanup, onMount } from "solid-js";
 import type { ArchiveShoot } from "../archive";
-import { background, mid, srcset, thumb } from "./media";
+import { background, mid, srcset } from "./media";
 import { refract } from "./glass";
 import { DownloadIcon } from "./Chrome";
 import { download } from "./download";
+import { Thumb } from "./Picture";
 
 export interface PreviewApi {
   /** Handle a key the table forwarded; true when it was used. */
@@ -248,7 +249,7 @@ export default function Preview(props: PreviewProps) {
           <For each={strip()}>{item =>
             <button type="button" class="ns-strip__thumb" classList={{ "is-on": item.d === 0 }} aria-label={`Show ${props.shoot.photos[item.k].alt}`}
               aria-current={item.d === 0 ? "true" : undefined} onClick={() => props.onGo(item.k)}>
-              <img src={thumb(props.shoot.photos[item.k])} alt="" draggable={false} loading="lazy" decoding="async" />
+              <Thumb photo={props.shoot.photos[item.k]} loading="lazy" />
             </button>}</For>
         </div>
       </div>

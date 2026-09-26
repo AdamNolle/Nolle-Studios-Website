@@ -9,13 +9,15 @@ const ZOOM = 1.8, LENS = 88, RADIUS = LENS / 2;
  * animates only while the pointer moves, so an idle table costs nothing.
  */
 export default function Loupe(props: { stage: () => HTMLElement | undefined; enabled: () => boolean }) {
-  let root!: HTMLDivElement, body!: HTMLDivElement, lens!: HTMLDivElement;
+  let root!: HTMLDivElement, body!: HTMLDivElement, lens!: HTMLDivElement, render!: HTMLImageElement;
   let px: number | null = null, py: number | null = null, lx = 0, ly = 0, on = false, raf = 0, last = 0, source = "";
   const fine = matchMedia("(hover: hover) and (pointer: fine)");
 
   function show(visible: boolean) {
     if (on === visible) return;
     on = visible;
+    // Touch screens never show the loupe, so its art loads on first use.
+    if (visible && !render.src) render.src = loupeArt;
     body.classList.toggle("is-on", visible);
   }
 
@@ -74,7 +76,7 @@ export default function Loupe(props: { stage: () => HTMLElement | undefined; ena
 
   return <div class="ns-loupe" ref={root} aria-hidden="true">
     <div class="ns-loupe__body" ref={body}>
-      <img class="ns-loupe__render" src={loupeArt} alt="" draggable={false} />
+      <img class="ns-loupe__render" ref={render} alt="" draggable={false} />
       <div class="ns-loupe__glass">
         <div class="ns-loupe__img" ref={lens} />
         <div class="ns-loupe__falloff" />

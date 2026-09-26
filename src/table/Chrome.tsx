@@ -1,6 +1,7 @@
 import { For, Show, createEffect, createSignal, on, onCleanup, onMount } from "solid-js";
 import type { ArchiveShoot } from "../archive";
-import { coverPhoto, thumb } from "./media";
+import { coverPhoto } from "./media";
+import { Thumb } from "./Picture";
 import { refract } from "./glass";
 import { download } from "./download";
 
@@ -132,7 +133,7 @@ export function Transport(props: TransportProps) {
           aria-label={`${shoot.title}, ${shoot.displayDate}, ${shoot.photos.length} ${shoot.photos.length === 1 ? "frame" : "frames"}`}
           onClick={() => props.onSelect(index())}>
           <span class="ns-chip__stack" aria-hidden="true">
-            <img src={thumb(coverPhoto(shoot))} alt="" draggable={false} loading={Math.abs(index() - props.current) < 6 ? "eager" : "lazy"} decoding="async" />
+            <Thumb photo={coverPhoto(shoot)} loading={Math.abs(index() - props.current) < 6 ? "eager" : "lazy"} />
           </span>
           <span class="ns-chip__text" aria-hidden="true">
             <span class="ns-chip__title">{shoot.title}</span>
@@ -187,7 +188,7 @@ export function About(props: { shootCount: number; onClose(): void }) {
   useDialog(() => root, () => close, () => props.onClose());
   return <div class="ns-overlay ns-overlay--about" ref={root}>
     <div class="ns-overlay__scrim" aria-hidden="true" onClick={() => props.onClose()} />
-    <aside class="ns-about ns-glass" ref={el => refract(el, { strength: 40, frost: 6 })} role="dialog" aria-modal="true" aria-labelledby="ns-about-title">
+    <div class="ns-about ns-glass" ref={el => refract(el, { strength: 40, frost: 6 })} role="dialog" aria-modal="true" aria-labelledby="ns-about-title">
       <div class="ns-about__top">
         <span id="ns-about-title" class="ns-about__label">About</span>
         <button type="button" class="ns-about__close" aria-label="Close" ref={close} onClick={() => props.onClose()}>×</button>
@@ -202,7 +203,7 @@ export function About(props: { shootCount: number; onClose(): void }) {
         </div>
         <div class="ns-about__foot">NOLLESTUDIOS.COM · {props.shootCount} {props.shootCount === 1 ? "SHOOT" : "SHOOTS"} ON THE TABLE</div>
       </div>
-    </aside>
+    </div>
   </div>;
 }
 
