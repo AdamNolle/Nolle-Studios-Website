@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 16 16" role="img" aria-label="Nolle Studios" shape-rendering="crispEdges">
+  <rect width="16" height="16" fill="#000"/>
+  <path fill="#2a35ff" d="M8 0h8v8H8z"/>
+  <path fill="#5ef50d" d="M0 8h8v8H0z"/>
+  <path fill="#ff1818" d="M8 8h8v8H8z"/>
+</svg>
