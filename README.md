@@ -96,5 +96,6 @@ docs/           CMS, publishing, and release notes
 - [Publishing the static site](docs/PUBLISH.md): building and releasing to GitHub Pages
 - [Media workshop](art/README.md): exporting photographs and rendering the Blender art
 - [Release checks](docs/QA.md)
+- [Notes for contributors and agents](AGENTS.md): working conventions, traps, and open items
 
 Photographs © Nolle Studios. All rights reserved.

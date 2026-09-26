@@ -13,6 +13,7 @@
     "build:admin": "vite build --mode admin",
     "build:static": "vite build --mode static && node scripts/static-routes.ts && node scripts/assemble-static.ts manifest",
     "build:cms-static": "vite build --mode static && node scripts/static-routes.ts && node --env-file-if-exists=.env scripts/assemble-static.ts cms",
+    "publish:pages": "sh scripts/publish-pages.sh",
     "preview": "vite preview",
     "dev:cms": "node --env-file-if-exists=.env --watch server/index.ts",
     "cms": "node --env-file-if-exists=.env server/index.ts",
