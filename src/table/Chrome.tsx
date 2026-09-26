@@ -4,6 +4,7 @@ import { coverPhoto } from "./media";
 import { Thumb } from "./Picture";
 import { refract } from "./glass";
 import { download } from "./download";
+import glassMark from "../assets/glass/mark.webp";
 
 const CONTACT_EMAIL = "hello@nollestudios.com";
 const INSTAGRAM_HANDLE = "@nollestudios";
@@ -57,7 +58,7 @@ export function Header(props: HeaderProps) {
     <div class="ns-bar__start">
       <Show when={props.board} fallback={
         <button type="button" class="ns-bar__mark" aria-label="Nolle Studios, newest shoot" onClick={() => props.onHome()}>
-          <img src="/nolle-studios-mark.svg" alt="" width="38" height="38" draggable={false} />
+          <img src={glassMark} alt="" width="38" height="38" draggable={false} />
         </button>
       }>
         <button type="button" class="ns-pill ns-pill--solid ns-pill--back" onClick={() => props.onBack()} aria-label={props.narrow ? "Back to the tables" : undefined}>

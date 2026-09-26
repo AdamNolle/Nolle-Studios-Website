@@ -194,11 +194,14 @@ picture { display: contents; }
 .ns-bar__start { justify-self: start; display: flex; align-items: center; gap: 14px; min-width: 0; }
 .ns-bar__center { justify-self: center; display: grid; justify-items: center; gap: 5px; min-width: 0; max-width: 100%; text-shadow: 0 1px 8px rgba(0,0,0,.45); }
 .ns-bar__end { justify-self: end; display: flex; align-items: center; gap: 2px; min-width: 0; }
+/* The mark is four tiles of Blender-rendered glass (art/glass_mark.py); the
+   seams between them show the header behind. */
 .ns-bar__mark {
-  display: block; flex: none; width: 38px; height: 38px; padding: 0; overflow: hidden; border: 0; border-radius: 7px; background: #000; cursor: pointer;
-  box-shadow: 0 0 0 1px rgba(255,255,255,.22), 0 4px 12px rgba(0,0,0,.35);
+  display: block; flex: none; width: 38px; height: 38px; padding: 0; border: 0; border-radius: 7px; background: none; cursor: pointer;
+  transition: transform .35s var(--ease-out);
 }
-.ns-bar__mark img { display: block; width: 100%; height: 100%; }
+.ns-bar__mark img { display: block; width: 100%; height: 100%; filter: drop-shadow(0 3px 6px rgba(20,10,2,.45)); }
+button.ns-bar__mark:hover { transform: translateY(-1px) scale(1.04); }
 .ns-bar__brand { font: 400 31px/1 var(--serif); letter-spacing: -.005em; color: #FBF8F3; white-space: nowrap; }
 .ns-bar__title { max-width: 100%; overflow-x: clip; overflow-y: visible; font: 400 25px/1 var(--serif); color: #FBF8F3; white-space: nowrap; text-overflow: ellipsis; }
 .ns-bar__meta { font: 500 9.5px/1 var(--mono); letter-spacing: .16em; color: rgba(255,255,255,.92); white-space: nowrap; text-shadow: 0 1px 4px rgba(0,0,0,.55); }

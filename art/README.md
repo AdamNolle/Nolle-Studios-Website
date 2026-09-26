@@ -44,6 +44,7 @@ Every texture and sprite on the table is made here: nothing is a stock or downlo
 blender -b -P art/cork.py -- out=art/renders/cork.png size=1536 samples=128
 python3 art/finish_cork.py art/renders/cork.png src/assets/cork-tile.webp   # also writes the AVIF
 blender -b -P art/liquid_glass.py        # src/assets/glass/liquid-glass.webp and liquid-glass-normal.png
+blender -b -P art/glass_mark.py          # src/assets/glass/mark.webp
 blender -b -P art/preview_loupe.py       # src/assets/loupe/preview-loupe.webp
 blender -b -P art/pins.py                # src/assets/pins/pin-<colour>-<1|2>.webp
 blender -b -P art/tape.py -- outdir=art/renders/tape samples=128
@@ -52,6 +53,7 @@ python3 art/finish_tape.py art/renders/tape src/assets/tape
 
 - **Cork** (`cork.py`, `finish_cork.py`): a procedural board of layered Voronoi granules with true displacement, sampled on a torus so the tile repeats seamlessly. The finishing step grades it to the table's tone and writes WebP and AVIF.
 - **Liquid glass** (`liquid_glass.py`): a thick glass slab with a pillowed shoulder, lit by Blender's bundled CC0 studio HDRI and one lamp to the upper left. Only the shoulder keeps its reflections, so the rim carries a bright line along the top that rolls around the corner rather than an even outline. CSS lays it over every bar and panel as a nine-slice `border-image`. The same outline, cut from a deep block with a round shoulder, is rendered a second time as a surface-normal map; `src/table/glass.ts` nine-slices it to each bar and feeds it to an SVG `feDisplacementMap`, so in Chromium the cork and photographs bend at the rim like real glass.
+- **Glass mark** (`glass_mark.py`): the header's four-square logo as four bevelled glass tiles fused with hairline seams. Each tile emits exactly the flat mark's colour, so the glass never dulls it; a clear coat adds the room's reflections, a lamp highlight along the shoulder, and a soft upper-left sheen.
 - **Loupe** (`preview_loupe.py`): a stand loupe seen from overhead, with a clear acrylic light-collecting skirt, a black anodised barrel with turned machining, and a brushed aluminium bezel. The aperture stays transparent for the live magnified crop.
 - **Push pins** (`pins.py`): moulded push pins (dished flare, fluted grip, thumb disc, steel needle) in blue, yellow, red, and dark green, each at two leans. The CC0 interior HDRI appears only in their reflections; diffuse light comes from an even ambient and one lamp, so each pin casts a single shadow, recorded by a shadow catcher.
 - **Tape** (`tape.py`, `finish_tape.py`): thin, torn, translucent film as short corner pieces and longer strips. The board hangs each print by tape in one of four placements (all corners, top corners, a diagonal pair, or one strip across the top) or by one, two, or four pins, and neighbouring prints never repeat.

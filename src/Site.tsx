@@ -1,5 +1,6 @@
 import { Match, Show, Switch, createResource, lazy } from "solid-js";
 import { loadArchive } from "./archive";
+import glassMark from "./assets/glass/mark.webp";
 
 // The table is its own chunk so the loading screen paints first. Its download
 // starts now, alongside the catalog request, rather than after it.
@@ -19,7 +20,7 @@ function Status(props: { kind: "loading" | "empty" | "error" | "missing"; previe
     </div>
     <header class="ns-bar ns-glass">
       <span class="ns-bar__glint" aria-hidden="true" />
-      <div class="ns-bar__start"><span class="ns-bar__mark"><img src="/nolle-studios-mark.svg" alt="" width="38" height="38" /></span></div>
+      <div class="ns-bar__start"><span class="ns-bar__mark"><img src={glassMark} alt="" width="38" height="38" /></span></div>
       <div class="ns-bar__center"><span class="ns-bar__brand">Nolle Studios</span></div>
       <div class="ns-bar__end" />
     </header>
