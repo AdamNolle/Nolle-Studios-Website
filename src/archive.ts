@@ -1,4 +1,4 @@
-const BASE = import.meta.env.BASE_URL;
+const BASE = import.meta.env?.BASE_URL ?? "/";
 
 export type PhotoFormats = Record<string, Record<string, string>>;
 
@@ -21,6 +21,7 @@ export interface ArchiveShoot {
   id: string;
   title: string;
   date: string;
+  endDate: string;
   displayDate: string;
   description: string;
   coverUrl: string;
@@ -52,13 +53,18 @@ function mediaUrl(value: unknown): string {
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
 /** "2026-09-20" → "20 SEP 2026", the form printed on the contact sheets. */
-export function displayDate(value: unknown): string {
+export function displayDate(value: unknown, endValue?: unknown): string {
   const dateString = stringValue(value);
   if (!dateString) return "DATE UNKNOWN";
   const match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})/);
   const month = match ? MONTHS[Number(match[2]) - 1] : undefined;
   if (!match || !month) return dateString.toUpperCase();
-  return `${match[3]} ${month} ${match[1]}`;
+  const start = `${match[3]} ${month} ${match[1]}`;
+  const endDateString = stringValue(endValue);
+  if (!endDateString || endDateString === dateString) return start;
+  const end = endDateString.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  const endMonth = end ? MONTHS[Number(end[2]) - 1] : undefined;
+  return end && endMonth ? `${start} – ${end[3]} ${endMonth} ${end[1]}` : `${start} – ${endDateString.toUpperCase()}`;
 }
 
 function normalizeFormats(value: unknown): PhotoFormats {
@@ -118,7 +124,8 @@ function normalizedArchive(data: unknown): ArchiveShoot[] | null {
       id: stringValue(rawShoot.id) || `shoot-${index}`,
       title: stringValue(rawShoot.title) || `Shoot ${index + 1}`,
       date: stringValue(rawShoot.date),
-      displayDate: displayDate(rawShoot.date),
+      endDate: stringValue(rawShoot.endDate),
+      displayDate: displayDate(rawShoot.date, rawShoot.endDate),
       description: stringValue(rawShoot.description),
       coverUrl: mediaUrl(stringValue(rawShoot.coverUrl) || photos[0].mid),
       photos,
@@ -129,7 +136,7 @@ function normalizedArchive(data: unknown): ArchiveShoot[] | null {
   const dated = shoots.map((shoot, index) => ({
     shoot,
     index,
-    time: /^\d{4}-\d{2}-\d{2}/.test(shoot.date) ? Date.parse(shoot.date) : Number.NaN,
+    time: /^\d{4}-\d{2}-\d{2}/.test(shoot.endDate || shoot.date) ? Date.parse(shoot.endDate || shoot.date) : Number.NaN,
   }));
   dated.sort((a, b) => {
     const aTime = Number.isFinite(a.time) ? a.time : Number.NEGATIVE_INFINITY;

@@ -37,12 +37,13 @@ function shootDto(row: ShootRow, publicOnly: boolean): Omit<ShootDto, 'photos' |
     title: (live ? row.live_title : row.title) ?? '',
     slug: (live ? row.live_slug : row.slug) ?? '',
     date: (live ? row.live_shot_date : row.shot_date) ?? '',
+    endDate: (live ? row.live_end_date : row.end_date) ?? '',
     description: (live ? row.live_description : row.description) ?? '',
     location: (live ? row.live_location : row.location) ?? '',
     sortOrder: (live ? row.live_sort_order : row.sort_order) ?? 0,
     published: !!row.published, approved: !!row.approved,
     ...(!live ? {
-      liveTitle: row.live_title ?? '', liveSlug: row.live_slug ?? '', liveDate: row.live_shot_date ?? '',
+      liveTitle: row.live_title ?? '', liveSlug: row.live_slug ?? '', liveDate: row.live_shot_date ?? '', liveEndDate: row.live_end_date ?? '',
       liveDescription: row.live_description ?? '', liveLocation: row.live_location ?? '', liveSortOrder: row.live_sort_order ?? 0,
     } : {}),
   };

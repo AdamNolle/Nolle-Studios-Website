@@ -2,6 +2,12 @@ services:
   cms:
     environment:
       SITE_URL: ${SITE_URL:-https://nollestudios.com/}
+      ALT_TEXT_URL: ${ALT_TEXT_URL:-http://ollama:11434}
+      ALT_TEXT_MODEL: ${ALT_TEXT_MODEL:-gemma3:4b}
+      ALT_TEXT_AUTO: ${ALT_TEXT_AUTO:-true}
+    networks:
+      - default
+      - local_ai
 
   web:
     # The public edge is a Cloudflare Tunnel. Keep the origin private and use
@@ -13,3 +19,7 @@ services:
     volumes:
       - ./infra/Caddyfile.tunnel:/etc/caddy/Caddyfile:ro
 
+networks:
+  local_ai:
+    name: ${ALT_TEXT_NETWORK:-nollehome_default}
+    external: true

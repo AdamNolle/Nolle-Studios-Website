@@ -17,7 +17,7 @@ interface ManifestPhoto extends ManifestSizes {
   published?: unknown; formats?: Record<string, ManifestSizes>;
 }
 interface ManifestShoot {
-  id?: unknown; title?: unknown; description?: unknown; date?: unknown; location?: unknown;
+  id?: unknown; title?: unknown; description?: unknown; date?: unknown; endDate?: unknown; location?: unknown;
   published?: unknown; coverUrl?: unknown; photos?: ManifestPhoto[];
 }
 
@@ -55,15 +55,16 @@ export async function seedFromManifest(db: Db, manifestPath: string) {
     const slug = await uniqueSlug(db, 'shoots', title, shootId);
     const description = String(shoot.description || '').slice(0, 3000);
     const shotDate = String(shoot.date || '').slice(0, 80);
+    const endDate = String(shoot.endDate || '').slice(0, 80);
     const location = String(shoot.location || '').slice(0, 180);
     // New manifest shoots start published; existing shoots keep CMS visibility.
     await db.query(`INSERT INTO shoots
-      (id, title, slug, description, shot_date, location, sort_order,
-       live_title, live_slug, live_description, live_shot_date, live_location, live_sort_order,
+      (id, title, slug, description, shot_date, end_date, location, sort_order,
+       live_title, live_slug, live_description, live_shot_date, live_end_date, live_location, live_sort_order,
        published, approved, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING`,
-    [shootId, title, slug, description, shotDate, location, shootIndex,
-      title, slug, description, shotDate, location, shootIndex, 1, 1, timestamp, timestamp]);
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING`,
+    [shootId, title, slug, description, shotDate, endDate, location, shootIndex,
+      title, slug, description, shotDate, endDate, location, shootIndex, 1, 1, timestamp, timestamp]);
     const formerDescription = formerShootDescriptions.get(shootId);
     if (formerDescription) {
       await db.query(`UPDATE shoots SET

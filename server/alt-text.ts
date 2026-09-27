@@ -78,7 +78,7 @@ export function createAltWriter(settings: Pick<Settings, 'altTextUrl' | 'altText
         }),
       });
     } catch {
-      throw new AltTextUnavailable('The local alt-text model is not running. Start it with npm run alt:model.');
+      throw new AltTextUnavailable('The local alt-text model is offline. Check the local AI service and try again.');
     }
     if (!response.ok) throw new AltTextUnavailable(`The alt-text model returned ${response.status}.`);
     const data = await response.json() as { model?: string; choices?: { message?: { content?: string } }[] };
@@ -93,12 +93,12 @@ export function createAltWriter(settings: Pick<Settings, 'altTextUrl' | 'altText
     async status() {
       if (!base) return { available: false, model: '' };
       try {
-        const health = await fetch(`${base}/health`, { signal: AbortSignal.timeout(1500) });
-        if (!health.ok) return { available: false, model };
-        if (!model) {
-          const models = await fetch(`${base}/v1/models`, { signal: AbortSignal.timeout(1500) }).then(r => r.json()).catch(() => null) as { data?: { id?: string }[] } | null;
-          model = models?.data?.[0]?.id ?? '';
-        }
+        // Both llama-server and Ollama expose this OpenAI-compatible endpoint;
+        // Ollama intentionally has no /health route.
+        const response = await fetch(`${base}/v1/models`, { signal: AbortSignal.timeout(1500) });
+        if (!response.ok) return { available: false, model };
+        const models = await response.json().catch(() => null) as { data?: { id?: string }[] } | null;
+        if (!model) model = models?.data?.[0]?.id ?? '';
         return { available: true, model: model.split('/').pop() ?? model };
       } catch { return { available: false, model }; }
     },

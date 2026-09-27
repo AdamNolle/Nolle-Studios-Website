@@ -2,15 +2,17 @@ export const localPreview = ["127.0.0.1", "localhost"].includes(location.hostnam
 export const siteLabel = localPreview ? "Local site preview" : "nollestudios.com";
 
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-/** "2026-09-20" → "20 SEP 2026". */
-export function dateLabel(value?: string) {
+/** "2026-09-20" → "20 SEP 2026"; date ranges keep both endpoints explicit. */
+export function dateLabel(value?: string, endValue?: string) {
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value ?? "");
-  return match ? `${match[3]} ${MONTHS[Number(match[2]) - 1]} ${match[1]}` : "UNDATED";
+  const start = match ? `${match[3]} ${MONTHS[Number(match[2]) - 1]} ${match[1]}` : "UNDATED";
+  const end = /^(\d{4})-(\d{2})-(\d{2})/.exec(endValue ?? "");
+  return end && endValue !== value ? `${start} – ${end[3]} ${MONTHS[Number(end[2]) - 1]} ${end[1]}` : start;
 }
 
 /** Newest shoot first; undated shoots last, in their saved order. */
-export const ordered = <T extends { date: string; sortOrder: number }>(rows: readonly T[]) => [...rows].sort((a, b) =>
-  (Date.parse(b.date) || 0) - (Date.parse(a.date) || 0) || a.sortOrder - b.sortOrder);
+export const ordered = <T extends { date: string; endDate?: string; sortOrder: number }>(rows: readonly T[]) => [...rows].sort((a, b) =>
+  (Date.parse(b.endDate || b.date) || 0) - (Date.parse(a.endDate || a.date) || 0) || a.sortOrder - b.sortOrder);
 
 const plural = (count: number, one: string, many = `${one}s`) => `${count} ${count === 1 ? one : many}`;
 export const frameCount = (count: number) => plural(count, "FRAME");

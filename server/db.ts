@@ -14,10 +14,10 @@ export interface Db {
 }
 
 export interface ShootRow {
-  id: string; title: string; slug: string; description: string; shot_date: string; location: string;
+  id: string; title: string; slug: string; description: string; shot_date: string; end_date: string; location: string;
   sort_order: number; published: number; approved: number; created_at: string; updated_at: string;
   live_title: string | null; live_slug: string | null; live_description: string | null;
-  live_shot_date: string | null; live_location: string | null; live_sort_order: number | null;
+  live_shot_date: string | null; live_end_date: string | null; live_location: string | null; live_sort_order: number | null;
 }
 
 export interface PhotoRow {
@@ -39,7 +39,7 @@ export interface CollectionRow {
 const schema = [
   `CREATE TABLE IF NOT EXISTS shoots (
     id TEXT PRIMARY KEY, title TEXT NOT NULL, slug TEXT NOT NULL UNIQUE,
-    description TEXT NOT NULL DEFAULT '', shot_date TEXT NOT NULL DEFAULT '',
+    description TEXT NOT NULL DEFAULT '', shot_date TEXT NOT NULL DEFAULT '', end_date TEXT NOT NULL DEFAULT '',
     location TEXT NOT NULL DEFAULT '', sort_order INTEGER NOT NULL DEFAULT 0,
     published INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
   )`,
@@ -101,6 +101,8 @@ async function migrate(db: Db) {
     // Existing published work stays approved when an older database is opened.
     await db.query(`UPDATE ${table} SET approved = published WHERE approved IS NULL`);
   }
+  const shootColumns = await columnsOf(db, 'shoots');
+  await addColumn(db, 'shoots', shootColumns, 'end_date', "TEXT NOT NULL DEFAULT ''");
   const photoColumns = await columnsOf(db, 'photos');
   for (const [name, definition] of [
     ['kind', "TEXT NOT NULL DEFAULT 'image'"],
@@ -116,7 +118,7 @@ async function migrate(db: Db) {
   await db.query('UPDATE photos SET live_is_cover = is_cover WHERE live_is_cover IS NULL');
   const live: [string, [string, string | null][]][] = [
     ['shoots', [['live_title', 'title'], ['live_slug', 'slug'], ['live_description', 'description'],
-      ['live_shot_date', 'shot_date'], ['live_location', 'location'], ['live_sort_order', 'sort_order']]],
+      ['live_shot_date', 'shot_date'], ['live_end_date', 'end_date'], ['live_location', 'location'], ['live_sort_order', 'sort_order']]],
     ['collections', [['live_title', 'title'], ['live_slug', 'slug'], ['live_description', 'description'],
       ['live_sort_order', 'sort_order'], ['live_photo_ids_json', null]]],
   ];

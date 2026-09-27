@@ -20,7 +20,7 @@ function Suggestion(props: { photo: PhotoDto; onUse(text: string): void }) {
     <div class="suggestion" classList={{ "is-busy": busy() }}>
       <Show when={props.photo.altSuggestion} fallback={
         <button type="button" class="suggestion-ask" disabled={busy() || !altStatus().available} onClick={() => ask(false)}
-          title={altStatus().available ? "" : "Start the model with npm run alt:model"}>
+          title={altStatus().available ? "" : "The local AI service is offline"}>
           {busy() ? "Describing…" : altStatus().available ? "✦ Draft alt text with the local model" : "✦ Local model offline"}
         </button>
       }>

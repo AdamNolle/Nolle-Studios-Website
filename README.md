@@ -41,6 +41,8 @@ Every shoot is a contact sheet on a cork board, newest first. Open one and its p
 
 **Alt text from a local model.** A vision model running on your own machine ([Qwen3-VL 8B](https://huggingface.co/unsloth/Qwen3-VL-8B-Instruct-GGUF) through `llama.cpp`) drafts a description for every upload without alt text. Drafts are suggestions only: the alt-text pass shows each photograph with its draft, and nothing is saved until you accept or correct it. No photograph leaves the server.
 
+Shoots can span a start and end date. In the Content Room, the cover is selectable directly from any shoot thumbnail, and selected private uploads can be deleted together after confirmation. Live and curated media keep their existing publish safeguards.
+
 **Fast by default.** The site is SolidJS, under 70 KB of JavaScript, with the table code split off and fetched while the catalog loads. Images are served as AVIF first, sized to the zoom they are shown at. Animation loops run only while something moves. Fonts are self-hosted Latin subsets. The CMS is Hono on Node's built-in TypeScript support, with no build step.
 
 ## Stack

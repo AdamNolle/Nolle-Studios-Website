@@ -107,7 +107,7 @@ function CreateDialog(props: { kind: "shoot" | "collection"; onClose(): void }) 
     <form ref={form} onSubmit={submit}>
       <div class="eyebrow">NEW ARCHIVE ITEM</div>
       <h2 id="create-title">{props.kind === "shoot" ? "New shoot" : "New collection"}</h2>
-      <p>{props.kind === "shoot" ? "A shoot holds the photographs from one day. It stays private until you publish it." : "A collection groups photographs from any shoot."}</p>
+      <p>{props.kind === "shoot" ? "A shoot holds photographs from one or more days. It stays private until you publish it." : "A collection groups photographs from any shoot."}</p>
       <label for="create-name">Name</label>
       <input id="create-name" name="title" maxlength="140" required autocomplete="off" autofocus />
       <p class="message" role="status">{error()}</p>
@@ -139,7 +139,8 @@ function ShootDialog(props: { shoot: ShootDto; onClose(): void }) {
       <div class="eyebrow">SHOOT DETAILS</div>
       <h2 id="item-title">{props.shoot.title}</h2>
       <label>Title<input name="title" value={props.shoot.title} required maxlength="140" /></label>
-      <label>Shot date<input name="date" type="date" value={props.shoot.date} /></label>
+      <label>Start date<input name="date" type="date" value={props.shoot.date} /></label>
+      <label>End date <span class="optional">optional</span><input name="endDate" type="date" value={props.shoot.endDate} /></label>
       <label>Location<input name="location" value={props.shoot.location} maxlength="140" /></label>
       <label>Archive notes<textarea name="description" maxlength="3000" rows="4" value={props.shoot.description} /></label>
       <label>Display order<input name="sortOrder" type="number" value={props.shoot.sortOrder} /></label>
@@ -157,6 +158,10 @@ function ShootDialog(props: { shoot: ShootDto; onClose(): void }) {
 
 function Batch(props: { onAltPass(ids: string[]): void }) {
   const ids = () => [...selected()].filter(id => photoOf(id));
+  const deletable = () => ids().filter(id => {
+    const photo = photoOf(id);
+    return photo && !photo.curated && !photo.published;
+  });
   async function approve(on: boolean) {
     const targets = ids(), pending = targets.filter(id => photoOf(id)!.approved !== on);
     const { missing } = await setApproval(targets, on);
@@ -164,11 +169,26 @@ function Batch(props: { onAltPass(ids: string[]): void }) {
     // When nothing could be approved, go straight to writing the missing descriptions.
     if (missing.length && missing.length === pending.length) props.onAltPass(missing);
   }
+  async function remove() {
+    const targets = deletable();
+    const skipped = ids().length - targets.length;
+    if (!targets.length) {
+      notice("Only private, unpublished uploads can be permanently deleted here", true);
+      return;
+    }
+    const detail = skipped ? ` ${skipped} live or curated item${skipped === 1 ? "" : "s"} will be kept.` : "";
+    if (!confirm(`Permanently delete ${targets.length} selected upload${targets.length === 1 ? "" : "s"} and their private files?${detail}`)) return;
+    const saved = await change(async () => {
+      for (const id of targets) await api(`/photos/${encodeURIComponent(id)}`, { method: "DELETE" });
+    }, `${targets.length} upload${targets.length === 1 ? "" : "s"} deleted${skipped ? ` · ${skipped} kept` : ""}`);
+    if (saved) setSelected(new Set<string>());
+  }
   return <div class="batch" role="region" aria-label="Selected photographs">
     <span class="batch-count">{ids().length} SELECTED</span>
     <button type="button" class="batch-primary" onClick={() => void approve(true)}>Approve for site</button>
     <button type="button" onClick={() => void approve(false)}>Back to draft</button>
     <button type="button" onClick={() => props.onAltPass(ids())}>Write alt text</button>
+    <button type="button" class="batch-danger" disabled={!deletable().length} onClick={() => void remove()}>Delete uploads</button>
     <select aria-label="Add selected photographs to a collection" value="" onChange={event => {
       const id = event.currentTarget.value;
       event.currentTarget.value = "";

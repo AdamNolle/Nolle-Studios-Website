@@ -25,7 +25,7 @@ test("a ZIP of photographs opens with standard tools, byte for byte", async () =
 
 test("downloads are named after the shoot and the frame", () => {
   const photo = (full: string) => ({ id: "", alt: "", caption: "", thumb: "", mid: "", full, formats: { jpeg: { full } } });
-  const shoot = { id: "s", title: "The Next Inning!", date: "", displayDate: "", description: "", coverUrl: "",
+  const shoot = { id: "s", title: "The Next Inning!", date: "", endDate: "", displayDate: "", description: "", coverUrl: "",
     photos: [photo("/media/a-3200.jpg"), photo("/media/b-3200.jpg")] } satisfies ArchiveShoot;
   assert.equal(fileName(shoot, 1), "the-next-inning-02.jpg");
 });

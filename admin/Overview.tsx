@@ -96,7 +96,7 @@ export default function Overview(props: { onAltPass(ids: string[]): void }) {
         return <button type="button" class="shoot-card" onClick={() => openScope({ type: "shoot", id: shoot.id })}>
           <img src={coverOf(shoot)} alt="" loading="lazy" decoding="async" />
           <div class="shoot-card-copy">
-            <div class="shoot-card-meta"><span>{dateLabel(shoot.date)}</span><span classList={{ live: shoot.published }}>{shoot.published ? "ON SITE" : "HIDDEN"}</span></div>
+            <div class="shoot-card-meta"><span>{dateLabel(shoot.date, shoot.endDate)}</span><span classList={{ live: shoot.published }}>{shoot.published ? "ON SITE" : "HIDDEN"}</span></div>
             <h3>{shoot.title}</h3>
             <div class="progress"><i style={{ width: `${Math.round(stats().live / Math.max(stats().total, 1) * 100)}%` }} /></div>
             <div class="shoot-card-foot"><span>{stats().live} of {stats().total} live</span><span><Show when={stats().missing}>{stats().missing} no alt</Show></span></div>

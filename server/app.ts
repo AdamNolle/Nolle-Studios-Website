@@ -28,6 +28,14 @@ const BRAND_FILES = ['nolle-studios-mark.svg', 'favicon.ico', 'favicon.svg'];
 const validShotDate = (value: string) => !value || /^\d{4}-\d{2}-\d{2}$/.test(value) &&
   Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
 
+function validateShotDates(date: string, endDate: string) {
+  if (!validShotDate(date) || !validShotDate(endDate)) {
+    throw new HttpError(400, 'Shoot dates must be real dates in YYYY-MM-DD format');
+  }
+  if (endDate && !date) throw new HttpError(400, 'Choose a start date before adding an end date');
+  if (date && endDate && endDate < date) throw new HttpError(400, 'End date cannot be before the start date');
+}
+
 function exactOrder(ids: unknown, available: string[]): ids is string[] {
   if (!Array.isArray(ids) || ids.length !== available.length) return false;
   const known = new Set(available);
@@ -201,18 +209,19 @@ export function createApp({ db, settings }: { db: Db; settings: Settings }): Cms
     const slug = await uniqueSlug(db, 'shoots', title, id);
     const description = text(body.description, 3000);
     const date = text(body.date, 80);
-    if (!validShotDate(date)) throw new HttpError(400, 'Shot date must be a real date in YYYY-MM-DD format');
+    const endDate = text(body.endDate, 80);
+    validateShotDates(date, endDate);
     const location = text(body.location, 180);
     const sortOrder = integer(body.sortOrder);
     const published = flag(body.published);
     const stamp = now();
     await db.query(`INSERT INTO shoots
-      (id, title, slug, description, shot_date, location, sort_order,
-       live_title, live_slug, live_description, live_shot_date, live_location, live_sort_order,
+      (id, title, slug, description, shot_date, end_date, location, sort_order,
+       live_title, live_slug, live_description, live_shot_date, live_end_date, live_location, live_sort_order,
        published, approved, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [id, title, slug, description, date, location, sortOrder,
-      title, slug, description, date, location, sortOrder, published, published, stamp, stamp]);
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [id, title, slug, description, date, endDate, location, sortOrder,
+      title, slug, description, date, endDate, location, sortOrder, published, published, stamp, stamp]);
     return c.json({ id }, 201);
   });
 
@@ -229,18 +238,19 @@ export function createApp({ db, settings }: { db: Db; settings: Settings }): Cms
     const slug = title === original.title ? original.slug : await uniqueSlug(db, 'shoots', title, original.id);
     const description = body.description === undefined ? original.description : text(body.description, 3000);
     const date = body.date === undefined ? original.shot_date : text(body.date, 80);
-    if (!validShotDate(date)) throw new HttpError(400, 'Shot date must be a real date in YYYY-MM-DD format');
+    const endDate = body.endDate === undefined ? original.end_date : text(body.endDate, 80);
+    validateShotDates(date, endDate);
     const location = body.location === undefined ? original.location : text(body.location, 180);
     const sortOrder = body.sortOrder === undefined ? original.sort_order : integer(body.sortOrder);
     const published = body.published === undefined ? original.published : flag(body.published);
     const approved = body.approved === undefined ? (body.published === undefined ? original.approved : published) : flag(body.approved);
     const liveNow = body.published !== undefined && published;
-    await db.query(`UPDATE shoots SET title = ?, slug = ?, description = ?, shot_date = ?,
+    await db.query(`UPDATE shoots SET title = ?, slug = ?, description = ?, shot_date = ?, end_date = ?,
       location = ?, sort_order = ?, published = ?, approved = ?, live_title = ?, live_slug = ?,
-      live_description = ?, live_shot_date = ?, live_location = ?, live_sort_order = ?, updated_at = ? WHERE id = ?`,
-    [title, slug, description, date, location, sortOrder, published, approved,
+      live_description = ?, live_shot_date = ?, live_end_date = ?, live_location = ?, live_sort_order = ?, updated_at = ? WHERE id = ?`,
+    [title, slug, description, date, endDate, location, sortOrder, published, approved,
       liveNow ? title : original.live_title, liveNow ? slug : original.live_slug,
-      liveNow ? description : original.live_description, liveNow ? date : original.live_shot_date,
+      liveNow ? description : original.live_description, liveNow ? date : original.live_shot_date, liveNow ? endDate : original.live_end_date,
       liveNow ? location : original.live_location, liveNow ? sortOrder : original.live_sort_order,
       now(), original.id]);
     return c.json({ id: original.id });

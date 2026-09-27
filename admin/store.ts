@@ -93,7 +93,7 @@ export function statusOf(photo: PhotoDto): Status {
 
 export const shootPending = (shoot: ShootDto) => shoot.approved !== shoot.published ||
   (shoot.published && (shoot.title !== shoot.liveTitle || shoot.slug !== shoot.liveSlug || shoot.description !== shoot.liveDescription ||
-    shoot.date !== shoot.liveDate || shoot.location !== shoot.liveLocation || shoot.sortOrder !== shoot.liveSortOrder));
+    shoot.date !== shoot.liveDate || shoot.endDate !== shoot.liveEndDate || shoot.location !== shoot.liveLocation || shoot.sortOrder !== shoot.liveSortOrder));
 
 export const collectionPending = (collection: CollectionDto) => collection.approved !== collection.published ||
   (collection.published && (collection.title !== collection.liveTitle || collection.slug !== collection.liveSlug ||
@@ -140,7 +140,8 @@ export const scoped = createRoot(() => createMemo(() => {
     return (collection?.photoIds ?? []).map(photoOf).filter((photo): photo is PhotoDto => !!photo);
   }
   return [...content.photos].sort((a, b) =>
-    (Date.parse(shootOf(b)?.date ?? "") || 0) - (Date.parse(shootOf(a)?.date ?? "") || 0) || a.sortOrder - b.sortOrder);
+    (Date.parse(shootOf(b)?.endDate || shootOf(b)?.date || "") || 0) -
+    (Date.parse(shootOf(a)?.endDate || shootOf(a)?.date || "") || 0) || a.sortOrder - b.sortOrder);
 }));
 
 /** The photographs the library shows after filters and search. */

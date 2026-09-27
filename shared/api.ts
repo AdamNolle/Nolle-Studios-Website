@@ -51,6 +51,7 @@ export interface ShootDto {
   title: string;
   slug: string;
   date: string;
+  endDate: string;
   description: string;
   location: string;
   sortOrder: number;
@@ -62,6 +63,7 @@ export interface ShootDto {
   liveTitle?: string;
   liveSlug?: string;
   liveDate?: string;
+  liveEndDate?: string;
   liveDescription?: string;
   liveLocation?: string;
   liveSortOrder?: number;

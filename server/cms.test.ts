@@ -180,21 +180,24 @@ test('failed upload deletion keeps the CMS record available for retry', async ()
   } finally { await close(); }
 });
 
-test('shoot dates reject impossible days without changing saved details', async () => {
+test('shoots support date ranges and reject impossible or reversed dates without changing saved details', async () => {
   const { signIn, close } = await fixture();
   try {
     const { admin, content } = await signIn();
     const rejected = await admin('/shoots', 'POST', { title: 'Invalid day', date: '2026-02-31' });
     assert.equal(rejected.status, 400);
     assert.match(((await rejected.json()) as Json).error, /real date/);
-    const created = await admin('/shoots', 'POST', { title: 'Leap day', date: '2024-02-29' });
+    const created = await admin('/shoots', 'POST', { title: 'Leap weekend', date: '2024-02-29', endDate: '2024-03-02' });
     assert.equal(created.status, 201);
     const { id } = await created.json() as Json;
     assert.equal((await admin(`/shoots/${id}`, 'PATCH', { title: 'Changed title', date: '2025-02-29' })).status, 400);
+    assert.equal((await admin(`/shoots/${id}`, 'PATCH', { endDate: '2024-02-28' })).status, 400);
     const shoot = (await content()).shoots.find(row => row.id === id)!;
-    assert.equal(shoot.title, 'Leap day');
+    assert.equal(shoot.title, 'Leap weekend');
     assert.equal(shoot.date, '2024-02-29');
-    assert.equal((await admin(`/shoots/${id}`, 'PATCH', { date: '' })).status, 200);
+    assert.equal(shoot.endDate, '2024-03-02');
+    assert.equal((await admin(`/shoots/${id}`, 'PATCH', { date: '' })).status, 400);
+    assert.equal((await admin(`/shoots/${id}`, 'PATCH', { date: '', endDate: '' })).status, 200);
   } finally { await close(); }
 });
 
@@ -661,7 +664,7 @@ test('shoot and collection edits stay staged until publish', async () => {
     const { id: photoId } = await (await upload('photos', shootId, jpeg, { alt: 'A frame in the original shoot' })).json() as Json;
     assert.equal((await admin(`/photos/${photoId}`, 'PATCH', { published: true })).status, 200);
     assert.equal((await admin(`/photos/${photoId}`, 'PATCH', { title: 'Internal draft', caption: 'Private planning note' })).status, 200);
-    assert.equal((await admin(`/shoots/${shootId}`, 'PATCH', { title: 'Revised shoot', date: '2026-09-02' })).status, 200);
+    assert.equal((await admin(`/shoots/${shootId}`, 'PATCH', { title: 'Revised shoot', date: '2026-09-02', endDate: '2026-09-04' })).status, 200);
     assert.equal((await admin(`/collections/${collectionId}`, 'PATCH', { title: 'Revised collection', description: 'Chosen frames' })).status, 200);
     assert.equal((await admin(`/collections/${collectionId}/photos/${photoId}`, 'PUT', {})).status, 200);
     let catalog = await site();
@@ -669,6 +672,7 @@ test('shoot and collection edits stay staged until publish', async () => {
     assert.equal(catalog.shoots[0].photos[0].caption, '');
     assert.equal(catalog.shoots[0].title, 'Original shoot');
     assert.equal(catalog.shoots[0].date, '2026-09-01');
+    assert.equal(catalog.shoots[0].endDate, '');
     assert.equal(catalog.collections[0].title, 'Original collection');
     assert.deepEqual(catalog.collections[0].photoIds, []);
     const privateCatalog = await content();
@@ -677,6 +681,8 @@ test('shoot and collection edits stay staged until publish', async () => {
     assert.equal(privateCatalog.photos[0].caption, 'Private planning note');
     assert.equal(privateCatalog.photos[0].fileName, 'frame.jpg');
     assert.equal(privateCatalog.shoots[0].liveTitle, 'Original shoot');
+    assert.equal(privateCatalog.shoots[0].endDate, '2026-09-04');
+    assert.equal(privateCatalog.shoots[0].liveEndDate, '');
     assert.equal(privateCatalog.collections[0].title, 'Revised collection');
     assert.deepEqual(privateCatalog.collections[0].photoIds, [photoId]);
     assert.deepEqual(privateCatalog.collections[0].livePhotoIds, []);
@@ -688,6 +694,7 @@ test('shoot and collection edits stay staged until publish', async () => {
     catalog = await site();
     assert.equal(catalog.shoots[0].title, 'Revised shoot');
     assert.equal(catalog.shoots[0].date, '2026-09-02');
+    assert.equal(catalog.shoots[0].endDate, '2026-09-04');
     assert.equal(catalog.collections[0].title, 'Revised collection');
     assert.equal(catalog.collections[0].description, 'Chosen frames');
     assert.deepEqual(catalog.collections[0].photoIds, [photoId]);
@@ -834,6 +841,6 @@ test('an unreachable model reports itself unavailable instead of failing uploads
     const { id } = await uploaded.json() as Json;
     const response = await admin(`/photos/${id}/alt-suggestion`, 'POST', {});
     assert.equal(response.status, 503);
-    assert.match(((await response.json()) as Json).error, /npm run alt:model/);
+    assert.match(((await response.json()) as Json).error, /local AI service/);
   } finally { await close(); }
 });

@@ -39,6 +39,8 @@ Write useful alt text for each published frame. The site does not show a caption
 
 The CMS can draft alt text with a vision model running on the same machine, so photographs never leave it. `npm run alt:model` starts [llama.cpp](https://github.com/ggml-org/llama.cpp)'s `llama-server` with Qwen3-VL 8B (Q4_K_M, about 5 GB, downloaded on first run) on `127.0.0.1:8790`, its OpenAI-compatible API. Install it with `brew install llama.cpp` or a release build. Any server with the same API works; set `ALT_TEXT_URL` to its address, and `ALT_TEXT_MODEL` if it hosts several models.
 
+The production tunnel compose file joins the existing local-AI Docker network and defaults to Ollama at `http://ollama:11434` with the vision-capable `gemma3:4b` model. Override `ALT_TEXT_URL`, `ALT_TEXT_MODEL`, or `ALT_TEXT_NETWORK` in `.env` when the host uses a different local runtime or network.
+
 - When an upload arrives without alt text, the CMS drafts a description in the background (turn this off with `ALT_TEXT_AUTO=false`). The Content Room checks back every few seconds while drafts are due.
 - Drafts are stored as suggestions only. The inspector and the alt-text pass show them labelled as drafts; nothing becomes alt text until an editor accepts or corrects it, and publishing still requires alt text.
 - The model reads a 1280 px copy of the photograph with a prompt tuned for literal, short descriptions. It is told to describe poses rather than guess actions, to count people only when certain, and to leave out sign text, jersey numbers, and event names. The shoot title is deliberately not sent, because models describe titles as if they were visible.

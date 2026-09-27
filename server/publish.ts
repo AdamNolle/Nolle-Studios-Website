@@ -63,12 +63,12 @@ export async function publish(db: Db, staging: Staging, storage: Storage) {
   await db.query(`UPDATE photos SET live_alt = alt, live_shoot_id = shoot_id, live_sort_order = sort_order,
     live_is_cover = CASE WHEN ${coverReady} THEN is_cover ELSE live_is_cover END WHERE ${changedPhotos}`);
   const changedShoots = `published = 1 AND (live_title IS NULL OR live_slug IS NULL OR
-    live_description IS NULL OR live_shot_date IS NULL OR live_location IS NULL OR live_sort_order IS NULL OR
+    live_description IS NULL OR live_shot_date IS NULL OR live_end_date IS NULL OR live_location IS NULL OR live_sort_order IS NULL OR
     title <> live_title OR slug <> live_slug OR description <> live_description OR
-    shot_date <> live_shot_date OR location <> live_location OR sort_order <> live_sort_order)`;
+    shot_date <> live_shot_date OR end_date <> live_end_date OR location <> live_location OR sort_order <> live_sort_order)`;
   const shootEdits = await db.query<{ id: string }>(`SELECT id FROM shoots WHERE ${changedShoots}`);
   await db.query(`UPDATE shoots SET live_title = title, live_slug = slug,
-    live_description = description, live_shot_date = shot_date,
+    live_description = description, live_shot_date = shot_date, live_end_date = end_date,
     live_location = location, live_sort_order = sort_order WHERE ${changedShoots}`);
   const changedCollections = `published = 1 AND (live_title IS NULL OR live_slug IS NULL OR
     live_description IS NULL OR live_sort_order IS NULL OR title <> live_title OR

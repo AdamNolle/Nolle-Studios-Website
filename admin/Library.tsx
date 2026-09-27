@@ -123,6 +123,15 @@ export default function Library(props: LibraryProps) {
         <img src={photoSrc(p.photo)} alt={p.photo.alt || "Undescribed photograph"} loading="lazy" decoding="async" draggable={false} />
         <button type="button" class="tile-select" classList={{ checked: isSelected() }} aria-label="Select photograph" aria-pressed={isSelected()}
           onClick={event => { event.stopPropagation(); toggleSelected([p.photo.id]); lastClicked = p.photo.id; }}>{isSelected() ? "✓" : ""}</button>
+        <Show when={scope().type === "shoot"}>
+          <button type="button" class="tile-cover" classList={{ on: p.photo.isCover }} disabled={p.photo.isCover}
+            aria-label={p.photo.isCover ? "Current shoot cover" : "Set as shoot cover"}
+            title={p.photo.isCover ? "Current shoot cover" : "Set as shoot cover"}
+            onClick={event => {
+              event.stopPropagation();
+              void change(() => api(`/photos/${encodeURIComponent(p.photo.id)}`, { method: "PATCH", body: { isCover: true } }), `Cover set for ${shootOf(p.photo)?.title}`);
+            }}>★</button>
+        </Show>
         <Show when={p.photo.isCover}><span class="cover-tag">COVER</span></Show>
         <Show when={p.photo.kind === "video"}><span class="video-tag">▶ {runtime(p.photo.duration)}</span></Show>
       </div>
@@ -165,7 +174,7 @@ export default function Library(props: LibraryProps) {
     return <For each={groups()}>{([id, list]) => {
       const sh = content.shoots.find(s => s.id === id);
       return <section class="contact-sheet">
-        <header><button type="button" onClick={() => openScope({ type: "shoot", id })}>{sh?.title ?? "Archive"}</button><span>{dateLabel(sh?.date)} · {frameCount(list.length)}</span></header>
+        <header><button type="button" onClick={() => openScope({ type: "shoot", id })}>{sh?.title ?? "Archive"}</button><span>{dateLabel(sh?.date, sh?.endDate)} · {frameCount(list.length)}</span></header>
         <div class="contact-grid"><For each={list}>{(photo, index) => <Tile photo={photo} index={index()} />}</For></div>
       </section>;
     }}</For>;
@@ -180,7 +189,7 @@ export default function Library(props: LibraryProps) {
           const stats = () => shootStats(sh);
           return <button type="button" class="rail-item" classList={{ active: scope().type === "shoot" && shoot()?.id === sh.id }} onClick={() => openScope({ type: "shoot", id: sh.id })}>
             <img src={coverOf(sh)} alt="" loading="lazy" decoding="async" />
-            <span><strong>{sh.title}</strong><small>{dateLabel(sh.date).slice(0, 6)}　{stats().live}/{stats().total}
+            <span><strong>{sh.title}</strong><small>{dateLabel(sh.date, sh.endDate)}　{stats().live}/{stats().total}
               <Show when={stats().missing}>　<em>{stats().missing} alt</em></Show><Show when={!sh.approved}>　HIDDEN</Show></small></span>
           </button>;
         }}</For>
@@ -202,7 +211,7 @@ export default function Library(props: LibraryProps) {
         <div class="library-identity">
           <Show when={shoot()}><img class="library-cover" src={coverOf(shoot()!)} alt="" /></Show>
           <div>
-            <div class="eyebrow">{shoot() ? `SHOOT · ${dateLabel(shoot()!.date)} · ${frameCount(photosIn(shoot()!.id).length)} · ${shoot()!.published ? "ON THE TABLE" : "NOT ON THE TABLE"}${shoot()!.approved !== shoot()!.published ? " · CHANGE QUEUED" : ""}`
+            <div class="eyebrow">{shoot() ? `SHOOT · ${dateLabel(shoot()!.date, shoot()!.endDate)} · ${frameCount(photosIn(shoot()!.id).length)} · ${shoot()!.published ? "ON THE TABLE" : "NOT ON THE TABLE"}${shoot()!.approved !== shoot()!.published ? " · CHANGE QUEUED" : ""}`
               : collection() ? `COLLECTION · ${frameCount(collection()!.photoIds.length)}` : `LIBRARY · ${frameCount(content.photos.length)} · ${content.shoots.length} SHOOTS`}</div>
             <h1>{shoot()?.title ?? collection()?.title ?? "All photographs"}</h1>
             <Show when={shoot()?.description || collection()?.description}><p>{shoot()?.description || collection()?.description}</p></Show>
@@ -270,4 +279,3 @@ export default function Library(props: LibraryProps) {
     </Show>
   </div>;
 }
-

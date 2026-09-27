@@ -123,7 +123,7 @@ export default function AltPass(props: { ids: string[]; onClose(): void }) {
             <button type="button" onClick={() => { setDraft(p().id, prior().alt); field?.focus(); }}>Start from this</button>
           </div>}</Show>
         <Show when={altConfigured() && !altStatus().available}>
-          <p class="pass-note">The local alt-text model is offline. Start it with <kbd>npm run alt:model</kbd> to get drafted descriptions.</p>
+          <p class="pass-note">The local alt-text model is offline. Check the local AI service to restore drafted descriptions.</p>
         </Show>
         <p class="pass-note">Screen readers read this aloud. It is never shown as a caption. Skip “photo of”; name the subject and what is happening.</p>
       </div>
