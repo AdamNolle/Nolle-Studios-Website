@@ -1,4 +1,12 @@
-# Release review — 25 September 2026
+# Release review — 27 September 2026
+
+## Content Room workflow pass, 27 September 2026
+
+- The Content Room header now has one clear Publish status/action instead of duplicate Publish navigation. Public-site and sign-out actions live in a compact overflow menu, leaving the primary navigation focused on Overview, Library, Collections, and Upload.
+- Overview puts the two starting actions—New shoot and Upload media—beside the page title. The redundant upload control above the shoot grid now opens the full library instead.
+- A shoot's primary controls now read as one workflow: site visibility, Upload photos, missing alt-text work when needed, and a More menu for edit and preview. Empty shoots use deliberate cover placeholders instead of broken images.
+- Upload is presented as a numbered flow: choose a destination shoot, add files, then review. The explanation makes it explicit that files remain private until Publish.
+- Checked in the isolated Content Room at desktop and 390×844, including the overview, upload setup, empty library, shoot actions, overflow menu, and empty-shoot states. `npm run typecheck`, `npm run build:admin`, and all 43 tests passed.
 
 ## TypeScript and SolidJS rewrite, 25 September 2026
 

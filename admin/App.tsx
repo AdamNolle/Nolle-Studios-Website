@@ -18,7 +18,7 @@ const Collections = lazy(() => import("./Collections"));
 const Publish = lazy(() => import("./Publish"));
 const AltPass = lazy(() => import("./AltPass"));
 
-const NAV: [View, string][] = [["overview", "Overview"], ["library", "Library"], ["collections", "Collections"], ["uploads", "Uploads"], ["publish", "Publish"]];
+const NAV: [View, string][] = [["overview", "Overview"], ["library", "Library"], ["collections", "Collections"], ["uploads", "Upload"]];
 const SHORTCUTS: [string[], string][] = [
   [["←", "→", "J", "K"], "Move between photos"], [["X"], "Select or deselect"], [["Shift-click"], "Select a range"],
   [["⌘A"], "Select all in view"], [["P"], "Approve for site"], [["D"], "Back to draft"], [["A"], "Alt-text pass"],
@@ -276,12 +276,17 @@ function Room() {
             <span class="chip-long">{pending() ? `PUBLISH ${pending()} CHANGE${pending() === 1 ? "" : "S"}` : "ALL CHANGES LIVE"}</span>
             <span class="chip-short">{pending() ? `${pending()} PENDING` : "UP TO DATE"}</span>
           </button>
-          <a href={siteUrl("")} target="_blank" rel="noopener">View site ↗</a>
-          <button type="button" onClick={() => void signOut()}>Sign out</button>
+          <details class="account-menu">
+            <summary aria-label="More content room options">•••</summary>
+            <div class="menu-popover">
+              <a href={siteUrl("")} target="_blank" rel="noopener" onClick={event => { (event.currentTarget.closest("details") as HTMLDetailsElement).open = false; }}>View public site ↗</a>
+              <button type="button" onClick={() => void signOut()}>Sign out</button>
+            </div>
+          </details>
         </div>
       </header>
       <Switch>
-        <Match when={view() === "overview"}><Overview onAltPass={openPass} /></Match>
+        <Match when={view() === "overview"}><Overview onAltPass={openPass} onCreateShoot={() => setCreating("shoot")} /></Match>
         <Match when={view() === "library"}>
           <Library onAltPass={openPass} onCreate={setCreating} onEditShoot={setEditing} onHelp={() => setHelp(true)} />
         </Match>

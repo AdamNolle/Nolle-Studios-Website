@@ -90,19 +90,28 @@ export default function Uploads(props: { onAltPass(ids: string[]): void; onCreat
   return <main class="uploads-page page-wrap">
     <div class="eyebrow">UPLOADS</div>
     <h1>Add photographs and video</h1>
-    <div class="upload-target">
-      <label for="upload-target">Into shoot</label>
-      <select id="upload-target" value={shootId()} onChange={event => setTarget(event.currentTarget.value)}>
-        <For each={shoots()}>{shoot => <option value={shoot.id}>{shoot.title}</option>}</For>
-      </select>
-      <button type="button" class="quiet-button" onClick={() => props.onCreateShoot()}>+ New shoot</button>
-      <span class="muted">New photos stay private while you review their alt text. Publish then releases every described photo in shoots marked “On site.”</span>
-    </div>
+    <p class="intro">Choose the shoot, add your files, then review their descriptions. Nothing goes public until you publish.</p>
+    <section class="upload-start" aria-labelledby="upload-destination">
+      <div class="upload-step">01</div>
+      <div class="upload-start-copy">
+        <div class="eyebrow">DESTINATION</div>
+        <h2 id="upload-destination">Choose a shoot</h2>
+        <p>Every file in this batch will be added to the selected shoot.</p>
+      </div>
+      <div class="upload-target">
+        <label class="sr-only" for="upload-target">Destination shoot</label>
+        <select id="upload-target" value={shootId()} onChange={event => setTarget(event.currentTarget.value)}>
+          <For each={shoots()}>{shoot => <option value={shoot.id}>{shoot.title}</option>}</For>
+        </select>
+        <button type="button" class="quiet-button" onClick={() => props.onCreateShoot()}>+ New shoot</button>
+      </div>
+    </section>
     <Show when={shoots().length} fallback={<p class="empty-copy panel">Create a shoot first. Curated shoots come from the site files and do not take uploads.</p>}>
       <label class="drop-zone" classList={{ dragover: over() }}
         onDragOver={event => { if (event.dataTransfer?.types.includes("Files")) { event.preventDefault(); setOver(true); } }}
         onDragLeave={() => setOver(false)}
         onDrop={event => { event.preventDefault(); setOver(false); add(event.dataTransfer?.files); }}>
+        <span class="drop-kicker">02 · FILES</span>
         <strong>Drop photographs or video here</strong>
         <small>Photos: JPEG, PNG, TIFF, WebP, AVIF or HEIF up to 50 MB. Camera, lens and capture time are kept; GPS and other private metadata are removed.
           Video: MP4, MOV or WebM up to 2 GB, transcoded to 720p and 1080p with a poster frame and metadata removed. Masters stay on private storage.</small>

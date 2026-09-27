@@ -188,7 +188,9 @@ export default function Library(props: LibraryProps) {
         <For each={ordered(content.shoots)}>{sh => {
           const stats = () => shootStats(sh);
           return <button type="button" class="rail-item" classList={{ active: scope().type === "shoot" && shoot()?.id === sh.id }} onClick={() => openScope({ type: "shoot", id: sh.id })}>
-            <img src={coverOf(sh)} alt="" loading="lazy" decoding="async" />
+            <Show when={coverOf(sh)} fallback={<span class="rail-cover-empty" aria-hidden="true">EMPTY</span>}>
+              {src => <img src={src()} alt="" loading="lazy" decoding="async" />}
+            </Show>
             <span><strong>{sh.title}</strong><small>{dateLabel(sh.date, sh.endDate)}　{stats().live}/{stats().total}
               <Show when={stats().missing}>　<em>{stats().missing} alt</em></Show><Show when={!sh.approved}>　HIDDEN</Show></small></span>
           </button>;
@@ -209,7 +211,9 @@ export default function Library(props: LibraryProps) {
       </Show>
       <div class="library-head">
         <div class="library-identity">
-          <Show when={shoot()}><img class="library-cover" src={coverOf(shoot()!)} alt="" /></Show>
+          <Show when={shoot()}>{sh => <Show when={coverOf(sh())} fallback={<span class="library-cover library-cover-empty" aria-hidden="true">NO COVER</span>}>
+            {src => <img class="library-cover" src={src()} alt="" />}
+          </Show>}</Show>
           <div>
             <div class="eyebrow">{shoot() ? `SHOOT · ${dateLabel(shoot()!.date, shoot()!.endDate)} · ${frameCount(photosIn(shoot()!.id).length)} · ${shoot()!.published ? "ON THE TABLE" : "NOT ON THE TABLE"}${shoot()!.approved !== shoot()!.published ? " · CHANGE QUEUED" : ""}`
               : collection() ? `COLLECTION · ${frameCount(collection()!.photoIds.length)}` : `LIBRARY · ${frameCount(content.photos.length)} · ${content.shoots.length} SHOOTS`}</div>
@@ -220,16 +224,26 @@ export default function Library(props: LibraryProps) {
         <div class="library-head-actions">
           <Show when={shoot()}>{sh => <>
             <Show when={sh().curated}><span class="curated-tag">CURATED · ARCHIVE.JSON</span></Show>
-            <div class="seg" role="group" aria-label="Shoot visibility">
-              <button type="button" classList={{ on: sh().approved }} aria-pressed={sh().approved} onClick={() => change(() => api(`/shoots/${encodeURIComponent(sh().id)}`, { method: "PATCH", body: { approved: true } }), `${sh().title} will appear on the table after you publish`)}>On site</button>
-              <button type="button" classList={{ on: !sh().approved }} aria-pressed={!sh().approved} onClick={() => change(() => api(`/shoots/${encodeURIComponent(sh().id)}`, { method: "PATCH", body: { approved: false } }), `${sh().title} will be hidden after you publish`)}>Hidden</button>
+            <div class="visibility-control">
+              <span>Site visibility</span>
+              <div class="seg" role="group" aria-label="Shoot visibility">
+                <button type="button" classList={{ on: sh().approved }} aria-pressed={sh().approved} onClick={() => change(() => api(`/shoots/${encodeURIComponent(sh().id)}`, { method: "PATCH", body: { approved: true } }), `${sh().title} will appear on the table after you publish`)}>On site</button>
+                <button type="button" classList={{ on: !sh().approved }} aria-pressed={!sh().approved} onClick={() => change(() => api(`/shoots/${encodeURIComponent(sh().id)}`, { method: "PATCH", body: { approved: false } }), `${sh().title} will be hidden after you publish`)}>Hidden</button>
+              </div>
             </div>
-            <button type="button" onClick={() => props.onEditShoot(sh().id)}>Edit details</button>
-            <a href={previewUrl(sh().id)} target="_blank" rel="noopener">Preview on table</a>
+            <Show when={!sh().curated}><button type="button" class="primary" onClick={() => setView("uploads")}>Upload photos</button></Show>
+            <details class="action-menu">
+              <summary>More</summary>
+              <div class="menu-popover">
+                <button type="button" onClick={event => { (event.currentTarget.closest("details") as HTMLDetailsElement).open = false; props.onEditShoot(sh().id); }}>Edit shoot details</button>
+                <a href={previewUrl(sh().id)} target="_blank" rel="noopener" onClick={event => { (event.currentTarget.closest("details") as HTMLDetailsElement).open = false; }}>Preview on table ↗</a>
+              </div>
+            </details>
           </>}</Show>
-          <button type="button" classList={{ "pass-button": true, warn: scoped().some(p => !p.alt.trim()) }}
-            onClick={() => props.onAltPass(scoped().filter(p => !p.alt.trim()).map(p => p.id))}>Alt-text pass · {scoped().filter(p => !p.alt.trim()).length}</button>
-          <Show when={shoot() && !shoot()!.curated}><button type="button" class="primary" onClick={() => setView("uploads")}>Upload</button></Show>
+          <Show when={scoped().filter(p => !p.alt.trim()).length}>{missing =>
+            <button type="button" class="pass-button warn"
+              onClick={() => props.onAltPass(scoped().filter(p => !p.alt.trim()).map(p => p.id))}>Write alt text · {missing()}</button>}
+          </Show>
         </div>
       </div>
       <Show when={shoot() && !shoot()!.approved}>

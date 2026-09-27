@@ -28,7 +28,7 @@ export function Pipeline() {
   </div>;
 }
 
-export default function Overview(props: { onAltPass(ids: string[]): void }) {
+export default function Overview(props: { onAltPass(ids: string[]): void; onCreateShoot(): void }) {
   const tasks = () => {
     const c = counts(), list: { title: string; sub: string; action: string; dot: string; run(): void }[] = [];
     const worst = content.shoots.map(shoot => ({ shoot, missing: shootStats(shoot).missing })).sort((a, b) => b.missing - a.missing)[0];
@@ -64,8 +64,16 @@ export default function Overview(props: { onAltPass(ids: string[]): void }) {
   const last = () => content.history[0];
 
   return <main class="overview page-wrap">
-    <div class="eyebrow">OVERVIEW · {today()}</div>
-    <h1>The work in progress</h1>
+    <div class="page-heading">
+      <div>
+        <div class="eyebrow">OVERVIEW · {today()}</div>
+        <h1>The work in progress</h1>
+      </div>
+      <div class="page-actions">
+        <button type="button" onClick={() => props.onCreateShoot()}>New shoot</button>
+        <button type="button" class="primary" onClick={() => setView("uploads")}>Upload media</button>
+      </div>
+    </div>
     <Pipeline />
     <div class="overview-panels">
       <section class="panel attention">
@@ -89,12 +97,14 @@ export default function Overview(props: { onAltPass(ids: string[]): void }) {
         <button type="button" class="primary" onClick={() => setView("publish")}>Review and publish</button>
       </section>
     </div>
-    <div class="section-heading"><h2>Shoots</h2><button type="button" onClick={() => setView("uploads")}>Upload media</button></div>
+    <div class="section-heading"><h2>Shoots</h2><button type="button" onClick={() => { setScopeSignal({ type: "all" }); setView("library"); }}>Open library</button></div>
     <div class="shoot-cards">
       <For each={ordered(content.shoots)}>{shoot => {
         const stats = () => shootStats(shoot);
         return <button type="button" class="shoot-card" onClick={() => openScope({ type: "shoot", id: shoot.id })}>
-          <img src={coverOf(shoot)} alt="" loading="lazy" decoding="async" />
+          <Show when={coverOf(shoot)} fallback={<span class="shoot-cover-empty" aria-hidden="true">NO COVER YET</span>}>
+            {src => <img src={src()} alt="" loading="lazy" decoding="async" />}
+          </Show>
           <div class="shoot-card-copy">
             <div class="shoot-card-meta"><span>{dateLabel(shoot.date, shoot.endDate)}</span><span classList={{ live: shoot.published }}>{shoot.published ? "ON SITE" : "HIDDEN"}</span></div>
             <h3>{shoot.title}</h3>
