@@ -1,3 +1,5 @@
+import { normalizeCameraMetadata } from "../shared/camera.ts";
+
 const BASE = import.meta.env?.BASE_URL ?? "/";
 
 export type PhotoFormats = Record<string, Record<string, string>>;
@@ -102,6 +104,10 @@ export function normalizeArchive(data: unknown): ArchiveShoot[] | null {
       const rawFull = stringValue(rawPhoto.full);
       const jpegThumb = formatValue(rawPhoto, "jpeg", "thumb");
       if (!rawThumb && !rawMid && !rawFull && !jpegThumb) return [];
+      const camera = normalizeCameraMetadata(
+        stringValue(rawPhoto.cameraMake),
+        stringValue(rawPhoto.cameraModel),
+      );
       const photo: ArchivePhoto = {
         id: stringValue(rawPhoto.id) || `${stringValue(rawShoot.id) || index}-${photoIndex}`,
         alt: stringValue(rawPhoto.alt) || stringValue(rawPhoto.caption) ||
@@ -118,8 +124,7 @@ export function normalizeArchive(data: unknown): ArchiveShoot[] | null {
           mp4_720: mediaUrl(rawPhoto.video.mp4_720),
           webm: mediaUrl(rawPhoto.video.webm),
         } : undefined,
-        cameraMake: stringValue(rawPhoto.cameraMake),
-        cameraModel: stringValue(rawPhoto.cameraModel),
+        ...camera,
         lensModel: stringValue(rawPhoto.lensModel),
         capturedAt: stringValue(rawPhoto.capturedAt),
       };

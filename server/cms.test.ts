@@ -409,7 +409,7 @@ test('upload stays private until publish, keeps safe EXIF, and unpublish removes
     assert.equal(await exists(stagedFile), true);
     assert.equal(await exists(publicFile), false);
     assert.deepEqual(await extractCameraMetadata(stagedFile), {
-      cameraMake: 'SONY', cameraModel: 'ILCE-7M5', lensModel: 'FE 100-400mm F5.6-8 OSS', capturedAt: '2026-09-20T09:23:53',
+      cameraMake: 'Sony', cameraModel: 'a7 V', lensModel: 'FE 100-400mm F5.6-8 OSS', capturedAt: '2026-09-20T09:23:53',
     });
     assert.equal((await sharp(stagedFile).metadata()).xmp, undefined);
     assert.equal((await site()).shoots[0].photos.length, 0);
@@ -417,7 +417,8 @@ test('upload stays private until publish, keeps safe EXIF, and unpublish removes
     const privatePreview = await (await admin('/preview')).json() as PublicCatalog;
     const stagedPhoto = privatePreview.shoots[0].photos.find(photo => photo.id === photoId)!;
     assert.equal(stagedPhoto.alt, 'A warm studio frame');
-    assert.equal(stagedPhoto.cameraModel, 'ILCE-7M5');
+    assert.equal(stagedPhoto.cameraMake, 'Sony');
+    assert.equal(stagedPhoto.cameraModel, 'a7 V');
     assert.equal(stagedPhoto.lensModel, 'FE 100-400mm F5.6-8 OSS');
     assert.equal(stagedPhoto.capturedAt, '2026-09-20T09:23:53');
     assert.match(stagedPhoto.mid, new RegExp(`/api/admin/photos/${photoId}/preview\\?width=1600$`));
@@ -440,7 +441,7 @@ test('upload stays private until publish, keeps safe EXIF, and unpublish removes
     assert.ok(publishedMeta.exif);
     assert.equal(publishedMeta.xmp, undefined);
     assert.deepEqual(await extractCameraMetadata(publishedBytes), {
-      cameraMake: 'SONY', cameraModel: 'ILCE-7M5', lensModel: 'FE 100-400mm F5.6-8 OSS', capturedAt: '2026-09-20T09:23:53',
+      cameraMake: 'Sony', cameraModel: 'a7 V', lensModel: 'FE 100-400mm F5.6-8 OSS', capturedAt: '2026-09-20T09:23:53',
     });
     let catalog = await site();
     assert.equal(catalog.shoots[0].photos.length, 1);

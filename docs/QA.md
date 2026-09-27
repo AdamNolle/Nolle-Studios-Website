@@ -1,5 +1,11 @@
 # Release review — 27 September 2026
 
+## Sony camera metadata normalization, 27 September 2026
+
+- Sony EXIF values `SONY` / `ILCE-7M5` are now translated once at the shared metadata boundary to the readable `Sony a7 V`. The same normalization covers new uploads, the Content Room, the live catalog, and static archive exports.
+- Generated image variants preserve the normalized make and model in their safe EXIF fields. The ASCII model spelling avoids the EXIF writer replacing Sony's Greek alpha mark with `?`.
+- `npm run typecheck`, all 43 tests, and the production build passed. The upload regression verifies both the catalog metadata and the EXIF embedded in staged and published variants.
+
 ## Content Room workflow pass, 27 September 2026
 
 - The public header now has one Contact entry instead of separate About and Contact controls that opened the same panel. The panel is contact-only on desktop and phone, with the descriptive About copy and shoot-count footer removed.

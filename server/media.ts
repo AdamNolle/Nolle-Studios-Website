@@ -8,6 +8,7 @@ import sharp from 'sharp';
 import type { Metadata } from 'sharp';
 import { AwsClient } from 'aws4fetch';
 import type { Settings } from './settings.ts';
+import { normalizeCameraMetadata } from '../shared/camera.ts';
 
 export const WIDTHS = [640, 960, 1600, 2400, 3200] as const;
 const allowedFormats = new Set(['jpeg', 'png', 'tiff', 'webp', 'avif', 'heif']);
@@ -154,9 +155,12 @@ export async function extractCameraMetadata(input: string | Buffer): Promise<Cam
       translateValues: false,
       reviveValues: false,
     }) as Record<string, unknown> | undefined;
+    const camera = normalizeCameraMetadata(
+      metadataText(tags?.Make, 80),
+      metadataText(tags?.Model, 120),
+    );
     return {
-      cameraMake: metadataText(tags?.Make, 80),
-      cameraModel: metadataText(tags?.Model, 120),
+      ...camera,
       lensModel: metadataText(tags?.LensModel, 180),
       capturedAt: capturedAt(tags?.DateTimeOriginal),
     };

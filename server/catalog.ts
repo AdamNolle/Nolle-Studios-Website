@@ -1,5 +1,6 @@
 import type { CollectionRow, Db, PhotoRow, ShootRow } from './db.ts';
 import type { AdminContent, CollectionDto, PhotoDto, PublicCatalog, PublishRecord, ShootDto } from '../shared/api.ts';
+import { normalizeCameraMetadata } from '../shared/camera.ts';
 
 // Rows keep two copies of every editable field: the working copy the Content
 // Room edits, and the live_* copy the last Publish released. The public
@@ -11,6 +12,7 @@ const parse = <T>(json: string | null | undefined, fallback: T): T => {
 
 function photoDto(row: PhotoRow, publicOnly = false): PhotoDto {
   const assets = parse<{ thumb?: string; mid?: string; full?: string; formats?: PhotoDto['formats'] }>(row.assets_json, {});
+  const camera = normalizeCameraMetadata(row.camera_make ?? '', row.camera_model ?? '');
   return {
     id: row.id, shootId: publicOnly ? row.live_shoot_id : row.shoot_id,
     title: publicOnly ? '' : row.title,
@@ -27,7 +29,7 @@ function photoDto(row: PhotoRow, publicOnly = false): PhotoDto {
     video: parse(row.video_assets_json, {}),
     thumb: assets.thumb ?? '', mid: assets.mid ?? '', full: assets.full ?? '',
     formats: assets.formats ?? {}, createdAt: row.created_at,
-    cameraMake: row.camera_make ?? '', cameraModel: row.camera_model ?? '',
+    ...camera,
     lensModel: row.lens_model ?? '', capturedAt: row.captured_at ?? '',
   };
 }
