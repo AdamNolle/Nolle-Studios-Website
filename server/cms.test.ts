@@ -816,6 +816,10 @@ test('uploads without alt text get a drafted suggestion that is never saved as a
     assert.equal(photo.alt, '');
     const [request] = model.requests;
     assert.equal(request.messages[0].role, 'system');
+    assert.equal(request.temperature, 0);
+    assert.equal(request.max_tokens, 64);
+    assert.match(request.messages[0].content, /every noun and verb is supported by visible evidence/i);
+    assert.doesNotMatch(request.messages[0].content, /stretch/i);
     // The shoot title stays out of the prompt: models describe it as if it were visible.
     assert.doesNotMatch(JSON.stringify(request.messages), /Studio session/);
     assert.match(request.messages[1].content[1].image_url.url, /^data:image\/jpeg;base64,/);

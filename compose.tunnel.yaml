@@ -3,7 +3,7 @@ services:
     environment:
       SITE_URL: ${SITE_URL:-https://nollestudios.com/}
       ALT_TEXT_URL: ${ALT_TEXT_URL:-http://ollama:11434}
-      ALT_TEXT_MODEL: ${ALT_TEXT_MODEL:-gemma3:4b}
+      ALT_TEXT_MODEL: ${ALT_TEXT_MODEL:-qwen3-vl:8b-instruct}
       ALT_TEXT_AUTO: ${ALT_TEXT_AUTO:-true}
     networks:
       - default

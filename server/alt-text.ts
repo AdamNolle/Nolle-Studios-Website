@@ -9,17 +9,18 @@ import type { AltTextStatus } from '../shared/api.ts';
 
 const MAX = 125;
 // Tuned against the portfolio: literal, short, and no guesses. The shoot title
-// is deliberately left out; models treat it as something they can see.
+// is deliberately left out; models treat it as something they can see. Avoid
+// pose examples here: small vision models tend to repeat their example verb
+// across an entire shoot instead of looking at each frame.
 const PROMPT = [
-  "You write alt text for photographs in a photographer's portfolio.",
-  'Look carefully and describe only what is clearly visible.',
-  'Name the main subject, then what they are doing, then the setting.',
-  'Choose the most ordinary reading of a pose: someone reaching out with one foot planted is stretching, not diving;',
-  'someone mid-stride is running or walking.',
-  'Give a number of people only when you can count them with certainty.',
-  'Leave out time of year, events, team names, jersey numbers, and sign text.',
-  'Reply with one sentence of 8 to 20 words and nothing else.',
-  "Do not begin with 'A photo of' or 'An image of'.",
+  'Write concise alt text for a photograph in a professional portfolio.',
+  'Describe the central subject first, then the directly visible action or posture, then the setting when useful.',
+  'Use only observable facts. Do not infer intent, emotion, relationships, game state, or an action that a single frame does not prove.',
+  'Choose literal verbs. If motion is unclear, describe the visible posture instead of guessing.',
+  'For a moving object, describe its visible position unless its direction is unambiguous.',
+  'Mention only visually important details. Never include names, team identity, visible text, numbers, brands, advertisements, image quality, or photographic technique.',
+  'Before answering, verify that every noun and verb is supported by visible evidence.',
+  'Return exactly one natural sentence of 8 to 16 words, without a label or introductory phrase.',
 ].join(' ');
 
 export class AltTextUnavailable extends Error {}
@@ -67,7 +68,7 @@ export function createAltWriter(settings: Pick<Settings, 'altTextUrl' | 'altText
         signal: AbortSignal.timeout(90_000),
         body: JSON.stringify({
           ...(model ? { model } : {}),
-          temperature: 0.1, max_tokens: 80,
+          temperature: 0, max_tokens: 64,
           messages: [
             { role: 'system', content: PROMPT },
             { role: 'user', content: [

@@ -39,7 +39,7 @@ Every shoot is a contact sheet on a cork board, newest first. Open one and its p
   <img src="docs/images/alt-text-pass.webp" alt="The alt-text pass: a photograph beside a drafted description, labelled as drafted by the local model" width="900">
 </p>
 
-**Alt text from a local model.** A vision model running on your own machine ([Qwen3-VL 8B](https://huggingface.co/unsloth/Qwen3-VL-8B-Instruct-GGUF) through `llama.cpp`) drafts a description for every upload without alt text. Drafts are suggestions only: the alt-text pass shows each photograph with its draft, and nothing is saved until you accept or correct it. No photograph leaves the server.
+**Alt text from a local model.** Qwen3-VL 8B runs locally through Ollama in production (or `llama.cpp` in development) and drafts a description for every upload without alt text. Drafts are suggestions only: the alt-text pass shows each photograph with its draft, and nothing is saved until you accept or correct it. No photograph leaves the server.
 
 Shoots can span a start and end date. In the Content Room, the cover is selectable directly from any shoot thumbnail, and selected private uploads can be deleted together after confirmation. Live and curated media keep their existing publish safeguards.
 
@@ -52,7 +52,7 @@ Shoots can span a start and end date. In the Content Room, the cover is selectab
 | Site and Content Room | [SolidJS](https://www.solidjs.com), TypeScript, [Vite](https://vite.dev) |
 | CMS | [Hono](https://hono.dev) on Node.js 26 (native TypeScript), SQLite locally or PostgreSQL, S3-compatible storage (R2, B2) |
 | Media | [sharp](https://sharp.pixelplumbing.com) for images, FFmpeg for video |
-| Alt text | [llama.cpp](https://github.com/ggml-org/llama.cpp) serving Qwen3-VL on `127.0.0.1` |
+| Alt text | [Ollama](https://ollama.com) or [llama.cpp](https://github.com/ggml-org/llama.cpp), serving Qwen3-VL 8B locally |
 | Art | [Blender](https://www.blender.org) 5.2, Cycles on the GPU |
 | Deployment | Docker Compose on Adlon, behind Caddy and Cloudflare Tunnel |
 
