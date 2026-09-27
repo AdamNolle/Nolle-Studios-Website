@@ -1,7 +1,7 @@
 import { For, Show, createMemo, createSignal } from "solid-js";
 import { api } from "./api";
 import { Pipeline } from "./Overview";
-import { change, collectionPending, content, photoOf, photoPending, photoSrc, shootOf, shootPending, siteUrl, statusOf, coverOf, setView } from "./store";
+import { autoPublishReady, change, collectionPending, content, photoOf, photoPending, photoSrc, shootOf, shootPending, siteUrl, statusOf, coverOf, setView } from "./store";
 import { localPreview, photoCount, siteLabel, when } from "./util";
 
 export default function Publish() {
@@ -15,7 +15,7 @@ export default function Publish() {
   const groups = () => {
     const p = pending().photos;
     return ([
-      ["Photos going live", p.filter(photo => photo.approved && !photo.published).length],
+      ["Photos going live", p.filter(photo => (photo.approved || autoPublishReady(photo)) && !photo.published).length],
       ["Photos coming off the site", p.filter(photo => !photo.approved && photo.published).length],
       ["Alt text updates", p.filter(photo => photo.approved && photo.published && photo.alt !== photo.liveAlt).length],
       ["Sequences reordered", new Set(p.filter(photo => photo.approved && photo.published && photo.sortOrder !== photo.liveSortOrder).map(photo => photo.shootId)).size],
@@ -26,7 +26,7 @@ export default function Publish() {
   const rows = () => [
     ...pending().photos.map(photo => ({
       title: photo.alt || "Untitled photograph", sub: shootOf(photo)?.title ?? "Archive", image: photoSrc(photo),
-      action: photo.approved !== photo.published ? (photo.approved ? "ADDING" : "REMOVING") :
+      action: autoPublishReady(photo) ? "ADDING AUTOMATICALLY" : photo.approved !== photo.published ? (photo.approved ? "ADDING" : "REMOVING") :
         [photo.alt !== photo.liveAlt && "ALT TEXT", photo.shootId !== photo.liveShootId && "SHOOT",
           photo.sortOrder !== photo.liveSortOrder && "ORDER", photo.isCover !== photo.liveIsCover && "COVER"].filter(Boolean).join(" · "),
     })),
@@ -39,8 +39,10 @@ export default function Publish() {
     }),
   ];
   const blocked = () => content.photos.filter(photo => statusOf(photo) === "approved" && !content.shoots.find(s => s.id === photo.shootId)?.approved).length;
-  const missingLive = () => content.photos.filter(photo => photo.approved && !photo.alt.trim()).length;
-  const drafts = () => content.photos.filter(photo => statusOf(photo) === "draft").length;
+  const missingLive = () => content.photos.filter(photo => !photo.alt.trim() &&
+    (photo.approved || (!photo.published && !!shootOf(photo)?.approved))).length;
+  const privateDrafts = () => content.photos.filter(photo => statusOf(photo) === "draft" && !autoPublishReady(photo) &&
+    !(!photo.alt.trim() && !!shootOf(photo)?.approved)).length;
 
   async function publishNow() {
     setBusy(true);
@@ -53,8 +55,8 @@ export default function Publish() {
   return <main class="publish-page page-wrap">
     <div class="eyebrow">PUBLISH · {siteLabel.toUpperCase()}</div>
     <h1>Put the work on the table</h1>
-    <p class="intro">Photos move from Draft to Approved in the library. Nothing reaches the site until you publish here: approved photos go live,
-      removed ones come off, and alt text and ordering update together.
+    <p class="intro">Publish releases everything ready for the site in one step: every described new photo in an “On site” shoot goes live,
+      removed photos come off, and alt text and ordering update together. Photos in hidden shoots stay private.
       {localPreview ? " This updates the local catalog; the GitHub Pages site needs a separate static build and deployment." : ""}</p>
     <Pipeline />
     <div class="publish-layout">
@@ -64,11 +66,11 @@ export default function Publish() {
           <dl class="publish-groups"><For each={groups()}>{([label, count]) => <><dt>{label}</dt><dd>{count}</dd></>}</For></dl>
         </Show>
         <Show when={blocked()}><p class="publish-note">{photoCount(blocked())} approved in hidden shoots will not appear until those shoots are shown.</p></Show>
-        <Show when={missingLive()}><p class="publish-note publish-note--warn">{photoCount(missingLive())} approved without alt text. Add it before publishing.</p></Show>
-        <Show when={drafts()}><p class="publish-note">{photoCount(drafts())} still in Draft and not queued for Publish. Add or accept alt text, approve the photos, and show their shoot first. <button type="button" onClick={() => setView("library")}>Open Library</button></p></Show>
+        <Show when={missingLive()}><p class="publish-note publish-note--warn">{photoCount(missingLive())} in “On site” shoots still need alt text. Add it before publishing everything. <button type="button" onClick={() => setView("library")}>Open Library</button></p></Show>
+        <Show when={privateDrafts()}><p class="publish-note">{photoCount(privateDrafts())} will remain private because their shoots are hidden. Nothing from a hidden shoot is published.</p></Show>
         <div class="publish-go">
-          <button type="button" class="primary" disabled={!pending().total || busy()} onClick={publishNow}>
-            {busy() ? "Publishing…" : pending().total ? `Publish ${pending().total} change${pending().total === 1 ? "" : "s"}` : "Nothing to publish"}
+          <button type="button" class="primary" disabled={!pending().total || !!missingLive() || busy()} onClick={publishNow}>
+            {busy() ? "Publishing…" : missingLive() ? `Add alt text to ${photoCount(missingLive())}` : pending().total ? `Publish everything · ${pending().total} change${pending().total === 1 ? "" : "s"}` : "Everything is live"}
           </button>
           <a href={siteUrl("")} target="_blank" rel="noopener">View site ↗</a>
         </div>

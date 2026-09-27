@@ -34,6 +34,7 @@ type Corner = "tl" | "tr" | "br" | "bl";
 const TAPE_CORNERS: Record<string, Corner[]> = { corners: ["tl", "tr", "br", "bl"], "top-corners": ["tl", "tr"], diagonal: ["tl", "br"] };
 const PIN_SPOTS: Record<number, Corner[]> = { 2: ["tl", "tr"], 4: ["tl", "tr", "br", "bl"] };
 const PIN_SIZE = 56, PIN_INSET = "16px";
+const TAPE_EDGE = "2%", TAPE_FAR_EDGE = "98%";
 
 /** Where each piece of tape or each pin sits on a print, as sprites. */
 function holdPieces(print: Print): Piece[] {
@@ -57,7 +58,9 @@ function holdPieces(print: Print): Piece[] {
   const angle: Record<Corner, number> = { tl: -44, tr: 47, br: -46, bl: 43 };
   return TAPE_CORNERS[hold.layout].map((corner, n) => ({
     src: tapeArt("corner", 1 + ((hold.variant + n) % 2)), w, rot: angle[corner],
-    x: corner[1] === "l" ? "5%" : "95%", y: corner[0] === "t" ? "6%" : "94%",
+    // Centre the tape almost on the paper edge so enough of each piece lands
+    // on the cork to look like it is actually holding the print down.
+    x: corner[1] === "l" ? TAPE_EDGE : TAPE_FAR_EDGE, y: corner[0] === "t" ? TAPE_EDGE : TAPE_FAR_EDGE,
   }));
 }
 type Point = { x: number; y: number };

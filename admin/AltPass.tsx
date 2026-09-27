@@ -89,8 +89,8 @@ export default function AltPass(props: { ids: string[]; onClose(): void }) {
       <div class="pass-finished"><div>
         <h3>{done().size === ids.length ? "All written." : done().size ? "Pass finished." : "Nothing saved."}</h3>
         <p>{done().size === 0 ? "Every photograph was skipped. Their alt text is still missing."
-          : done().size === 1 ? "1 description saved. It goes live with the next publish."
-          : `${done().size} descriptions saved. They go live with the next publish.`}</p>
+          : done().size === 1 ? "1 description saved. Publish will include it automatically when its shoot is On site."
+          : `${done().size} descriptions saved. Publish will include them automatically when their shoots are On site.`}</p>
         <button type="button" class="primary" ref={el => queueMicrotask(() => el.focus())} onClick={() => props.onClose()}>Back to the library</button>
       </div></div>
     }>{p => <div class="pass-body">

@@ -100,7 +100,10 @@ export const collectionPending = (collection: CollectionDto) => collection.appro
     collection.description !== collection.liveDescription || collection.sortOrder !== collection.liveSortOrder ||
     JSON.stringify(collection.photoIds) !== JSON.stringify(collection.livePhotoIds)));
 
-export const photoPending = (photo: PhotoDto) => photo.approved !== photo.published ||
+/** Described new uploads in visible shoots are picked up by Publish automatically. */
+export const autoPublishReady = (photo: PhotoDto) => !photo.published && !photo.approved && !!photo.alt.trim() && !!shootOf(photo)?.approved;
+
+export const photoPending = (photo: PhotoDto) => autoPublishReady(photo) || photo.approved !== photo.published ||
   (photo.published && (photo.alt !== photo.liveAlt || photo.shootId !== photo.liveShootId || photo.sortOrder !== photo.liveSortOrder ||
     (photo.isCover !== photo.liveIsCover && !derived.waitingCovers().has(photo.shootId))));
 

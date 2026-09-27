@@ -96,7 +96,7 @@ export default function Uploads(props: { onAltPass(ids: string[]): void; onCreat
         <For each={shoots()}>{shoot => <option value={shoot.id}>{shoot.title}</option>}</For>
       </select>
       <button type="button" class="quiet-button" onClick={() => props.onCreateShoot()}>+ New shoot</button>
-      <span class="muted">New photos arrive as private drafts. Alt text is drafted by the local model when it is running.</span>
+      <span class="muted">New photos stay private while you review their alt text. Publish then releases every described photo in shoots marked “On site.”</span>
     </div>
     <Show when={shoots().length} fallback={<p class="empty-copy panel">Create a shoot first. Curated shoots come from the site files and do not take uploads.</p>}>
       <label class="drop-zone" classList={{ dragover: over() }}
@@ -125,8 +125,8 @@ export default function Uploads(props: { onAltPass(ids: string[]): void; onCreat
           </div>}</For>
         <Show when={!tally().active && tally().ready}>
           <div class="queue-done">
-            <span>{tally().ready === 1 ? "1 new draft. It stays private until you publish it." : `${tally().ready} new drafts. They stay private until you publish them.`}{tally().failed ? ` ${tally().failed} file${tally().failed === 1 ? "" : "s"} could not be used.` : ""}</span>
-            <span><button type="button" onClick={clear}>Clear queue</button><button type="button" class="primary" onClick={review}>Write alt text for new drafts</button></span>
+            <span>{tally().ready === 1 ? "1 upload ready for alt-text review." : `${tally().ready} uploads ready for alt-text review.`}{tally().failed ? ` ${tally().failed} file${tally().failed === 1 ? "" : "s"} could not be used.` : ""}</span>
+            <span><button type="button" onClick={clear}>Clear queue</button><button type="button" class="primary" onClick={review}>Review alt text</button></span>
           </div>
         </Show>
       </section>

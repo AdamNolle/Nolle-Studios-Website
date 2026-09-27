@@ -5,11 +5,25 @@ import { publishVariants, unpublishVariants, variantKeys } from './media.ts';
 import type { Staging, Storage } from './media.ts';
 import { HttpError } from './http.ts';
 
-// Publish releases every queued change together: approved uploads are copied
-// to public storage, withdrawn ones removed, and each live_* column catches up
-// with its working copy. A failed media step leaves the rest queued for a retry.
+// Publish releases every intended site change together. New, described uploads
+// in shoots marked "on site" are included automatically; withdrawals remain
+// explicit. A failed media step leaves the work queued for a retry.
 
 export async function publish(db: Db, staging: Staging, storage: Storage) {
+  const missingDrafts = await db.query<{ id: string }>(`SELECT photos.id FROM photos
+    JOIN shoots ON shoots.id = photos.shoot_id
+    WHERE photos.published = 0 AND photos.approved = 0 AND shoots.approved = 1 AND TRIM(photos.alt) = ''`);
+  if (missingDrafts.length) {
+    const label = missingDrafts.length === 1 ? 'photograph needs' : 'photographs need';
+    throw new HttpError(400, `${missingDrafts.length} ${label} alt text before everything can publish`);
+  }
+  const readyDrafts = await db.query<{ id: string }>(`SELECT photos.id FROM photos
+    JOIN shoots ON shoots.id = photos.shoot_id
+    WHERE photos.published = 0 AND photos.approved = 0 AND shoots.approved = 1 AND TRIM(photos.alt) <> ''`);
+  const queuedAt = now();
+  for (const photo of readyDrafts) {
+    await db.query('UPDATE photos SET approved = 1, updated_at = ? WHERE id = ?', [queuedAt, photo.id]);
+  }
   const [photos, shoots, collections] = await Promise.all([
     db.query<PhotoRow>('SELECT * FROM photos WHERE approved <> published ORDER BY created_at ASC, id ASC'),
     db.query<{ id: string }>('SELECT id FROM shoots WHERE approved <> published'),

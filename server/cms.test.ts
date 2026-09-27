@@ -521,6 +521,31 @@ test('approval queues a photograph until publish and queues withdrawal without e
   } finally { await close(); }
 });
 
+test('Publish includes every described draft in shoots marked on site', async () => {
+  const { site, signIn, close } = await fixture();
+  try {
+    const { admin, content, upload } = await signIn();
+    const { id: visibleShoot } = await (await admin('/shoots', 'POST', { title: 'Visible shoot', published: true })).json() as Json;
+    const { id: hiddenShoot } = await (await admin('/shoots', 'POST', { title: 'Hidden shoot' })).json() as Json;
+    const jpeg = await jpegOf('#b6a48c');
+    for (const name of ['First frame', 'Second frame']) {
+      assert.equal((await upload('photos', visibleShoot, jpeg, { alt: name, name: `${name}.jpg` })).status, 201);
+    }
+    assert.equal((await upload('photos', hiddenShoot, jpeg, { alt: 'Private frame', name: 'private.jpg' })).status, 201);
+
+    assert.equal((await site()).shoots.find(shoot => shoot.id === visibleShoot)!.photos.length, 0);
+    const response = await admin('/publish', 'POST');
+    assert.equal(response.status, 200);
+    assert.equal((await site()).shoots.find(shoot => shoot.id === visibleShoot)!.photos.length, 2);
+
+    const rows = (await content()).photos;
+    assert.equal(rows.filter(photo => photo.shootId === visibleShoot).every(photo => photo.approved && photo.published), true);
+    const hidden = rows.find(photo => photo.shootId === hiddenShoot)!;
+    assert.equal(hidden.approved, false);
+    assert.equal(hidden.published, false);
+  } finally { await close(); }
+});
+
 test('failed later upload keeps earlier additions out of the public catalog', async () => {
   const { root, site, signIn, close } = await fixture();
   try {

@@ -4,7 +4,7 @@
 
 The dynamic gallery and Content Room run as Docker Compose services on Adlon's SSD. Cloudflare Tunnel sends `nollestudios.com` and `admin.nollestudios.com` to the private Caddy origin at `http://127.0.0.1:18081`; no inbound router port is required. The public hostname serves the gallery and its live `/api/site` catalog. The admin hostname redirects `/` to `/admin/`.
 
-The database, private staging variants, and public media variants persist in Docker volumes. Publishing in the Content Room updates the production catalog immediately; a photograph appears only after it has alt text, is approved, belongs to a visible shoot, and **Publish** is pressed.
+The database, private staging variants, and public media variants persist in Docker volumes. Publishing in the Content Room updates the production catalog immediately. **Publish** automatically includes every described, unpublished photograph in shoots marked “On site”; photographs in hidden shoots remain private. Missing alt text blocks the release with a clear message instead of silently skipping photographs.
 
 ## Deploying the dynamic gallery
 
