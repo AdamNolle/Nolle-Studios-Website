@@ -33,7 +33,7 @@ Every shoot is a contact sheet on a cork board, newest first. Open one and its p
 
 **Everything is rendered, nothing is stock.** The cork, the liquid-glass rims, the loupe, the push pins, and the tape are Blender scenes in [`art/`](art/README.md), rendered on the GPU with Cycles. The glass bends what is behind it: a normal map rendered from the same glass slab drives an SVG displacement filter, so the cork and photographs refract at the rim (Chromium; Safari and Firefox show frosted glass).
 
-**The Content Room.** A private editor at `/admin/` for shoots, collections, uploads, and ordering. Photographs move from Draft to Approved to Live, and nothing reaches visitors until **Publish**. Uploads are resized to AVIF, WebP, and JPEG from 640 to 3200 px with EXIF, GPS, and XMP removed. Videos are transcoded to 720p and 1080p.
+**The Content Room.** A private editor at `/admin/` for shoots, collections, uploads, and ordering. Photographs move from Draft to Approved to Live, and nothing reaches visitors until **Publish**. Uploads are resized concurrently to AVIF, WebP, and JPEG from 640 to 3200 px. Camera, lens, and capture time stay with every generated image while GPS, serial numbers, names, and other private metadata are removed. Videos are transcoded to 720p and 1080p.
 
 <p align="center">
   <img src="docs/images/alt-text-pass.webp" alt="The alt-text pass: a photograph beside a drafted description, labelled as drafted by the local model" width="900">
@@ -54,7 +54,7 @@ Shoots can span a start and end date. In the Content Room, the cover is selectab
 | Media | [sharp](https://sharp.pixelplumbing.com) for images, FFmpeg for video |
 | Alt text | [llama.cpp](https://github.com/ggml-org/llama.cpp) serving Qwen3-VL on `127.0.0.1` |
 | Art | [Blender](https://www.blender.org) 5.2, Cycles on the GPU |
-| Deployment | GitHub Pages for the static site; Docker Compose with Caddy for the CMS |
+| Deployment | Docker Compose on Adlon, behind Caddy and Cloudflare Tunnel |
 
 ## Run it locally
 
@@ -70,16 +70,18 @@ npm run alt:model           # optional: the local alt-text model on 127.0.0.1:87
 
 Open [127.0.0.1:5173](http://127.0.0.1:5173/) for the light table and [127.0.0.1:5173/admin/](http://127.0.0.1:5173/admin/) for the Content Room. The first `alt:model` run downloads the model (about 5 GB).
 
-For a production origin behind Cloudflare Tunnel, combine the base Compose file
-with `compose.tunnel.yaml`. The override binds Caddy only to
-`127.0.0.1:18081`, leaves TLS at Cloudflare's edge, and redirects the hostname
-root to the Content Room:
+For the production origin behind Cloudflare Tunnel, combine the base Compose
+file with `compose.tunnel.yaml`. The override binds Caddy only to
+`127.0.0.1:18081` and leaves TLS at Cloudflare's edge. The public hostname
+serves the gallery; only the admin hostname redirects its root to the Content
+Room:
 
 ```bash
 docker compose -f compose.yaml -f compose.tunnel.yaml up -d --build
 ```
 
-Point the tunnel hostname at `http://127.0.0.1:18081`. Set
+Point both `nollestudios.com` and `admin.nollestudios.com` at
+`http://127.0.0.1:18081`. Set
 `POSTGRES_PASSWORD`, `CMS_ADMIN_PASSWORD_HASH`, and `CMS_SESSION_SECRET` in a
 mode-`0600` `.env` file before starting the stack. Persistent database, media,
 and staging data live in named Docker volumes and are not replaced by image
@@ -110,7 +112,7 @@ docs/           CMS, publishing, and release notes
 ## Documentation
 
 - [Content Room and CMS deployment](docs/CMS.md): uploads, publishing, alt-text drafting, the API, and Docker Compose
-- [Publishing the static site](docs/PUBLISH.md): building and releasing to GitHub Pages
+- [Production publishing](docs/PUBLISH.md): deploying Adlon and the optional static fallback
 - [Media workshop](art/README.md): exporting photographs and rendering the Blender art
 - [Release checks](docs/QA.md)
 - [Notes for contributors and agents](AGENTS.md): working conventions, traps, and open items

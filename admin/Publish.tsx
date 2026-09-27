@@ -1,7 +1,7 @@
 import { For, Show, createMemo, createSignal } from "solid-js";
 import { api } from "./api";
 import { Pipeline } from "./Overview";
-import { change, collectionPending, content, photoOf, photoPending, photoSrc, shootOf, shootPending, siteUrl, statusOf, coverOf } from "./store";
+import { change, collectionPending, content, photoOf, photoPending, photoSrc, shootOf, shootPending, siteUrl, statusOf, coverOf, setView } from "./store";
 import { localPreview, photoCount, siteLabel, when } from "./util";
 
 export default function Publish() {
@@ -40,6 +40,7 @@ export default function Publish() {
   ];
   const blocked = () => content.photos.filter(photo => statusOf(photo) === "approved" && !content.shoots.find(s => s.id === photo.shootId)?.approved).length;
   const missingLive = () => content.photos.filter(photo => photo.approved && !photo.alt.trim()).length;
+  const drafts = () => content.photos.filter(photo => statusOf(photo) === "draft").length;
 
   async function publishNow() {
     setBusy(true);
@@ -64,6 +65,7 @@ export default function Publish() {
         </Show>
         <Show when={blocked()}><p class="publish-note">{photoCount(blocked())} approved in hidden shoots will not appear until those shoots are shown.</p></Show>
         <Show when={missingLive()}><p class="publish-note publish-note--warn">{photoCount(missingLive())} approved without alt text. Add it before publishing.</p></Show>
+        <Show when={drafts()}><p class="publish-note">{photoCount(drafts())} still in Draft and not queued for Publish. Add or accept alt text, approve the photos, and show their shoot first. <button type="button" onClick={() => setView("library")}>Open Library</button></p></Show>
         <div class="publish-go">
           <button type="button" class="primary" disabled={!pending().total || busy()} onClick={publishNow}>
             {busy() ? "Publishing…" : pending().total ? `Publish ${pending().total} change${pending().total === 1 ? "" : "s"}` : "Nothing to publish"}

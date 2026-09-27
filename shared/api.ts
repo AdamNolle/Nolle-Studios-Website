@@ -37,6 +37,10 @@ export interface PhotoDto {
   full: string;
   formats: Record<string, MediaSizes>;
   createdAt: string;
+  cameraMake: string;
+  cameraModel: string;
+  lensModel: string;
+  capturedAt: string;
   // Content Room only.
   liveAlt?: string;
   liveShootId?: string | null;

@@ -110,7 +110,10 @@ export default function Inspector(props: { photo: PhotoDto | undefined; rows: Ph
             <dt>File</dt><dd class="mono">{photo().fileName || "—"}</dd>
             <dt>Size</dt><dd>{photo().width} × {photo().height}</dd>
             <dt>Variants</dt><dd>{photo().kind === "video" ? "720p and 1080p MP4, WebM, poster" : "640–3200 px · AVIF, WebP, JPEG"}</dd>
-            <dt>Metadata</dt><dd>{photo().kind === "video" ? "Location and device data removed" : "EXIF, GPS, XMP stripped"}</dd>
+            <Show when={photo().cameraMake || photo().cameraModel}><><dt>Camera</dt><dd>{[photo().cameraMake, photo().cameraModel].filter(Boolean).join(" ")}</dd></></Show>
+            <Show when={photo().lensModel}><><dt>Lens</dt><dd>{photo().lensModel}</dd></></Show>
+            <Show when={photo().capturedAt}><><dt>Captured</dt><dd>{photo().capturedAt.replace("T", " ")}</dd></></Show>
+            <dt>Privacy</dt><dd>{photo().kind === "video" ? "Location and device data removed" : "Camera, lens and capture time kept · GPS and other private metadata removed"}</dd>
             <dt>Source</dt><dd>{photo().curated ? "Curated manifest" : "CMS upload"}</dd>
           </dl>
           <Show when={!photo().curated}>

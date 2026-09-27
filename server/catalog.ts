@@ -27,6 +27,8 @@ function photoDto(row: PhotoRow, publicOnly = false): PhotoDto {
     video: parse(row.video_assets_json, {}),
     thumb: assets.thumb ?? '', mid: assets.mid ?? '', full: assets.full ?? '',
     formats: assets.formats ?? {}, createdAt: row.created_at,
+    cameraMake: row.camera_make ?? '', cameraModel: row.camera_model ?? '',
+    lensModel: row.lens_model ?? '', capturedAt: row.captured_at ?? '',
   };
 }
 

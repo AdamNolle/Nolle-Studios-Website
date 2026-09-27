@@ -13,26 +13,33 @@ const VIDEO = /^video\/(mp4|quicktime|webm)$/;
 // The queue survives moving between screens while files are still uploading.
 const [queue, setQueue] = createStore<Item[]>([]);
 const [target, setTarget] = createSignal("");
-let running = false, nextKey = 0;
+const MAX_CONCURRENT_UPLOADS = 2;
+let running = 0, nextKey = 0;
 export const uploading = () => queue.some(item => item.state === "queued" || item.state === "uploading" || item.state === "processing");
 
-async function drain() {
-  if (running) return;
-  running = true;
+async function runUpload(index: number) {
+  const item = queue[index];
+  setQueue(index, { state: "uploading", progress: 0 });
   try {
-    for (let index = queue.findIndex(item => item.state === "queued"); index >= 0; index = queue.findIndex(item => item.state === "queued")) {
-      const item = queue[index];
-      setQueue(index, { state: "uploading", progress: 0 });
-      try {
-        const { id } = await uploadFile(item.video ? "videos" : "photos", item.shootId, item.file,
-          fraction => setQueue(index, "progress", fraction), () => setQueue(index, "state", "processing"));
-        setQueue(index, { state: "ready", id, progress: 1 });
-      } catch (error) {
-        setQueue(index, { state: "failed", error: (error as Error).message });
-      }
-    }
-    await load().catch(() => undefined);
-  } finally { running = false; }
+    const { id } = await uploadFile(item.video ? "videos" : "photos", item.shootId, item.file,
+      fraction => setQueue(index, "progress", fraction), () => setQueue(index, "state", "processing"));
+    setQueue(index, { state: "ready", id, progress: 1 });
+  } catch (error) {
+    setQueue(index, { state: "failed", error: (error as Error).message });
+  } finally {
+    running--;
+    drain();
+    if (!uploading()) await load().catch(() => undefined);
+  }
+}
+
+function drain() {
+  while (running < MAX_CONCURRENT_UPLOADS) {
+    const index = queue.findIndex(item => item.state === "queued");
+    if (index < 0) return;
+    running++;
+    void runUpload(index);
+  }
 }
 
 export default function Uploads(props: { onAltPass(ids: string[]): void; onCreateShoot(): void }) {
@@ -58,7 +65,7 @@ export default function Uploads(props: { onAltPass(ids: string[]): void; onCreat
           preview: /^image\/(jpeg|png|webp|avif)$/.test(file.type) ? URL.createObjectURL(file) : "", id: "" });
       }
     }));
-    void drain();
+    drain();
   }
   function clear() {
     for (const item of queue) if (item.preview && !["queued", "uploading", "processing"].includes(item.state)) URL.revokeObjectURL(item.preview);
@@ -78,7 +85,7 @@ export default function Uploads(props: { onAltPass(ids: string[]): void; onCreat
 
   const label = (item: Item) => item.state === "queued" ? "Waiting" : item.state === "uploading" ? `Uploading ${Math.round(item.progress * 100)}%` :
     item.state === "processing" ? (item.video ? "Transcoding 720p and 1080p" : "Making 640–3200 px variants") :
-      item.state === "failed" ? item.error : item.video ? "Draft · video ready" : "Draft · metadata stripped";
+      item.state === "failed" ? item.error : item.video ? "Draft · video ready" : "Draft · camera metadata kept";
 
   return <main class="uploads-page page-wrap">
     <div class="eyebrow">UPLOADS</div>
@@ -97,7 +104,7 @@ export default function Uploads(props: { onAltPass(ids: string[]): void; onCreat
         onDragLeave={() => setOver(false)}
         onDrop={event => { event.preventDefault(); setOver(false); add(event.dataTransfer?.files); }}>
         <strong>Drop photographs or video here</strong>
-        <small>Photos: JPEG, PNG, TIFF, WebP, AVIF or HEIF up to 50 MB, resized to 640–3200 px with EXIF, GPS and XMP removed.
+        <small>Photos: JPEG, PNG, TIFF, WebP, AVIF or HEIF up to 50 MB. Camera, lens and capture time are kept; GPS and other private metadata are removed.
           Video: MP4, MOV or WebM up to 2 GB, transcoded to 720p and 1080p with a poster frame and metadata removed. Masters stay on private storage.</small>
         <span class="primary">Choose files</span>
         <input id="upload-input" type="file" multiple accept="image/jpeg,image/png,image/tiff,image/webp,image/avif,image/heic,image/heif,video/mp4,video/quicktime,video/webm,.mov"

@@ -3,6 +3,7 @@ import { createReadStream } from 'node:fs';
 import path from 'node:path';
 import { Readable } from 'node:stream';
 import { randomUUID } from 'node:crypto';
+import exifr from 'exifr';
 import sharp from 'sharp';
 import type { Metadata } from 'sharp';
 import { AwsClient } from 'aws4fetch';
@@ -11,16 +12,24 @@ import type { Settings } from './settings.ts';
 export const WIDTHS = [640, 960, 1600, 2400, 3200] as const;
 const allowedFormats = new Set(['jpeg', 'png', 'tiff', 'webp', 'avif', 'heif']);
 const outputFormats: ['avif' | 'webp' | 'jpeg', Record<string, unknown>][] = [
-  ['avif', { quality: 52, effort: 4 }],
-  ['webp', { quality: 82, effort: 5 }],
+  ['avif', { quality: 52, effort: 2 }],
+  ['webp', { quality: 82, effort: 4 }],
   ['jpeg', { quality: 86, progressive: true, mozjpeg: true }],
 ];
+const ENCODE_WORKERS = 3;
 const mediaKey = /^(?:photos\/[a-f0-9-]{36}\/\d+\.(?:avif|webp|jpg)|videos\/[a-f0-9-]{36}\/(?:720|1080)\.(?:mp4|webm))$/;
 const PUBLIC_CACHE = 'public, max-age=300, must-revalidate';
 
 export interface ImageAssets {
   thumb: string; mid: string; full: string;
   formats: Record<string, { thumb: string; mid: string; full: string; widths: Record<string, string> }>;
+}
+
+export interface CameraMetadata {
+  cameraMake: string;
+  cameraModel: string;
+  lensModel: string;
+  capturedAt: string;
 }
 
 export interface Storage {
@@ -32,6 +41,7 @@ export interface Storage {
 
 export interface Staging {
   put(key: string, bytes: Buffer): Promise<void>;
+  replace(key: string, bytes: Buffer): Promise<void>;
   putFile(key: string, source: string): Promise<void>;
   read(key: string): Promise<Buffer>;
   path(key: string): string;
@@ -115,11 +125,58 @@ export function createStaging(settings: Pick<Settings, 'stagingDir'>): Staging {
   };
   return {
     put: (key, bytes) => atomicLocal(location(key), temporary => fs.writeFile(temporary, bytes, { flag: 'wx' }), true),
+    replace: (key, bytes) => atomicLocal(location(key), temporary => fs.writeFile(temporary, bytes, { flag: 'wx' })),
     putFile: (key, source) => atomicLocal(location(key), temporary => fs.copyFile(source, temporary, fs.constants.COPYFILE_EXCL), true),
     read: key => fs.readFile(location(key)),
     path: location,
     delete: key => fs.rm(location(key), { force: true }),
   };
+}
+
+const metadataText = (value: unknown, limit: number) => typeof value === 'string'
+  ? value.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, limit)
+  : '';
+
+const capturedAt = (value: unknown) => {
+  const raw = metadataText(value, 32);
+  const match = raw.match(/^(\d{4}):(\d{2}):(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/);
+  return match ? `${match[1]}-${match[2]}-${match[3]}T${match[4]}:${match[5]}:${match[6]}` : '';
+};
+
+/** Read only the useful, non-location EXIF fields that are safe to publish. */
+export async function extractCameraMetadata(input: string | Buffer): Promise<CameraMetadata> {
+  try {
+    // exifr's Node path reader is not compatible with every supported Node release;
+    // the upload is capped at 50 MB, so a bounded Buffer keeps this deterministic.
+    const bytes = typeof input === 'string' ? await fs.readFile(input) : input;
+    const tags = await exifr.parse(bytes, {
+      pick: ['Make', 'Model', 'LensModel', 'DateTimeOriginal'],
+      translateValues: false,
+      reviveValues: false,
+    }) as Record<string, unknown> | undefined;
+    return {
+      cameraMake: metadataText(tags?.Make, 80),
+      cameraModel: metadataText(tags?.Model, 120),
+      lensModel: metadataText(tags?.LensModel, 180),
+      capturedAt: capturedAt(tags?.DateTimeOriginal),
+    };
+  } catch {
+    return { cameraMake: '', cameraModel: '', lensModel: '', capturedAt: '' };
+  }
+}
+
+function outputExif(metadata: CameraMetadata) {
+  const ifd0 = Object.fromEntries(Object.entries({ Make: metadata.cameraMake, Model: metadata.cameraModel }).filter(([, value]) => value));
+  const date = metadata.capturedAt.replace(/^(\d{4})-(\d{2})-(\d{2})T/, '$1:$2:$3 ');
+  const ifd2 = Object.fromEntries(Object.entries({ LensModel: metadata.lensModel, DateTimeOriginal: date }).filter(([, value]) => value));
+  return { ...(Object.keys(ifd0).length ? { IFD0: ifd0 } : {}), ...(Object.keys(ifd2).length ? { IFD2: ifd2 } : {}) };
+}
+
+async function runLimited<T>(items: T[], limit: number, work: (item: T) => Promise<void>) {
+  let cursor = 0;
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (cursor < items.length) await work(items[cursor++]);
+  }));
 }
 
 export function variantKeys(photoId: string, kind = 'image') {
@@ -162,7 +219,7 @@ export async function unpublishVariants(photoId: string, staging: Staging, stora
 }
 
 /** Build every responsive variant. `input` is a file path or bytes. */
-export async function buildVariants(input: string | Buffer, photoId: string, staging: Staging, storage: Storage) {
+export async function buildVariants(input: string | Buffer, photoId: string, staging: Staging, storage: Storage, options: { replace?: boolean } = {}) {
   const open = () => sharp(input, { limitInputPixels: 80_000_000 });
   let metadata: Metadata;
   try { metadata = await open().metadata(); }
@@ -174,6 +231,8 @@ export async function buildVariants(input: string | Buffer, photoId: string, sta
   const width = rotated ? metadata.height : metadata.width;
   const height = rotated ? metadata.width : metadata.height;
   if (!width || !height || width < 300 || height < 300) throw new Error('Image must be at least 300 pixels on each side');
+  const camera = await extractCameraMetadata(input);
+  const exif = outputExif(camera);
 
   const keys: string[] = [];
   const variants: Record<string, Record<string, string>> = { avif: {}, webp: {}, jpeg: {} };
@@ -184,18 +243,27 @@ export async function buildVariants(input: string | Buffer, photoId: string, sta
     const { data, info } = await open().rotate().toColourspace('srgb')
       .resize({ width: WIDTHS.at(-1), withoutEnlargement: true }).raw().toBuffer({ resolveWithObject: true });
     const master = () => sharp(data, { raw: { width: info.width, height: info.height, channels: info.channels } });
-    for (const [format, options] of outputFormats) {
-      for (const targetWidth of WIDTHS) {
-        // Raw pixels carry no EXIF, GPS or XMP, so nothing private reaches the output.
-        const bytes = await master().resize({ width: targetWidth, withoutEnlargement: true }).toFormat(format, options).toBuffer();
+    const jobs = outputFormats.flatMap(([format, formatOptions]) => {
+      const widths = new Map<number, number[]>();
+      for (const target of WIDTHS) {
+        const actual = Math.min(target, info.width);
+        widths.set(actual, [...(widths.get(actual) ?? []), target]);
+      }
+      return [...widths].map(([actualWidth, targets]) => ({ format, formatOptions, actualWidth, targets }));
+    });
+    await runLimited(jobs, ENCODE_WORKERS, async ({ format, formatOptions, actualWidth, targets }) => {
+      let pipeline = master().resize({ width: actualWidth, withoutEnlargement: true }).toFormat(format, formatOptions);
+      if (Object.keys(exif).length) pipeline = pipeline.withExif(exif);
+      const bytes = await pipeline.toBuffer();
+      for (const targetWidth of targets) {
         const key = `photos/${photoId}/${targetWidth}.${format === 'jpeg' ? 'jpg' : format}`;
-        await staging.put(key, bytes);
+        if (options.replace) await staging.replace(key, bytes); else await staging.put(key, bytes);
         keys.push(key);
         variants[format][targetWidth] = storage.url(key);
       }
-    }
+    });
   } catch (error) {
-    await Promise.allSettled(keys.map(key => staging.delete(key)));
+    if (!options.replace) await Promise.allSettled(keys.map(key => staging.delete(key)));
     throw error;
   }
   const assets: ImageAssets = {
@@ -204,5 +272,5 @@ export async function buildVariants(input: string | Buffer, photoId: string, sta
       thumb: widths[640], mid: widths[1600], full: widths[3200], widths,
     }])),
   };
-  return { width, height, keys, assets };
+  return { width, height, keys, assets, camera };
 }

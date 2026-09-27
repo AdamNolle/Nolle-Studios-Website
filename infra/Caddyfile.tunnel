@@ -9,8 +9,13 @@
     Permissions-Policy "camera=(), geolocation=(), microphone=()"
   }
 
-  @root path /
-  redir @root /admin/ 308
+  # The tunnel serves both hostnames. Only the private Content Room hostname
+  # redirects its root; the public hostname opens the photography site.
+  @adminRoot {
+    host admin.nollestudios.com
+    path /
+  }
+  redir @adminRoot /admin/ 308
 
   @cms path /api/* /admin /admin/* /media/photos/* /media/videos/*
   handle @cms {
@@ -28,4 +33,3 @@
     file_server
   }
 }
-

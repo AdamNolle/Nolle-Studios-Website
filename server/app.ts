@@ -378,10 +378,12 @@ export function createApp({ db, settings }: { db: Db; settings: Settings }): Cms
         const stamp = now();
         await db.query(`INSERT INTO photos
           (id, shoot_id, title, alt, caption, width, height, sort_order, published, approved,
-           is_cover, assets_json, storage_prefix, file_name, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           is_cover, assets_json, storage_prefix, file_name, camera_make, camera_model, lens_model, captured_at,
+           created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [id, shootId, text(c.req.query('title'), 180), text(c.req.query('alt'), 400), '', built.width, built.height,
-          sortOrder, 0, 0, 0, JSON.stringify(built.assets), `photos/${id}/`, fileName(c), stamp, stamp]);
+          sortOrder, 0, 0, 0, JSON.stringify(built.assets), `photos/${id}/`, fileName(c),
+          built.camera.cameraMake, built.camera.cameraModel, built.camera.lensModel, built.camera.capturedAt, stamp, stamp]);
       } catch (error) {
         await Promise.allSettled(built.keys.map(key => staging.delete(key)));
         throw error;

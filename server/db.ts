@@ -26,7 +26,8 @@ export interface PhotoRow {
   sort_order: number; published: number; approved: number; is_cover: number;
   assets_json: string; storage_prefix: string; created_at: string; updated_at: string;
   live_alt: string | null; live_shoot_id: string | null; live_sort_order: number | null; live_is_cover: number | null;
-  file_name: string; alt_suggestion: string;
+  file_name: string; alt_suggestion: string; camera_make: string; camera_model: string;
+  lens_model: string; captured_at: string;
 }
 
 export interface CollectionRow {
@@ -56,7 +57,9 @@ const schema = [
     video_assets_json TEXT NOT NULL DEFAULT '{}',
     sort_order INTEGER NOT NULL DEFAULT 0, published INTEGER NOT NULL DEFAULT 0,
     is_cover INTEGER NOT NULL DEFAULT 0, assets_json TEXT NOT NULL,
-    storage_prefix TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+    storage_prefix TEXT NOT NULL DEFAULT '', camera_make TEXT NOT NULL DEFAULT '',
+    camera_model TEXT NOT NULL DEFAULT '', lens_model TEXT NOT NULL DEFAULT '', captured_at TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL, updated_at TEXT NOT NULL
   )`,
   `CREATE TABLE IF NOT EXISTS collection_photos (
     collection_id TEXT NOT NULL REFERENCES collections(id) ON DELETE CASCADE,
@@ -111,6 +114,10 @@ async function migrate(db: Db) {
     ['live_alt', 'TEXT'], ['live_shoot_id', 'TEXT'], ['live_sort_order', 'INTEGER'], ['live_is_cover', 'INTEGER'],
     ['file_name', "TEXT NOT NULL DEFAULT ''"],
     ['alt_suggestion', "TEXT NOT NULL DEFAULT ''"],
+    ['camera_make', "TEXT NOT NULL DEFAULT ''"],
+    ['camera_model', "TEXT NOT NULL DEFAULT ''"],
+    ['lens_model', "TEXT NOT NULL DEFAULT ''"],
+    ['captured_at', "TEXT NOT NULL DEFAULT ''"],
   ] as const) await addColumn(db, 'photos', photoColumns, name, definition);
   await db.query('UPDATE photos SET live_alt = alt WHERE live_alt IS NULL');
   await db.query('UPDATE photos SET live_shoot_id = shoot_id WHERE live_shoot_id IS NULL');

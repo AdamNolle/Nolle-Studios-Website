@@ -13,7 +13,7 @@ import { serve } from '@hono/node-server';
 import { createApp } from './app.ts';
 import { openDatabase } from './db.ts';
 import { seedFromManifest } from './seed.ts';
-import { buildVariants, createStaging, createStorage, publishVariants } from './media.ts';
+import { buildVariants, createStaging, createStorage, extractCameraMetadata, publishVariants } from './media.ts';
 import { cleanSuggestion } from './alt-text.ts';
 import { localSettings } from './settings.ts';
 import type { Settings } from './settings.ts';
@@ -375,7 +375,7 @@ test('manifest sync moves a curated photo and refreshes its assets without losin
   } finally { await close(); }
 });
 
-test('upload stays private until publish, strips EXIF, and unpublish removes public copies', async () => {
+test('upload stays private until publish, keeps safe EXIF, and unpublish removes public copies', async () => {
   const { root, base, site, signIn, close } = await fixture();
   try {
     const adminRedirect = await fetch(`${base}/admin`, { redirect: 'manual' });
@@ -395,7 +395,10 @@ test('upload stays private until publish, strips EXIF, and unpublish removes pub
     assert.match(((await invalidUpload.json()) as Json).error, /Upload an edited JPEG, PNG, TIFF, WebP, AVIF, or HEIF image/);
 
     const jpeg = await sharp({ create: { width: 800, height: 600, channels: 3, background: '#c58d62' } })
-      .jpeg().withExif({ IFD0: { Make: 'Sony', Model: 'A7 V' } }).toBuffer();
+      .jpeg().withExif({
+        IFD0: { Make: 'SONY', Model: 'ILCE-7M5', Artist: 'Private photographer name' },
+        IFD2: { LensModel: 'FE 100-400mm F5.6-8 OSS', DateTimeOriginal: '2026:09:20 09:23:53' },
+      }).toBuffer();
     assert.ok((await sharp(jpeg).metadata()).exif);
     const uploaded = await upload('photos', shootId, jpeg, { alt: 'A warm studio frame' });
     const uploadResult = await uploaded.json() as Json;
@@ -405,12 +408,18 @@ test('upload stays private until publish, strips EXIF, and unpublish removes pub
     const stagedFile = path.join(root, 'staging', 'photos', photoId, '640.jpg');
     assert.equal(await exists(stagedFile), true);
     assert.equal(await exists(publicFile), false);
-    assert.equal((await sharp(stagedFile).metadata()).exif, undefined);
+    assert.deepEqual(await extractCameraMetadata(stagedFile), {
+      cameraMake: 'SONY', cameraModel: 'ILCE-7M5', lensModel: 'FE 100-400mm F5.6-8 OSS', capturedAt: '2026-09-20T09:23:53',
+    });
+    assert.equal((await sharp(stagedFile).metadata()).xmp, undefined);
     assert.equal((await site()).shoots[0].photos.length, 0);
     assert.equal((await fetch(`${base}/api/admin/preview`)).status, 401);
     const privatePreview = await (await admin('/preview')).json() as PublicCatalog;
     const stagedPhoto = privatePreview.shoots[0].photos.find(photo => photo.id === photoId)!;
     assert.equal(stagedPhoto.alt, 'A warm studio frame');
+    assert.equal(stagedPhoto.cameraModel, 'ILCE-7M5');
+    assert.equal(stagedPhoto.lensModel, 'FE 100-400mm F5.6-8 OSS');
+    assert.equal(stagedPhoto.capturedAt, '2026-09-20T09:23:53');
     assert.match(stagedPhoto.mid, new RegExp(`/api/admin/photos/${photoId}/preview\\?width=1600$`));
     assert.equal((await fetch(`${base}${stagedPhoto.mid}`)).status, 401);
     const stagedPreview = await fetch(`${base}${stagedPhoto.mid}`, { headers: { Cookie: cookie } });
@@ -428,8 +437,11 @@ test('upload stays private until publish, strips EXIF, and unpublish removes pub
     assert.equal(publicResponse.status, 200);
     assert.match(publicResponse.headers.get('cache-control')!, /max-age=300/);
     const publishedMeta = await sharp(publishedBytes).metadata();
-    assert.equal(publishedMeta.exif, undefined);
+    assert.ok(publishedMeta.exif);
     assert.equal(publishedMeta.xmp, undefined);
+    assert.deepEqual(await extractCameraMetadata(publishedBytes), {
+      cameraMake: 'SONY', cameraModel: 'ILCE-7M5', lensModel: 'FE 100-400mm F5.6-8 OSS', capturedAt: '2026-09-20T09:23:53',
+    });
     let catalog = await site();
     assert.equal(catalog.shoots[0].photos.length, 1);
     assert.equal(catalog.shoots[0].photos[0].alt, 'A warm studio frame');
