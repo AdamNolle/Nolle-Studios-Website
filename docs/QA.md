@@ -8,6 +8,7 @@
 - A live visual pass covered the table and Contact panel at 1280×720, 390×844, and 844×390. The layouts had no document overflow; the intentionally adjacent contact sheets remained the only offscreen elements. Contact opened with focus on its close control.
 - A cache-disabled live load transferred 1.36 MB over 45 requests; first meaningful paint was about 462 ms and DOM content loaded in about 369 ms in the in-app Chromium run. The site remains image-dominated, with 36 KB of entry JavaScript and a 51 KB lazy table chunk.
 - The production storage audit found 209 MB of public variants, 218 MB of private staging, 49 catalog photos, and 817 GB free on the SSD. The repository has no runtime JavaScript sources, `npm audit --omit=dev` reported zero vulnerabilities, and Sharp plus the Node type definitions were updated to their current patch releases.
+- Adlon now runs a persistent daily user timer that writes a verified PostgreSQL custom-format dump to `/srv/data/backups/nolle-studios` on the 2 TB drive. Media remain separate from the database backup and are the next storage-migration concern.
 
 ## Content Room workflow pass, 27 September 2026
 

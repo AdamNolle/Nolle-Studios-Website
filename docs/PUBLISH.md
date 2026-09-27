@@ -20,6 +20,8 @@ The database, private staging variants, and public media variants persist in Doc
 
 Back up PostgreSQL plus the `media_data` and `staging_data` volumes before migrations or host maintenance. Keep `.env`, camera originals, private staging, and credentials out of Git.
 
+Adlon's user-level `nolle-studios-backup.timer` creates a verified PostgreSQL custom-format dump on the 2 TB data drive every day. Check it with `systemctl --user list-timers nolle-studios-backup.timer`; the backup files live under `/srv/data/backups/nolle-studios`. Published and staged media still need their own durable copy until object storage is enabled.
+
 ## Static fallback
 
 The `gh-pages` branch remains a static fallback and historical artifact. `npm run publish:pages` builds from `public/media/archive.json`; it does not contain the CMS database or newly uploaded photographs. It must not be used as the production DNS target while the Content Room is the source of truth.

@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily Nolle Studios catalog backup
+
+[Timer]
+OnCalendar=*-*-* 03:15:00 UTC
+Persistent=true
+RandomizedDelaySec=10m
+Unit=nolle-studios-backup.service
+
+[Install]
+WantedBy=timers.target
