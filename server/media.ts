@@ -8,7 +8,7 @@ import sharp from 'sharp';
 import type { Metadata } from 'sharp';
 import { AwsClient } from 'aws4fetch';
 import type { Settings } from './settings.ts';
-import { normalizeCameraMetadata } from '../shared/camera.ts';
+import { cameraMetadataForExif, normalizeCameraMetadata } from '../shared/camera.ts';
 
 export const WIDTHS = [640, 960, 1600, 2400, 3200] as const;
 const allowedFormats = new Set(['jpeg', 'png', 'tiff', 'webp', 'avif', 'heif']);
@@ -170,7 +170,8 @@ export async function extractCameraMetadata(input: string | Buffer): Promise<Cam
 }
 
 function outputExif(metadata: CameraMetadata) {
-  const ifd0 = Object.fromEntries(Object.entries({ Make: metadata.cameraMake, Model: metadata.cameraModel }).filter(([, value]) => value));
+  const camera = cameraMetadataForExif(metadata.cameraMake, metadata.cameraModel);
+  const ifd0 = Object.fromEntries(Object.entries({ Make: camera.cameraMake, Model: camera.cameraModel }).filter(([, value]) => value));
   const date = metadata.capturedAt.replace(/^(\d{4})-(\d{2})-(\d{2})T/, '$1:$2:$3 ');
   const ifd2 = Object.fromEntries(Object.entries({ LensModel: metadata.lensModel, DateTimeOriginal: date }).filter(([, value]) => value));
   return { ...(Object.keys(ifd0).length ? { IFD0: ifd0 } : {}), ...(Object.keys(ifd2).length ? { IFD2: ifd2 } : {}) };

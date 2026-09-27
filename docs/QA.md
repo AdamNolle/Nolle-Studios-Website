@@ -2,9 +2,12 @@
 
 ## Sony camera metadata normalization, 27 September 2026
 
-- Sony EXIF values `SONY` / `ILCE-7M5` are now translated once at the shared metadata boundary to the readable `Sony a7 V`. The same normalization covers new uploads, the Content Room, the live catalog, and static archive exports.
-- Generated image variants preserve the normalized make and model in their safe EXIF fields. The ASCII model spelling avoids the EXIF writer replacing Sony's Greek alpha mark with `?`.
+- Sony EXIF values `SONY` / `ILCE-7M5` are now translated once at the shared metadata boundary to the correctly styled `Sony α7 V`. The same normalization covers new uploads, the Content Room, the live catalog, and static archive exports.
+- Generated image variants preserve the make and an EXIF-safe `a7 V` model internally; reads translate it back to Sony's `α7 V` styling because the EXIF writer replaces the Greek alpha with `?`.
 - `npm run typecheck`, all 43 tests, and the production build passed. The upload regression verifies both the catalog metadata and the EXIF embedded in staged and published variants.
+- A live visual pass covered the table and Contact panel at 1280×720, 390×844, and 844×390. The layouts had no document overflow; the intentionally adjacent contact sheets remained the only offscreen elements. Contact opened with focus on its close control.
+- A cache-disabled live load transferred 1.36 MB over 45 requests; first meaningful paint was about 462 ms and DOM content loaded in about 369 ms in the in-app Chromium run. The site remains image-dominated, with 36 KB of entry JavaScript and a 51 KB lazy table chunk.
+- The production storage audit found 209 MB of public variants, 218 MB of private staging, 49 catalog photos, and 817 GB free on the SSD. The repository has no runtime JavaScript sources, `npm audit --omit=dev` reported zero vulnerabilities, and Sharp plus the Node type definitions were updated to their current patch releases.
 
 ## Content Room workflow pass, 27 September 2026
 

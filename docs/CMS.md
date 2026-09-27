@@ -92,9 +92,9 @@ docker compose --env-file /path/to/private/compose.env \
 
 ## Public Linux deployment
 
-`nollestudios.com` is the intended domain, but the Linux host and live DNS have not been set up. Once the host exists, point a Cloudflare apex A record to its public address; add AAAA only if IPv6 works. Point `www` to the same site if desired, and allow inbound ports 80 and 443. If Cloudflare proxies the records, use **Full (strict)** SSL/TLS mode.
+The live stack runs on Adlon behind Cloudflare Tunnel. The tunnel sends `nollestudios.com`, `www.nollestudios.com`, and `admin.nollestudios.com` to Caddy on `127.0.0.1:18081`; the router exposes no inbound web ports. Caddy serves the gallery, proxies the API and uploaded media to the CMS, and redirects the admin hostname's root to `/admin/`.
 
-Set `SITE_DOMAIN=nollestudios.com` in a private production environment file so Caddy can issue and renew its certificate. Set unique `POSTGRES_PASSWORD`, `CMS_SESSION_SECRET`, and `CMS_ADMIN_PASSWORD_HASH` values. With `STORAGE_DRIVER=local`, back up the PostgreSQL database and the private `staging_data` and published `media_data` volumes. Then run `docker compose --env-file /path/to/private/compose.env up -d --build` using only `compose.yaml`. Check `https://nollestudios.com/api/health` and `/admin/` after DNS and TLS are live.
+Production secrets live in Adlon's mode-`0600` `.env`, never in Git. Back up PostgreSQL and the private `staging_data` and published `media_data` volumes while `STORAGE_DRIVER=local`. Deploy with `compose.yaml` plus `compose.tunnel.yaml`, then check the public site, `/api/health`, and `/admin/` through their public hostnames.
 
 Caddy routes `/api`, `/admin`, and uploaded `/media/photos` and `/media/videos` to the CMS, serves curated media as static files, and serves `index.html` for client routes such as `/archive`. PostgreSQL stores the catalog. PostGIS is not required because the site does not publish location coordinates.
 
@@ -102,7 +102,9 @@ Caddy routes `/api`, `/admin`, and uploaded `/media/photos` and `/media/videos` 
 
 Set `STORAGE_DRIVER=s3` and provide `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_ENDPOINT`, `S3_REGION`, and `MEDIA_BASE_URL`. The media base URL must be an HTTPS address from which anonymous visitors can read the published bucket. Grant the key access only to that bucket. Keep and back up the private staging volume because it is needed to republish without reuploading.
 
-For R2, use the account's `https://<account-id>.r2.cloudflarestorage.com` endpoint, `S3_REGION=auto`, and a public custom domain for `MEDIA_BASE_URL`. For B2, use its regional S3 endpoint and region code with a public bucket URL or custom domain. Set `S3_FORCE_PATH_STYLE` if the provider requires it. Neither provider is required for local or WSL use.
+For R2, use the account's `https://<account-id>.r2.cloudflarestorage.com` endpoint, `S3_REGION=auto`, and a public custom domain for `MEDIA_BASE_URL`. For B2, use its regional S3 endpoint and region code with a Cloudflare-proxied custom domain. Set `S3_FORCE_PATH_STYLE` if the provider requires it. Neither provider is required for local or WSL use.
+
+Object storage moves only published variants. Private staging remains a local filesystem because previews and republishing read it frequently; on Adlon it can be bind-mounted under `/srv/data` so bulk growth uses the 2 TB data drive while the application, database, and image processing stay on the SSD.
 
 On withdrawal, the CMS deletes the public object at its origin. Published objects use `Cache-Control: public, max-age=300, must-revalidate`, so browsers and CDNs honoring that header may serve cached copies for up to five minutes. Custom cache rules can extend that window. Already downloaded copies cannot be recalled.
 
