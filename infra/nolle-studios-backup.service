@@ -5,4 +5,4 @@ After=docker.service
 [Service]
 Type=oneshot
 WorkingDirectory=/home/adam/Code/Nolle-Studios-Website
-ExecStart=/home/adam/Code/Nolle-Studios-Website/infra/backup-production.sh
+ExecStart=/usr/bin/sg docker -c /home/adam/Code/Nolle-Studios-Website/infra/backup-production.sh
