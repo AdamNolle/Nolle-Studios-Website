@@ -2,6 +2,7 @@
 
 ## Content Room workflow pass, 27 September 2026
 
+- The public header now has one Contact entry instead of separate About and Contact controls that opened the same panel. The panel is contact-only on desktop and phone, with the descriptive About copy and shoot-count footer removed.
 - The Content Room header now has one clear Publish status/action instead of duplicate Publish navigation. Public-site and sign-out actions live in a compact overflow menu, leaving the primary navigation focused on Overview, Library, Collections, and Upload.
 - Overview puts the two starting actions—New shoot and Upload media—beside the page title. The redundant upload control above the shoot grid now opens the full library instead.
 - A shoot's primary controls now read as one workflow: site visibility, Upload photos, missing alt-text work when needed, and a More menu for edit and preview. Empty shoots use deliberate cover placeholders instead of broken images.

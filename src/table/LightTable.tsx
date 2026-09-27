@@ -3,7 +3,7 @@ import type { ArchiveShoot } from "../archive";
 import { runtime, sheetLayout, sheetOffsets, tableFrame } from "./layout";
 import { background, coverPhoto } from "./media";
 import Picture from "./Picture";
-import { About, Header, Hint, Keys, Picker, Transport } from "./Chrome";
+import { Contact, Header, Hint, Keys, Picker, Transport } from "./Chrome";
 import Board from "./Board";
 import type { BoardApi } from "./Board";
 import Preview from "./Preview";
@@ -25,7 +25,7 @@ export default function LightTable(props: { shoots: ArchiveShoot[]; initialShoot
   const [current, setCurrent] = createSignal(Math.max(0, shoots.findIndex(shoot => shoot.id === props.initialShoot)));
   const [board, setBoard] = createSignal<{ e: number; k: number } | null>(null);
   const [lifted, setLifted] = createSignal<number | null>(null);
-  const [overlay, setOverlay] = createSignal<"about" | "help" | null>(null);
+  const [overlay, setOverlay] = createSignal<"contact" | "help" | null>(null);
   const [hint, setHint] = createSignal(false);
   const [size, setSize] = createSignal({ w: window.innerWidth, h: window.innerHeight });
   const [dragX, setDragX] = createSignal<number | null>(null);
@@ -278,7 +278,7 @@ export default function LightTable(props: { shoots: ArchiveShoot[]; initialShoot
     </Show>
     <div class="ns-sr" aria-live="polite">{board() ? "" : shootAnnouncement()}</div>
 
-    <Show when={overlay() === "about"}><About shootCount={shoots.length} onClose={() => setOverlay(null)} /></Show>
+    <Show when={overlay() === "contact"}><Contact onClose={() => setOverlay(null)} /></Show>
     <Show when={overlay() === "help"}><Keys onClose={() => setOverlay(null)} /></Show>
 
     <Show when={board() && lifted() !== null}>

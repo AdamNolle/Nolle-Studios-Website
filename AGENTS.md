@@ -57,5 +57,5 @@ Then open `http://localhost:8791/admin/` after `npm run build:admin`. The produc
 ## Open items
 
 - **Not yet verified:** Safari, Firefox, physical phones (pinch zoom), building the Docker images, live R2/B2 storage, and hosting the CMS online. The CMS currently runs only locally. Photographs uploaded there reach the public site only after they are exported into `public/media/` and published.
-- **Very short landscape phones** (for example 667×375): the keys and About panels scroll inside the glass, with a fade showing there is more.
+- **Very short landscape phones** (for example 667×375): the keys and Contact panels scroll inside the glass, with a fade showing there is more.
 - **Screenshots go stale.** `public/og-image.jpg` and `docs/images/*.webp` are browser screenshots. Retake them after visible design changes.

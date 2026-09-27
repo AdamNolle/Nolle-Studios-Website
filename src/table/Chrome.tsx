@@ -41,7 +41,7 @@ interface HeaderProps {
   zoom: number;
   /** The board is zoomed as far out as it goes: every print in view. */
   atFit: boolean;
-  overlay: "about" | "help" | null;
+  overlay: "contact" | "help" | null;
   onHome(): void;
   onBack(): void;
   onZoom(factor: number): void;
@@ -49,7 +49,7 @@ interface HeaderProps {
   /** Whether the board is picking photographs to download. */
   selecting: boolean;
   onSelect(): void;
-  onOverlay(which: "about" | "help"): void;
+  onOverlay(which: "contact" | "help"): void;
 }
 
 export function Header(props: HeaderProps) {
@@ -89,13 +89,12 @@ export function Header(props: HeaderProps) {
         </div>
       }>
         <Show when={!props.narrow} fallback={
-          <button type="button" class="ns-pill is-active" aria-expanded={props.overlay === "about"} onClick={() => props.onOverlay("about")}>
-            <span class="ns-pill__dot" aria-hidden="true" />Info
+          <button type="button" class="ns-pill is-active" aria-expanded={props.overlay === "contact"} onClick={() => props.onOverlay("contact")}>
+            <span class="ns-pill__dot" aria-hidden="true" />Contact
           </button>
         }>
           <span class="ns-pill is-active" aria-current="page"><span class="ns-pill__dot" aria-hidden="true" />Tables</span>
-          <button type="button" class="ns-pill" aria-expanded={props.overlay === "about"} onClick={() => props.onOverlay("about")}>About</button>
-          <button type="button" class="ns-pill" onClick={() => props.onOverlay("about")}>Contact</button>
+          <button type="button" class="ns-pill" aria-expanded={props.overlay === "contact"} onClick={() => props.onOverlay("contact")}>Contact</button>
           <span class="ns-bar__rule" aria-hidden="true" />
           <button type="button" class="ns-keycap" aria-label="Keyboard and gesture help" aria-expanded={props.overlay === "help"} onClick={() => props.onOverlay("help")}>?</button>
         </Show>
@@ -159,7 +158,7 @@ export function Hint(props: { on: boolean; narrow: boolean; onDismiss(): void })
   </div>;
 }
 
-// ---- About and keys panels --------------------------------------------------
+// ---- Contact and keys panels ------------------------------------------------
 
 /** Move focus into a dialog, trap Tab inside it, and give focus back on close. */
 function useDialog(root: () => HTMLElement, first: () => HTMLElement | undefined, onClose: () => void) {
@@ -184,25 +183,23 @@ function useDialog(root: () => HTMLElement, first: () => HTMLElement | undefined
   });
 }
 
-export function About(props: { shootCount: number; onClose(): void }) {
+export function Contact(props: { onClose(): void }) {
   let root!: HTMLDivElement, close!: HTMLButtonElement;
   useDialog(() => root, () => close, () => props.onClose());
-  return <div class="ns-overlay ns-overlay--about" ref={root}>
+  return <div class="ns-overlay ns-overlay--contact" ref={root}>
     <div class="ns-overlay__scrim" aria-hidden="true" onClick={() => props.onClose()} />
-    <div class="ns-about ns-glass" ref={el => refract(el, { strength: 40, frost: 6 })} role="dialog" aria-modal="true" aria-labelledby="ns-about-title">
-      <div class="ns-about__top">
-        <span id="ns-about-title" class="ns-about__label">About</span>
-        <button type="button" class="ns-about__close" aria-label="Close" ref={close} onClick={() => props.onClose()}>×</button>
+    <div class="ns-contact ns-glass" ref={el => refract(el, { strength: 40, frost: 6 })} role="dialog" aria-modal="true" aria-labelledby="ns-contact-title">
+      <div class="ns-contact__top">
+        <span id="ns-contact-title" class="ns-contact__label">Contact</span>
+        <button type="button" class="ns-contact__close" aria-label="Close" ref={close} onClick={() => props.onClose()}>×</button>
       </div>
-      <div class="ns-about__body ns-scroll" ref={fadeWhileScrollable}>
-        <img class="ns-about__logo" src="/nolle-studios-header-on-dark.svg" alt="Nolle Studios" width="210" height="60" draggable={false} />
-        <p class="ns-about__lead">Photographs laid out like prints on a table: every shoot, newest first.</p>
-        <p class="ns-about__text">For prints, portraits, or a shoot of your own, get in touch.</p>
-        <div class="ns-about__links">
+      <div class="ns-contact__body ns-scroll" ref={fadeWhileScrollable}>
+        <img class="ns-contact__logo" src="/nolle-studios-header-on-dark.svg" alt="Nolle Studios" width="210" height="60" draggable={false} />
+        <p class="ns-contact__lead">For prints, portraits, or a shoot of your own, get in touch.</p>
+        <div class="ns-contact__links">
           <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}<span>EMAIL ↗</span></a>
           <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer">{INSTAGRAM_HANDLE}<span>INSTAGRAM ↗</span></a>
         </div>
-        <div class="ns-about__foot">NOLLESTUDIOS.COM · {props.shootCount} {props.shootCount === 1 ? "SHOOT" : "SHOOTS"} ON THE TABLE</div>
       </div>
     </div>
   </div>;

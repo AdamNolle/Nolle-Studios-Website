@@ -74,7 +74,7 @@ picture { display: contents; }
   background: linear-gradient(160deg, rgba(255,255,255,.1), rgba(255,255,255,0) 42%, rgba(255,255,255,0) 70%, rgba(255,255,255,.05)), rgba(22,14,8,.4);
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.025), inset 0 -10px 22px -18px rgba(255,255,255,.1), 0 16px 36px rgba(30,14,4,.26), 0 2px 6px rgba(30,14,4,.14);
 }
-.ns-about.is-refracting, .ns-keys.is-refracting { background: rgba(20,13,8,.5); }
+.ns-contact.is-refracting, .ns-keys.is-refracting { background: rgba(20,13,8,.5); }
 
 /* ---------- Cork backdrop (table view) ---------- */
 
@@ -406,7 +406,7 @@ span.ns-pill.is-active { cursor: default; }
 }
 .ns-preview-zoom .ns-preview-zoom__fit { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
 
-/* ---------- About and keys panels ---------- */
+/* ---------- Contact and keys panels ---------- */
 
 .ns-overlay { position: absolute; inset: 0; z-index: 40; }
 .ns-overlay__scrim { position: absolute; inset: 0; background: rgba(18,10,4,.35); animation: nsVeil .3s var(--ease-soft) both; }
@@ -417,26 +417,24 @@ span.ns-pill.is-active { cursor: default; }
 /* When contents do scroll, the lower edge fades to show there is more. */
 .ns-scroll.is-overflowing { mask-image: linear-gradient(#000 calc(100% - 36px), transparent); }
 
-.ns-about {
+.ns-contact {
   --rim: 30px;
   top: 16px; right: 16px; bottom: 16px; width: 400px; max-width: calc(100% - 32px);
   display: flex; flex-direction: column; gap: 18px; padding: 22px 26px 26px; border-radius: 18px;
   user-select: text; -webkit-user-select: text; animation: nsPanelIn .45s var(--ease-out) both;
 }
-.ns-about__top { display: flex; justify-content: space-between; align-items: center; }
-.ns-about__label { font: 500 10px/1 var(--mono); letter-spacing: .2em; color: rgba(229,234,240,.72); text-transform: uppercase; }
-.ns-about__close { width: 44px; height: 44px; border: 1px solid rgba(255,255,255,.16); border-radius: 12px; background: rgba(255,255,255,.04); color: var(--ink); font: 400 16px/1 Archivo, sans-serif; cursor: pointer; }
-.ns-about__close:hover { background: rgba(255,255,255,.12); }
-.ns-about__body { flex: 1; display: flex; flex-direction: column; gap: 18px; }
-.ns-about__logo { display: block; width: 210px; height: auto; aspect-ratio: 7 / 2; }
-.ns-about__lead { margin: 0; font: 400 26px/1.15 var(--serif); color: #F4F7FA; text-wrap: pretty; }
-.ns-about__text { margin: 0; font: 400 14px/1.6 Archivo, sans-serif; color: rgba(229,234,240,.8); }
-.ns-about__links { display: grid; border-top: 1px solid rgba(255,255,255,.12); }
-.ns-about__links a { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 52px; border-bottom: 1px solid rgba(255,255,255,.12); color: var(--ink); font: 400 14px/1.3 Archivo, sans-serif; }
-.ns-about__links a:hover { color: #fff; }
-.ns-about__links span { font: 500 10px/1 var(--mono); letter-spacing: .14em; color: rgba(229,234,240,.6); transition: color .2s; }
-.ns-about__links a:hover span { color: rgba(255,255,255,.9); }
-.ns-about__foot { margin-top: auto; font: 500 9.5px/1.4 var(--mono); letter-spacing: .16em; color: rgba(229,234,240,.55); }
+.ns-contact__top { display: flex; justify-content: space-between; align-items: center; }
+.ns-contact__label { font: 500 10px/1 var(--mono); letter-spacing: .2em; color: rgba(229,234,240,.72); text-transform: uppercase; }
+.ns-contact__close { width: 44px; height: 44px; border: 1px solid rgba(255,255,255,.16); border-radius: 12px; background: rgba(255,255,255,.04); color: var(--ink); font: 400 16px/1 Archivo, sans-serif; cursor: pointer; }
+.ns-contact__close:hover { background: rgba(255,255,255,.12); }
+.ns-contact__body { flex: 1; display: flex; flex-direction: column; gap: 18px; }
+.ns-contact__logo { display: block; width: 210px; height: auto; aspect-ratio: 7 / 2; }
+.ns-contact__lead { margin: 0; font: 400 26px/1.15 var(--serif); color: #F4F7FA; text-wrap: pretty; }
+.ns-contact__links { display: grid; border-top: 1px solid rgba(255,255,255,.12); }
+.ns-contact__links a { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 52px; border-bottom: 1px solid rgba(255,255,255,.12); color: var(--ink); font: 400 14px/1.3 Archivo, sans-serif; }
+.ns-contact__links a:hover { color: #fff; }
+.ns-contact__links span { font: 500 10px/1 var(--mono); letter-spacing: .14em; color: rgba(229,234,240,.6); transition: color .2s; }
+.ns-contact__links a:hover span { color: rgba(255,255,255,.9); }
 
 .ns-overlay--keys { display: grid; place-items: center; padding: 20px; }
 .ns-overlay--keys .ns-overlay__scrim { background: rgba(18,10,4,.4); }
@@ -537,7 +535,7 @@ span.ns-pill.is-active { cursor: default; }
   .ns-nav { top: auto; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); width: 46px; height: 46px; transform: none; z-index: 4; }
   .ns-preview-zoom { right: 10px; bottom: 82px; height: 44px; }
   .ns-preview-zoom output { min-width: 49px; }
-  .ns-about {
+  .ns-contact {
     --rim: 33px;
     top: auto; left: 0; right: 0; bottom: 0; width: auto; max-width: none; max-height: 86%;
     padding: 18px 20px calc(28px + env(safe-area-inset-bottom, 0px)); border-radius: 20px 20px 0 0; animation-name: nsSheetUp;
@@ -566,11 +564,11 @@ span.ns-pill.is-active { cursor: default; }
 
 @media (max-height: 560px) {
   .ns-preview-zoom { bottom: 10px; }
-  .ns-about { gap: 12px; padding-top: 16px; padding-bottom: 18px; }
-  .ns-about__body { gap: 12px; }
-  .ns-about__logo { width: 150px; }
-  .ns-about__lead { font-size: 21px; }
-  .ns-about__links a { min-height: 44px; }
+  .ns-contact { gap: 12px; padding-top: 16px; padding-bottom: 18px; }
+  .ns-contact__body { gap: 12px; }
+  .ns-contact__logo { width: 150px; }
+  .ns-contact__lead { font-size: 21px; }
+  .ns-contact__links a { min-height: 44px; }
 }
 
 @media (max-height: 560px) and (max-width: 759.98px) {
