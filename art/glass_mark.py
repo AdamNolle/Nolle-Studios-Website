@@ -35,10 +35,10 @@ HDRI = sorted(Path(bpy.app.binary_path).parent.parent.glob("Resources/*/datafile
 SIZE, GAP, THICK = 16.0, 0.38, 3.0
 OUTER, INNER, SHOULDER = 2.85, 0.48, 1.0
 TILES = [  # (x, y) quadrant, laminate colour
-    ((-1, 1), "#070B10"),
-    ((1, 1), "#3447FF"),
-    ((-1, -1), "#62F523"),
-    ((1, -1), "#FF2633"),
+    ((-1, 1), "#000000"),
+    ((1, 1), "#2A35FF"),
+    ((-1, -1), "#5EF50F"),
+    ((1, -1), "#FF1818"),
 ]
 
 
@@ -84,10 +84,10 @@ def glass_body():
     noise = n.add("TexNoise", inputs={"Scale": 34.0, "Detail": 2.0, "Roughness": 0.55})
     roughness = n.add("MapRange", inputs={"Value": noise.outputs["Fac"], "From Min": 0.0, "From Max": 1.0, "To Min": 0.035, "To Max": 0.075})
     surface = n.add("BsdfPrincipled", inputs={
-        "Base Color": (*srgb("#EDF5FF"), 1), "Roughness": roughness.outputs["Result"], "IOR": 1.5,
-        "Transmission Weight": 0.88, "Coat Weight": 0.5, "Coat Roughness": 0.018, "Coat IOR": 1.52,
+        "Base Color": (*srgb("#FFFFFF"), 1), "Roughness": roughness.outputs["Result"], "IOR": 1.46,
+        "Transmission Weight": 0.96, "Coat Weight": 0.22, "Coat Roughness": 0.018, "Coat IOR": 1.5,
     })
-    volume = n.add("VolumeAbsorption", inputs={"Color": (*srgb("#DCEBFF"), 1), "Density": 0.008})
+    volume = n.add("VolumeAbsorption", inputs={"Color": (*srgb("#FFFFFF"), 1), "Density": 0.002})
     n.add("OutputMaterial", inputs={"Surface": surface.outputs[0], "Volume": volume.outputs[0]})
     obj.data.materials.append(mat)
     return obj
@@ -123,7 +123,7 @@ def laminate(name, quadrant, colour):
     # three millimetres of glass. The color source stays below the reflective
     # lens, unlike the older render whose outer surface looked self-lit.
     back.inputs["Emission Color"].default_value = (*srgb(colour), 1)
-    back.inputs["Emission Strength"].default_value = 1.2
+    back.inputs["Emission Strength"].default_value = 1.0
     backing.data.materials.append(back_mat)
     return backing
 
@@ -149,7 +149,7 @@ def main():
     world.use_nodes = True
     nodes, links = world.node_tree.nodes, world.node_tree.links
     background = nodes["Background"]
-    background.inputs["Strength"].default_value = 0.42
+    background.inputs["Strength"].default_value = 0.22
     if HDRI:
         environment = nodes.new("ShaderNodeTexEnvironment")
         environment.image = bpy.data.images.load(str(HDRI[0]))
@@ -173,7 +173,7 @@ def main():
     lamp_data = bpy.data.lights.new("Table lamp", "AREA")
     lamp_data.shape = "RECTANGLE"
     lamp_data.size, lamp_data.size_y = 30, 5
-    lamp_data.energy = 1700
+    lamp_data.energy = 900
     lamp_data.color = srgb("#FFF4E6")
     lamp = bpy.data.objects.new("Table lamp", lamp_data)
     lamp.location = (-7, 13, 20)
@@ -186,7 +186,7 @@ def main():
     strip_data = bpy.data.lights.new("Cool strip", "AREA")
     strip_data.shape = "RECTANGLE"
     strip_data.size, strip_data.size_y = 21.0, 3.5
-    strip_data.energy = 620
+    strip_data.energy = 320
     strip_data.color = srgb("#DCEBFF")
     strip = bpy.data.objects.new("Cool strip", strip_data)
     strip.location = (2, 16, 18)
