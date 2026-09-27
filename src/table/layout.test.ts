@@ -30,8 +30,10 @@ test("the first table frame is always the largest cover feature", () => {
 test("portrait covers receive a tall feature cell instead of a landscape crop", () => {
   const portrait = sheetLayout(12, false, 1440, 900, 2 / 3);
   const landscape = sheetLayout(12, false, 1440, 900, 3 / 2);
-  assert.equal(portrait.plan[0][3], 6);
+  assert.equal(portrait.tracks, 96);
+  assert.equal(portrait.plan[0][3], 24);
   assert.equal(landscape.plan[0][3], 12);
+  assert.ok(portrait.plan.flat().every(Number.isInteger), "portrait layout uses valid integer grid lines");
   const areas = portrait.plan.map(([, , rows, columns]) => rows * columns);
   assert.ok(areas[0] > Math.max(...areas.slice(1)), "portrait cover remains the dominant frame");
   const pair = sheetLayout(2, false, 1440, 900, 2 / 3).plan;

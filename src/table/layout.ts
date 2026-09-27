@@ -47,7 +47,9 @@ export function sheetLayout(count: number, narrow: boolean, W: number, H: number
   maxW = narrow ? W - 24 : Math.min(W - 44, count === 1 ? 860 : count <= 6 ? 1000 : 1160);
   const maxRows = H < 560 ? 1 : narrow ? (H >= 760 ? 4 : 3) : H >= 860 ? 3 : 2;
   const visible = Math.min(count, cols * maxRows);
-  tracks = narrow ? 12 : 24;
+  // Portrait feature sheets use a denser track grid so their quarter-width
+  // cover and the two supporting rows always divide into whole CSS lines.
+  tracks = narrow ? 12 : portraitCover ? 96 : 24;
   plan = [];
 
   const row = (number: number, column: number, width: number, cells: number) => {
@@ -60,7 +62,7 @@ export function sheetLayout(count: number, narrow: boolean, W: number, H: number
     plan.push([1, 1, 1, tracks]);
   } else if (maxRows === 1) {
     // A shallow landscape viewport still gives the cover at least half the sheet.
-    const coverWidth = visible === 2 ? 16 : portraitCover ? 10 : 12;
+    const coverWidth = visible === 2 ? tracks * 2 / 3 : portraitCover ? 36 : tracks / 2;
     plan.push([1, 1, 1, coverWidth]);
     row(1, coverWidth + 1, tracks - coverWidth, visible - 1);
   } else if (narrow) {
@@ -73,13 +75,14 @@ export function sheetLayout(count: number, narrow: boolean, W: number, H: number
     // holds up to eight supporting frames; tall viewports may add one final
     // full-width row without ever competing with the cover's visual weight.
     if (visible === 2) {
-      plan.push([1, 1, 2, 16], [1, 17, 2, 8]);
+      const coverWidth = tracks * 2 / 3;
+      plan.push([1, 1, 2, coverWidth], [1, coverWidth + 1, 2, tracks - coverWidth]);
     } else {
       const bottom = visible > 9 ? Math.min(4, visible - 7) : 0;
       const side = visible - 1 - bottom;
       // Match the feature cell to a 2:3 portrait rather than slicing it into
       // the landscape cover used for horizontal photographs.
-      const coverWidth = portraitCover ? 6 : 12;
+      const coverWidth = portraitCover ? 24 : 12;
       plan.push([1, 1, 2, coverWidth]);
       const first = Math.ceil(side / 2), second = side - first;
       row(1, coverWidth + 1, tracks - coverWidth, first);
