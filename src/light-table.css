@@ -382,9 +382,8 @@ span.ns-pill.is-active { cursor: default; }
 
 .ns-strip {
   --rim: 30px;
-  position: absolute; left: 50%; bottom: 16px; z-index: 3; display: flex; align-items: center; justify-content: center;
-  width: max-content; max-width: calc(100% - 32px); height: 58px; padding: 0 10px; border-radius: 18px;
-  transform: translateX(-50%);
+  position: absolute; left: 16px; bottom: 16px; z-index: 3; display: flex; align-items: center; justify-content: center;
+  width: max-content; max-width: calc(100% - 252px); height: 58px; padding: 0 10px; border-radius: 18px;
 }
 .ns-strip__reel { position: relative; display: flex; gap: 4px; align-items: center; }
 .ns-strip__thumb {
@@ -395,7 +394,7 @@ span.ns-pill.is-active { cursor: default; }
 .ns-strip__thumb:hover { opacity: 1 !important; }
 .ns-strip__thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
 
-.ns-preview-zoom { --rim: 23px; position: absolute; right: 16px; bottom: 88px; z-index: 4; display: flex; align-items: stretch; height: 46px; border-radius: 14px; }
+.ns-preview-zoom { --rim: 23px; position: absolute; right: 16px; bottom: 16px; z-index: 4; display: flex; align-items: stretch; height: 46px; border-radius: 14px; }
 .ns-preview-zoom button {
   min-width: 44px; padding: 0 11px; border: 0; border-left: 1px solid rgba(255,255,255,.12);
   background: transparent; color: var(--paper); cursor: pointer; font: 500 17px/1 var(--mono);

@@ -119,11 +119,11 @@ def laminate(name, quadrant, colour):
     back.inputs["Roughness"].default_value = 0.24
     back.inputs["Coat Weight"].default_value = 0.18
     back.inputs["Coat Roughness"].default_value = 0.08
-    # Preserve the identity colours after the light passes through the glass;
-    # this is a gentle luminous laminate, not the self-lit outer surface used
-    # by the older plastic-looking render.
+    # Preserve the electric identity colours after the light passes through
+    # three millimetres of glass. The color source stays below the reflective
+    # lens, unlike the older render whose outer surface looked self-lit.
     back.inputs["Emission Color"].default_value = (*srgb(colour), 1)
-    back.inputs["Emission Strength"].default_value = 0.42
+    back.inputs["Emission Strength"].default_value = 1.2
     backing.data.materials.append(back_mat)
     return backing
 
