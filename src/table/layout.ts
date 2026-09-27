@@ -38,8 +38,9 @@ export function balancedRows(count: number, cols: number): number[] {
   return rows;
 }
 
-export function sheetLayout(count: number, narrow: boolean, W: number, H: number): SheetLayout {
+export function sheetLayout(count: number, narrow: boolean, W: number, H: number, coverAspect = 1.5): SheetLayout {
   const gap = 5, pad = narrow ? 12 : 15, aspect = narrow ? 1.24 : 1.45;
+  const portraitCover = coverAspect > 0 && coverAspect < 0.9;
   const { band } = tableFrame(narrow, H);
   let cols: number, maxW: number, plan: Span[], tracks: number;
   cols = narrow ? Math.min(2, count) : count <= 2 ? count : count <= 6 ? 3 : 4;
@@ -59,7 +60,7 @@ export function sheetLayout(count: number, narrow: boolean, W: number, H: number
     plan.push([1, 1, 1, tracks]);
   } else if (maxRows === 1) {
     // A shallow landscape viewport still gives the cover at least half the sheet.
-    const coverWidth = visible === 2 ? 16 : 12;
+    const coverWidth = visible === 2 ? 16 : portraitCover ? 10 : 12;
     plan.push([1, 1, 1, coverWidth]);
     row(1, coverWidth + 1, tracks - coverWidth, visible - 1);
   } else if (narrow) {
@@ -76,7 +77,9 @@ export function sheetLayout(count: number, narrow: boolean, W: number, H: number
     } else {
       const bottom = visible > 9 ? Math.min(4, visible - 7) : 0;
       const side = visible - 1 - bottom;
-      const coverWidth = 12;
+      // Match the feature cell to a 2:3 portrait rather than slicing it into
+      // the landscape cover used for horizontal photographs.
+      const coverWidth = portraitCover ? 6 : 12;
       plan.push([1, 1, 2, coverWidth]);
       const first = Math.ceil(side / 2), second = side - first;
       row(1, coverWidth + 1, tracks - coverWidth, first);

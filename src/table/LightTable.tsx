@@ -1,7 +1,7 @@
 import { For, Show, batch, createEffect, createMemo, createSignal, on, onCleanup, onMount } from "solid-js";
 import type { ArchiveShoot } from "../archive";
 import { runtime, sheetLayout, sheetOffsets, tableFrame } from "./layout";
-import { background, coverPhoto } from "./media";
+import { aspect, background, coverPhoto } from "./media";
 import Picture from "./Picture";
 import { Contact, Header, Hint, Keys, Picker, Transport } from "./Chrome";
 import Board from "./Board";
@@ -44,7 +44,9 @@ export default function LightTable(props: { shoots: ArchiveShoot[]; initialShoot
   const narrow = () => size().w < 760;
   let boardApi: BoardApi | undefined, previewApi: PreviewApi | undefined;
 
-  const layouts = createMemo(() => shoots.map(shoot => sheetLayout(shoot.photos.length, narrow(), size().w, size().h)));
+  const layouts = createMemo(() => shoots.map(shoot => sheetLayout(
+    shoot.photos.length, narrow(), size().w, size().h, aspect(coverPhoto(shoot)),
+  )));
   const offsets = createMemo(() => sheetOffsets(layouts().map(layout => layout.w), current(), narrow() ? 34 : 56));
   // Only sheets near the current one are in the DOM; the rest are off the table.
   const nearby = createMemo(() => shoots.map((_, i) => i).filter(i => Math.abs(i - current()) <= 2));
@@ -218,7 +220,8 @@ export default function LightTable(props: { shoots: ArchiveShoot[]; initialShoot
             const entry = tablePhotos[slot()];
             const photo = entry.photo;
             const more = () => slot() === layout().visible - 1 ? layout().more : 0;
-            return <div class="ns-frame" style={{ "grid-area": `${span[0]} / ${span[1]} / span ${span[2]} / span ${span[3]}` }}>
+            return <div class="ns-frame" classList={{ "ns-frame--portrait-cover": slot() === 0 && aspect(photo) < 0.9 }}
+              style={{ "grid-area": `${span[0]} / ${span[1]} / span ${span[2]} / span ${span[3]}` }}>
               <button type="button" class="ns-frame__btn" data-shoot-index={p.index} data-photo-index={entry.index} tabIndex={isCurrent() ? 0 : -1}
                 aria-label={more() ? `Open ${shoot.title}, ${more()} more photographs` : `Open ${photo.alt}`}
                 onClick={event => { event.stopPropagation(); if (suppressClick) return; if (!isCurrent()) go(p.index); else openBoard(p.index, entry.index); }}>

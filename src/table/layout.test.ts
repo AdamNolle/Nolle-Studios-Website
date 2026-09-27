@@ -27,6 +27,17 @@ test("the first table frame is always the largest cover feature", () => {
   }
 });
 
+test("portrait covers receive a tall feature cell instead of a landscape crop", () => {
+  const portrait = sheetLayout(12, false, 1440, 900, 2 / 3);
+  const landscape = sheetLayout(12, false, 1440, 900, 3 / 2);
+  assert.equal(portrait.plan[0][3], 6);
+  assert.equal(landscape.plan[0][3], 12);
+  const areas = portrait.plan.map(([, , rows, columns]) => rows * columns);
+  assert.ok(areas[0] > Math.max(...areas.slice(1)), "portrait cover remains the dominant frame");
+  const pair = sheetLayout(2, false, 1440, 900, 2 / 3).plan;
+  assert.ok(pair[0][2] * pair[0][3] > pair[1][2] * pair[1][3], "a two-photo portrait cover stays largest");
+});
+
 test("large shoots show a +N frame", () => {
   const big = sheetLayout(58, false, 1440, 900);
   assert.equal(big.visible, 12);

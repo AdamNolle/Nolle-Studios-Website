@@ -125,6 +125,8 @@ picture { display: contents; }
 }
 .ns-frame__img:hover { transform: scale(1.05); filter: brightness(1.12); }
 .ns-frame__img.is-loaded { opacity: 1; }
+.ns-frame--portrait-cover { background: #090A0C; }
+.ns-frame--portrait-cover .ns-frame__img { object-fit: contain; object-position: center; }
 .ns-frame__edge { position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 0 1px rgba(255,255,255,.09), inset 0 -18px 30px -18px rgba(0,0,0,.35); }
 .ns-frame__more {
   position: absolute; inset: 0; z-index: 2; display: grid; place-items: center;
