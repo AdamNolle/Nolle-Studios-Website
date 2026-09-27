@@ -68,6 +68,21 @@ npm run alt:model           # optional: the local alt-text model on 127.0.0.1:87
 
 Open [127.0.0.1:5173](http://127.0.0.1:5173/) for the light table and [127.0.0.1:5173/admin/](http://127.0.0.1:5173/admin/) for the Content Room. The first `alt:model` run downloads the model (about 5 GB).
 
+For a production origin behind Cloudflare Tunnel, combine the base Compose file
+with `compose.tunnel.yaml`. The override binds Caddy only to
+`127.0.0.1:18081`, leaves TLS at Cloudflare's edge, and redirects the hostname
+root to the Content Room:
+
+```bash
+docker compose -f compose.yaml -f compose.tunnel.yaml up -d --build
+```
+
+Point the tunnel hostname at `http://127.0.0.1:18081`. Set
+`POSTGRES_PASSWORD`, `CMS_ADMIN_PASSWORD_HASH`, and `CMS_SESSION_SECRET` in a
+mode-`0600` `.env` file before starting the stack. Persistent database, media,
+and staging data live in named Docker volumes and are not replaced by image
+updates.
+
 | Command | |
 | --- | --- |
 | `npm run build` | Build the site (`dist/`) and the Content Room (`dist-admin/`) |

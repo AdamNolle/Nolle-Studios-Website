@@ -1,0 +1,15 @@
+services:
+  cms:
+    environment:
+      SITE_URL: ${SITE_URL:-https://nollestudios.com/}
+
+  web:
+    # The public edge is a Cloudflare Tunnel. Keep the origin private and use
+    # plain HTTP for the final, host-local hop from cloudflared to Caddy.
+    environment:
+      SITE_DOMAIN: :80
+    ports: !override
+      - "127.0.0.1:${TUNNEL_ORIGIN_PORT:-18081}:80"
+    volumes:
+      - ./infra/Caddyfile.tunnel:/etc/caddy/Caddyfile:ro
+
