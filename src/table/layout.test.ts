@@ -11,15 +11,23 @@ test("contact sheets fill their last row instead of leaving an empty cell", () =
   for (const count of [1, 2, 4, 5, 6, 7, 8, 11, 12]) {
     const { plan, tracks } = sheetLayout(count, false, 1440, 900);
     const rows = new Map<number, number>();
-    for (const [row, , , span] of plan) rows.set(row, (rows.get(row) ?? 0) + span);
+    for (const [row, , rowSpan, columnSpan] of plan) {
+      for (let covered = row; covered < row + rowSpan; covered++) rows.set(covered, (rows.get(covered) ?? 0) + columnSpan);
+    }
     for (const total of rows.values()) assert.equal(total, tracks, `${count} frames`);
   }
 });
 
-test("three frames make a feature sheet, and large shoots show a +N frame", () => {
-  const feature = sheetLayout(3, false, 1440, 900);
-  assert.equal(feature.tracks, 3);
-  assert.deepEqual(feature.plan[0], [1, 1, 2, 2]);
+test("the first table frame is always the largest cover feature", () => {
+  for (const count of [2, 3, 4, 5, 8, 9, 12]) {
+    const feature = sheetLayout(count, false, 1440, 900);
+    const areas = feature.plan.map(([, , rows, columns]) => rows * columns);
+    assert.equal(areas.indexOf(Math.max(...areas)), 0, `${count} frames`);
+    assert.ok(areas[0] > Math.max(...areas.slice(1)), `${count} frames have a dominant cover`);
+  }
+});
+
+test("large shoots show a +N frame", () => {
   const big = sheetLayout(58, false, 1440, 900);
   assert.equal(big.visible, 12);
   assert.equal(big.more, 46);

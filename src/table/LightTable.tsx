@@ -1,7 +1,7 @@
 import { For, Show, batch, createEffect, createMemo, createSignal, on, onCleanup, onMount } from "solid-js";
 import type { ArchiveShoot } from "../archive";
 import { runtime, sheetLayout, sheetOffsets, tableFrame } from "./layout";
-import { background } from "./media";
+import { background, coverPhoto } from "./media";
 import Picture from "./Picture";
 import { About, Header, Hint, Keys, Picker, Transport } from "./Chrome";
 import Board from "./Board";
@@ -188,6 +188,11 @@ export default function LightTable(props: { shoots: ArchiveShoot[]; initialShoot
 
   const Sheet = (p: { index: number }) => {
     const shoot = shoots[p.index];
+    const cover = coverPhoto(shoot);
+    // The table is a visual index, so lead with the selected cover without
+    // disturbing the editor's order used by the full shoot board.
+    const tablePhotos = (cover ? [cover, ...shoot.photos.filter(photo => photo !== cover)] : shoot.photos)
+      .map(photo => ({ photo, index: shoot.photos.indexOf(photo) }));
     const layout = () => layouts()[p.index];
     const distance = () => p.index - current();
     const isCurrent = () => distance() === 0;
@@ -210,12 +215,13 @@ export default function LightTable(props: { shoots: ArchiveShoot[]; initialShoot
         </div>
         <div class="ns-sheet__grid" style={{ gap: `${layout().gap}px`, "grid-template-columns": `repeat(${layout().tracks},minmax(0,1fr))`, "grid-auto-rows": `${layout().rowH}px` }}>
           <For each={layout().plan}>{(span, slot) => {
-            const photo = shoot.photos[slot()];
+            const entry = tablePhotos[slot()];
+            const photo = entry.photo;
             const more = () => slot() === layout().visible - 1 ? layout().more : 0;
             return <div class="ns-frame" style={{ "grid-area": `${span[0]} / ${span[1]} / span ${span[2]} / span ${span[3]}` }}>
-              <button type="button" class="ns-frame__btn" data-shoot-index={p.index} data-photo-index={slot()} tabIndex={isCurrent() ? 0 : -1}
+              <button type="button" class="ns-frame__btn" data-shoot-index={p.index} data-photo-index={entry.index} tabIndex={isCurrent() ? 0 : -1}
                 aria-label={more() ? `Open ${shoot.title}, ${more()} more photographs` : `Open ${photo.alt}`}
-                onClick={event => { event.stopPropagation(); if (suppressClick) return; if (!isCurrent()) go(p.index); else openBoard(p.index, slot()); }}>
+                onClick={event => { event.stopPropagation(); if (suppressClick) return; if (!isCurrent()) go(p.index); else openBoard(p.index, entry.index); }}>
                 <Picture photo={photo} class="ns-frame__img" alt={photo.alt} sizes={`${cell(span)}px`}
                   eager={Math.abs(distance()) <= 1} priority={isCurrent() && slot() < 4} loupe={background(photo)} />
                 <Show when={photo.kind === "video"}>

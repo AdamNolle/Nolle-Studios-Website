@@ -42,25 +42,47 @@ export function sheetLayout(count: number, narrow: boolean, W: number, H: number
   const gap = 5, pad = narrow ? 12 : 15, aspect = narrow ? 1.24 : 1.45;
   const { band } = tableFrame(narrow, H);
   let cols: number, maxW: number, plan: Span[], tracks: number;
-  let visible = count;
+  cols = narrow ? Math.min(2, count) : count <= 2 ? count : count <= 6 ? 3 : 4;
+  maxW = narrow ? W - 24 : Math.min(W - 44, count === 1 ? 860 : count <= 6 ? 1000 : 1160);
+  const maxRows = H < 560 ? 1 : narrow ? (H >= 760 ? 4 : 3) : H >= 860 ? 3 : 2;
+  const visible = Math.min(count, cols * maxRows);
+  tracks = narrow ? 12 : 24;
+  plan = [];
 
-  if (count === 3 && (narrow ? H >= 600 : H >= 620)) {
-    // Three frames make a feature: one large print and two small ones.
-    cols = narrow ? 2 : 3;
-    tracks = cols;
-    maxW = narrow ? W - 24 : Math.min(W - 44, 960);
-    plan = narrow ? [[1, 1, 2, 2], [3, 1, 1, 1], [3, 2, 1, 1]] : [[1, 1, 2, 2], [1, 3, 1, 1], [2, 3, 1, 1]];
+  const row = (number: number, column: number, width: number, cells: number) => {
+    if (!cells) return;
+    const span = width / cells;
+    for (let cell = 0; cell < cells; cell++) plan.push([number, column + cell * span, 1, span]);
+  };
+
+  if (visible <= 1) {
+    plan.push([1, 1, 1, tracks]);
+  } else if (maxRows === 1) {
+    // A shallow landscape viewport still gives the cover at least half the sheet.
+    const coverWidth = visible === 2 ? 16 : 12;
+    plan.push([1, 1, 1, coverWidth]);
+    row(1, coverWidth + 1, tracks - coverWidth, visible - 1);
+  } else if (narrow) {
+    // On phones the cover becomes a full-width two-row print, with the
+    // remaining frames continuing below it like a compact contact sheet.
+    plan.push([1, 1, 2, tracks]);
+    balancedRows(visible - 1, 2).forEach((cells, index) => row(index + 3, 1, tracks, cells));
   } else {
-    cols = narrow ? Math.min(2, count) : count <= 2 ? count : count <= 6 ? 3 : 4;
-    maxW = narrow ? W - 24 : Math.min(W - 44, count === 1 ? 860 : count <= 6 ? 1000 : 1160);
-    const maxRows = H < 560 ? 1 : narrow ? (H >= 760 ? 4 : 3) : H >= 860 ? 3 : 2;
-    visible = Math.min(count, cols * maxRows);
-    tracks = 12;
-    plan = [];
-    balancedRows(visible, cols).forEach((inRow, r) => {
-      const span = 12 / inRow;
-      for (let c = 0; c < inRow; c++) plan.push([r + 1, 1 + c * span, 1, span]);
-    });
+    // Desktop sheets reserve their left half for the cover. The right half
+    // holds up to eight supporting frames; tall viewports may add one final
+    // full-width row without ever competing with the cover's visual weight.
+    if (visible === 2) {
+      plan.push([1, 1, 2, 16], [1, 17, 2, 8]);
+    } else {
+      const bottom = visible > 9 ? Math.min(4, visible - 7) : 0;
+      const side = visible - 1 - bottom;
+      const coverWidth = 12;
+      plan.push([1, 1, 2, coverWidth]);
+      const first = Math.ceil(side / 2), second = side - first;
+      row(1, coverWidth + 1, tracks - coverWidth, first);
+      row(2, coverWidth + 1, tracks - coverWidth, second);
+      row(3, 1, tracks, bottom);
+    }
   }
 
   const rows = Math.max(...plan.map(([row, , rowSpan]) => row + rowSpan - 1));
