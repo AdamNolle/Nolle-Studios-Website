@@ -46,7 +46,7 @@ async function fixture(overrides: Partial<Settings> = {}) {
 
   async function signIn() {
     const response = await fetch(`${base}/api/admin/login`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: PASSWORD }),
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: 'admin', password: PASSWORD }),
     });
     assert.equal(response.status, 200);
     const cookie = response.headers.get('set-cookie')!.split(';')[0];
@@ -74,6 +74,18 @@ async function fixture(overrides: Partial<Settings> = {}) {
     async close() { await app.idle(); server.close(); await once(server, 'close'); await db.close(); },
   };
 }
+
+test('Content Room rejects the wrong username with a generic credential error', async () => {
+  const { base, close } = await fixture();
+  try {
+    const response = await fetch(`${base}/api/admin/login`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: 'someone-else', password: PASSWORD }),
+    });
+    assert.equal(response.status, 401);
+    assert.deepEqual(await response.json(), { error: 'Incorrect username or password' });
+  } finally { await close(); }
+});
 
 const jpegOf = (background: string, width = 640, height = 400) =>
   sharp({ create: { width, height, channels: 3, background } }).jpeg().toBuffer();

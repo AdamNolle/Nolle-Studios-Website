@@ -156,7 +156,10 @@ export function createApp({ db, settings }: { db: Db; settings: Settings }): Cms
     const session = await currentSession(c, db, settings);
     return c.json(session ? { authenticated: true, csrfToken: session.csrfToken } : { authenticated: false });
   });
-  app.post('/api/admin/login', async c => login(c, db, settings, (await readJson(c)).password));
+  app.post('/api/admin/login', async c => {
+    const body = await readJson(c);
+    return login(c, db, settings, body.username, body.password);
+  });
   app.use('/api/admin/*', requireAdmin(db, settings));
   app.post('/api/admin/logout', c => logout(c, db, settings));
   app.get('/api/admin/config', c => c.json({ siteUrl: publicSiteUrl(c, settings), altText: { configured: alt.configured, auto: alt.configured && settings.altTextAuto } } satisfies AdminConfig));

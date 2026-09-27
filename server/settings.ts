@@ -24,6 +24,7 @@ export interface Settings {
   s3AccessKeyId: string;
   s3SecretAccessKey: string;
   s3ForcePathStyle: boolean;
+  adminUsername: string;
   adminPasswordHash: string;
   localAdminPassword: string;
   sessionSecret: string;
@@ -46,7 +47,7 @@ export function localSettings(root: string, overrides: Partial<Settings> = {}): 
     adminDir: path.join(root, 'dist-admin'),
     mediaBaseUrl: '/media', siteUrl: '',
     s3Endpoint: '', s3Region: 'auto', s3Bucket: '', s3AccessKeyId: '', s3SecretAccessKey: '', s3ForcePathStyle: false,
-    adminPasswordHash: '', localAdminPassword: '', sessionSecret: '',
+    adminUsername: 'admin', adminPasswordHash: '', localAdminPassword: '', sessionSecret: '',
     altTextUrl: '', altTextModel: '', altTextAuto: true,
     ...overrides,
   };

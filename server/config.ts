@@ -52,6 +52,7 @@ export const config: Settings = localSettings(root, {
   s3AccessKeyId: env.S3_ACCESS_KEY_ID || '',
   s3SecretAccessKey: env.S3_SECRET_ACCESS_KEY || '',
   s3ForcePathStyle: env.S3_FORCE_PATH_STYLE === 'true',
+  adminUsername: env.CMS_ADMIN_USERNAME || 'admin',
   adminPasswordHash: env.CMS_ADMIN_PASSWORD_HASH || '',
   localAdminPassword: env.CMS_ADMIN_PASSWORD || '',
   sessionSecret: env.CMS_SESSION_SECRET || (production ? randomBytes(32).toString('hex') : localSessionSecret()),
@@ -79,6 +80,9 @@ export function validateConfig(settings: Settings = config) {
   }
   if (settings.adminPasswordHash && !/^scrypt\$[a-f0-9]{32,}\$[a-f0-9]{128}$/i.test(settings.adminPasswordHash)) {
     throw new Error('CMS_ADMIN_PASSWORD_HASH has an invalid format');
+  }
+  if (!/^[a-z0-9._-]{1,64}$/i.test(settings.adminUsername)) {
+    throw new Error('CMS_ADMIN_USERNAME must contain only letters, numbers, dots, underscores, or hyphens');
   }
   if (settings.storageDriver === 's3') {
     for (const key of ['s3Bucket', 's3AccessKeyId', 's3SecretAccessKey'] as const) {

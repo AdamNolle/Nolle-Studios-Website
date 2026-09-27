@@ -40,11 +40,13 @@ function SignIn() {
   const [busy, setBusy] = createSignal(false);
   async function submit(event: SubmitEvent & { currentTarget: HTMLFormElement }) {
     event.preventDefault();
-    const form = event.currentTarget, password = (form.elements.namedItem("password") as HTMLInputElement).value;
+    const form = event.currentTarget;
+    const username = (form.elements.namedItem("username") as HTMLInputElement).value;
+    const password = (form.elements.namedItem("password") as HTMLInputElement).value;
     setBusy(true);
     setSignInNote("Signing in…");
     try {
-      const { csrfToken } = await api<{ csrfToken: string }>("/login", { method: "POST", body: { password } });
+      const { csrfToken } = await api<{ csrfToken: string }>("/login", { method: "POST", body: { username, password } });
       form.reset();
       await start(csrfToken);
     } catch (error) { setSignInNote((error as Error).message); }
@@ -58,8 +60,10 @@ function SignIn() {
         <h1>Content room</h1>
         <p>Manage shoots, photos, and collections.</p>
         <form onSubmit={submit}>
+          <label for="username">Username</label>
+          <input id="username" type="text" name="username" value="admin" autocomplete="username" required autofocus />
           <label for="password">Password</label>
-          <input id="password" type="password" name="password" autocomplete="current-password" required autofocus />
+          <input id="password" type="password" name="password" autocomplete="current-password" required />
           <button class="primary" type="submit" disabled={busy()}>Sign in</button>
         </form>
         <p class="message" role="status" aria-live="polite">{signInNote()}</p>

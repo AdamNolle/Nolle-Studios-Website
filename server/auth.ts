@@ -45,7 +45,7 @@ function clientAddress(c: Context<AppEnv>) {
   return forwarded || c.env?.incoming?.socket.remoteAddress || 'unknown';
 }
 
-export async function login(c: Context<AppEnv>, db: Db, settings: Settings, password: unknown) {
+export async function login(c: Context<AppEnv>, db: Db, settings: Settings, username: unknown, password: unknown) {
   const ip = clientAddress(c);
   const time = Date.now();
   // Drop stale entries so the table cannot grow without bound.
@@ -53,10 +53,14 @@ export async function login(c: Context<AppEnv>, db: Db, settings: Settings, pass
   const state = attempts.get(ip) ?? { count: 0, since: time };
   if (time - state.since > WINDOW_MS) { state.count = 0; state.since = time; }
   if (state.count >= 8) return c.json({ error: 'Too many sign-in attempts. Try again in 15 minutes.' }, 429);
-  if (typeof password !== 'string' || !verifyPassword(password, settings)) {
+  // Check the password even when the username is wrong so both failure paths
+  // take the same expensive scrypt work and do not reveal account validity.
+  const validPassword = typeof password === 'string' && verifyPassword(password, settings);
+  const validUsername = typeof username === 'string' && username === settings.adminUsername;
+  if (!validUsername || !validPassword) {
     state.count++;
     attempts.set(ip, state);
-    return c.json({ error: 'Incorrect password' }, 401);
+    return c.json({ error: 'Incorrect username or password' }, 401);
   }
   attempts.delete(ip);
   const token = randomBytes(32).toString('base64url');
