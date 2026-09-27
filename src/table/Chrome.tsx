@@ -52,8 +52,19 @@ interface HeaderProps {
   onOverlay(which: "contact" | "help"): void;
 }
 
+function ZoomControls(props: Pick<HeaderProps, "zoom" | "atFit" | "onZoom" | "onFit"> & { mobile?: boolean }) {
+  return <div class="ns-zoom" classList={{ "ns-zoom--mobile": props.mobile, "ns-glass": props.mobile }}
+    ref={el => { if (props.mobile) refract(el, { strength: 12, frost: 0.5 }); }} role="group" aria-label="Board zoom">
+    <button type="button" aria-label="Zoom out" disabled={props.atFit} onClick={() => props.onZoom(0.8)}>−</button>
+    <span class="ns-zoom__pct" aria-live="polite">{Math.round(props.zoom * 100)}%</span>
+    <button type="button" aria-label="Zoom in" onClick={() => props.onZoom(1.25)}>+</button>
+    <button type="button" class="ns-zoom__fit" onClick={() => props.onFit()}>Fit</button>
+  </div>;
+}
+
 export function Header(props: HeaderProps) {
-  return <header class="ns-bar ns-glass" ref={el => refract(el)} classList={{ "ns-bar--board": !!props.board }}>
+  return <>
+  <header class="ns-bar ns-glass" ref={el => refract(el)} classList={{ "ns-bar--board": !!props.board }}>
     <span class="ns-bar__glint" aria-hidden="true" />
     <div class="ns-bar__start">
       <Show when={props.board} fallback={
@@ -80,12 +91,7 @@ export function Header(props: HeaderProps) {
         <button type="button" class="ns-pill ns-pill--select" classList={{ "is-active": props.selecting }} aria-pressed={props.selecting} onClick={() => props.onSelect()}>
           <DownloadIcon /><span class="ns-wide">Select</span><span class="ns-sr">photos to download</span>
         </button>
-        <div class="ns-zoom" role="group" aria-label="Board zoom">
-          <button type="button" aria-label="Zoom out" disabled={props.atFit} onClick={() => props.onZoom(0.8)}>−</button>
-          <span class="ns-zoom__pct" aria-live="polite">{Math.round(props.zoom * 100)}%</span>
-          <button type="button" aria-label="Zoom in" onClick={() => props.onZoom(1.25)}>+</button>
-          <button type="button" class="ns-zoom__fit" onClick={() => props.onFit()}>Fit</button>
-        </div>
+        <Show when={!props.narrow}><ZoomControls {...props} /></Show>
         </div>
       }>
         <Show when={!props.narrow} fallback={
@@ -100,7 +106,11 @@ export function Header(props: HeaderProps) {
         </Show>
       </Show>
     </nav>
-  </header>;
+  </header>
+  <Show when={props.board && props.narrow && !props.selecting}>
+    <ZoomControls {...props} mobile />
+  </Show>
+  </>;
 }
 
 // ---- Transport: a row of shoot covers --------------------------------------

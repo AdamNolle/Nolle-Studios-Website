@@ -138,7 +138,9 @@ export interface Camera { x: number; y: number; z: number }
 const rnd = (seed: number) => { const x = Math.sin(seed * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
 
 export function boardView(narrow: boolean, W: number, H: number): BoardView {
-  const top = narrow ? 10 + 58 + 22 : 16 + 66 + 30, side = narrow ? 16 : 44, bottom = narrow ? 24 : 40;
+  // On phones the centered zoom bar occupies the safe-area edge. Reserve its
+  // height so Fit keeps every print above the controls instead of under them.
+  const top = narrow ? 10 + 58 + 22 : 16 + 66 + 30, side = narrow ? 16 : 44, bottom = narrow ? 84 : 40;
   return { w: Math.max(200, W - side * 2), h: Math.max(200, H - top - bottom), cy: (top - bottom) / 2 };
 }
 

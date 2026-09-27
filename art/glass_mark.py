@@ -1,16 +1,15 @@
-"""Render the studio's four-square mark as four tiles of coloured glass.
+"""Render the studio's four-square mark as one piece of optical glass.
 
 Blender 5.2 (Cycles on the GPU):
   blender -b -P art/glass_mark.py
   blender -b -P art/glass_mark.py -- samples=512
 
-Black, blue, green and red tiles, each a slab of glass with a rounded
-shoulder, fused into the mark's rounded square with hairline seams that
-show the header behind. Each tile emits exactly the flat mark's colour, so
-the glass never dulls it; a clear coat on top reflects Blender's CC0 studio
-HDRI and the lamp that lights the header's rim, with a soft sheen in each
-tile's upper-left corner and a deeper tone along the shoulder. The
-background renders transparent.
+A single thick optical-glass lens sits over smoke, blue, green and red
+laminated quadrants. Hairline seams stay below the uninterrupted reflective
+surface, so the mark reads as one crafted object instead of four plastic
+buttons. Surface transmission, volume absorption and two studio softboxes
+create the depth and reflections. The camera is just off axis so the lower
+edge reveals physical thickness. The background renders transparent.
 
 Writes src/assets/glass/mark.webp (160 x 160, shown at 38 px).
 """
@@ -33,13 +32,13 @@ HDRI = sorted(Path(bpy.app.binary_path).parent.parent.glob("Resources/*/datafile
 
 # The mark is a 16 x 16 square in millimetres; its corners match the header
 # button's 7 px radius at 38 px.
-SIZE, GAP, THICK = 16.0, 0.28, 3.2
-OUTER, INNER, SHOULDER = 2.9, 0.55, 1.15
-TILES = [  # (x, y) quadrant, the flat mark's colour
-    ((-1, 1), "#000000"),
-    ((1, 1), "#2A35FF"),
-    ((-1, -1), "#5EF50D"),
-    ((1, -1), "#FF1818"),
+SIZE, GAP, THICK = 16.0, 0.38, 3.0
+OUTER, INNER, SHOULDER = 2.85, 0.48, 1.0
+TILES = [  # (x, y) quadrant, laminate colour
+    ((-1, 1), "#070B10"),
+    ((1, 1), "#3447FF"),
+    ((-1, -1), "#62F523"),
+    ((1, -1), "#FF2633"),
 ]
 
 
@@ -55,7 +54,46 @@ def outline(x0, y0, x1, y1, radii, steps=14):
     return points
 
 
-def tile(name, quadrant, colour):
+def glass_body():
+    half = SIZE / 2
+    ring = outline(-half, -half, half, half, [OUTER] * 4)
+    count = len(ring)
+    verts = [(x, y, z) for z in (0.0, THICK) for x, y in ring]
+    faces = [tuple(reversed(range(count))), tuple(range(count, 2 * count))] + [
+        (i, (i + 1) % count, (i + 1) % count + count, i + count) for i in range(count)
+    ]
+    mesh = bpy.data.meshes.new("Optical glass body")
+    mesh.from_pydata(verts, [], faces)
+    mesh.update()
+    obj = bpy.data.objects.new("Optical glass body", mesh)
+    bpy.context.scene.collection.objects.link(obj)
+    bevel = obj.modifiers.new("Pillowed edge", "BEVEL")
+    bevel.width = SHOULDER
+    bevel.segments = 12
+    bevel.profile = 0.62
+    bevel.limit_method = "ANGLE"
+    obj.modifiers.new("Weighted normals", "WEIGHTED_NORMAL")
+    for polygon in mesh.polygons:
+        polygon.use_smooth = True
+
+    mat = bpy.data.materials.new("Clear optical glass")
+    mat.use_nodes = True
+    nt = mat.node_tree
+    nt.nodes.clear()
+    n = Nodes(nt)
+    noise = n.add("TexNoise", inputs={"Scale": 34.0, "Detail": 2.0, "Roughness": 0.55})
+    roughness = n.add("MapRange", inputs={"Value": noise.outputs["Fac"], "From Min": 0.0, "From Max": 1.0, "To Min": 0.035, "To Max": 0.075})
+    surface = n.add("BsdfPrincipled", inputs={
+        "Base Color": (*srgb("#EDF5FF"), 1), "Roughness": roughness.outputs["Result"], "IOR": 1.5,
+        "Transmission Weight": 0.88, "Coat Weight": 0.5, "Coat Roughness": 0.018, "Coat IOR": 1.52,
+    })
+    volume = n.add("VolumeAbsorption", inputs={"Color": (*srgb("#DCEBFF"), 1), "Density": 0.008})
+    n.add("OutputMaterial", inputs={"Surface": surface.outputs[0], "Volume": volume.outputs[0]})
+    obj.data.materials.append(mat)
+    return obj
+
+
+def laminate(name, quadrant, colour):
     qx, qy = quadrant
     half = SIZE / 2
     x0, x1 = (-half, -GAP / 2) if qx < 0 else (GAP / 2, half)
@@ -64,48 +102,30 @@ def tile(name, quadrant, colour):
     outer = {(-1, 1): 0, (1, 1): 1, (1, -1): 2, (-1, -1): 3}[quadrant]
     radii = [INNER] * 4
     radii[outer] = OUTER
-    ring = outline(x0, y0, x1, y1, radii)
-    n = len(ring)
-    verts = [(x, y, z) for z in (0.0, THICK) for x, y in ring]
-    faces = [tuple(reversed(range(n))), tuple(range(n, 2 * n))] + [(i, (i + 1) % n, (i + 1) % n + n, i + n) for i in range(n)]
-    mesh = bpy.data.meshes.new(name)
-    mesh.from_pydata(verts, [], faces)
-    mesh.update()
-    obj = bpy.data.objects.new(name, mesh)
-    bpy.context.scene.collection.objects.link(obj)
-    bevel = obj.modifiers.new("Rounded shoulder", "BEVEL")
-    bevel.width = SHOULDER
-    bevel.segments = 10
-    bevel.profile = 0.6
-    bevel.limit_method = "ANGLE"
-    obj.modifiers.new("Weighted normals", "WEIGHTED_NORMAL")
-    for polygon in mesh.polygons:
-        polygon.use_smooth = True
-
-    # The colour is emitted at exactly the brand's sRGB value, so lighting can
-    # never dull it. On top sits a clear coat that only adds reflections: the
-    # room, the lamp along the shoulder, and a soft sheen in the upper-left.
-    mat = bpy.data.materials.new(f"{name} glass")
-    mat.use_nodes = True
-    nt = mat.node_tree
-    nt.nodes.clear()
-    n = Nodes(nt)
-    generated = n.add("SeparateXYZ", inputs=[n.add("TexCoord").outputs["Generated"]])
-    corner = n.math("ADD", generated.outputs[0], n.math("SUBTRACT", 1.0, generated.outputs[1]))
-    sheen = n.math("POWER", n.math("SUBTRACT", 1.0, n.math("MULTIPLY", corner, 0.95), clamp=True), 2.0)
-    tint = n.mix(n.math("MULTIPLY", sheen, 0.2), (*srgb(colour), 1), (1, 1, 1, 1))
-    # Glass looks deeper where you see through more of it: the shoulder.
-    facing = n.add("LayerWeight", inputs={"Blend": 0.5}).outputs["Facing"]
-    depth = n.math("SUBTRACT", 1.0, n.math("MULTIPLY", n.math("POWER", facing, 2.0), 0.35))
-    emission = n.add("Emission", inputs={"Color": tint, "Strength": depth})
-    coat = n.add("BsdfPrincipled", inputs={
-        "Base Color": (0, 0, 0, 1), "Roughness": 0.05, "IOR": 1.5,
-        "Coat Weight": 1.0, "Coat Roughness": 0.02, "Coat IOR": 1.5,
-    })
-    glass = n.add("AddShader", inputs=[emission.outputs[0], coat.outputs[0]])
-    n.add("OutputMaterial", inputs={"Surface": glass.outputs[0]})
-    obj.data.materials.append(mat)
-    return obj
+    # Color sits below the uninterrupted glass face, like a piece of optical
+    # signage glass. The seams are in the laminate, not raised button edges.
+    inset = 0.18
+    back_ring = outline(x0 + inset, y0 + inset, x1 - inset, y1 - inset,
+                        [max(0.12, r - inset) for r in radii])
+    back_mesh = bpy.data.meshes.new(f"{name} laminate")
+    back_mesh.from_pydata([(x, y, 0.18) for x, y in back_ring], [], [tuple(range(len(back_ring)))])
+    back_mesh.update()
+    backing = bpy.data.objects.new(f"{name} laminate", back_mesh)
+    bpy.context.scene.collection.objects.link(backing)
+    back_mat = bpy.data.materials.new(f"{name} colour backing")
+    back_mat.use_nodes = True
+    back = back_mat.node_tree.nodes.get("Principled BSDF")
+    back.inputs["Base Color"].default_value = (*srgb(colour), 1)
+    back.inputs["Roughness"].default_value = 0.24
+    back.inputs["Coat Weight"].default_value = 0.18
+    back.inputs["Coat Roughness"].default_value = 0.08
+    # Preserve the identity colours after the light passes through the glass;
+    # this is a gentle luminous laminate, not the self-lit outer surface used
+    # by the older plastic-looking render.
+    back.inputs["Emission Color"].default_value = (*srgb(colour), 1)
+    back.inputs["Emission Strength"].default_value = 0.42
+    backing.data.materials.append(back_mat)
+    return backing
 
 
 def main():
@@ -129,7 +149,7 @@ def main():
     world.use_nodes = True
     nodes, links = world.node_tree.nodes, world.node_tree.links
     background = nodes["Background"]
-    background.inputs["Strength"].default_value = 0.9
+    background.inputs["Strength"].default_value = 0.42
     if HDRI:
         environment = nodes.new("ShaderNodeTexEnvironment")
         environment.image = bpy.data.images.load(str(HDRI[0]))
@@ -142,9 +162,10 @@ def main():
 
     camera_data = bpy.data.cameras.new("Overhead")
     camera_data.type = "ORTHO"
-    camera_data.ortho_scale = SIZE + 0.9
+    camera_data.ortho_scale = SIZE + 1.6
     camera = bpy.data.objects.new("Overhead", camera_data)
-    camera.location = (0, 0, 40)
+    camera.location = (0, -6.2, 40)
+    camera.rotation_euler = (Vector((0, 0, 1.1)) - camera.location).to_track_quat("-Z", "Y").to_euler()
     scene.collection.objects.link(camera)
     scene.camera = camera
 
@@ -152,15 +173,29 @@ def main():
     lamp_data = bpy.data.lights.new("Table lamp", "AREA")
     lamp_data.shape = "RECTANGLE"
     lamp_data.size, lamp_data.size_y = 30, 5
-    lamp_data.energy = 3400
+    lamp_data.energy = 1700
     lamp_data.color = srgb("#FFF4E6")
     lamp = bpy.data.objects.new("Table lamp", lamp_data)
-    lamp.location = (-14, 16, 18)
+    lamp.location = (-7, 13, 20)
     lamp.rotation_euler = (Vector((0, 0, 0)) - lamp.location).to_track_quat("-Z", "Y").to_euler()
     scene.collection.objects.link(lamp)
 
+    # A narrow cool reflection makes the front face read as glass without a
+    # hand-painted streak; it is a real softbox reflection and rolls naturally
+    # across the bevel at the icon's displayed 34–38 px size.
+    strip_data = bpy.data.lights.new("Cool strip", "AREA")
+    strip_data.shape = "RECTANGLE"
+    strip_data.size, strip_data.size_y = 21.0, 3.5
+    strip_data.energy = 620
+    strip_data.color = srgb("#DCEBFF")
+    strip = bpy.data.objects.new("Cool strip", strip_data)
+    strip.location = (2, 16, 18)
+    strip.rotation_euler = (Vector((0, 0, 1.2)) - strip.location).to_track_quat("-Z", "Y").to_euler()
+    scene.collection.objects.link(strip)
+
+    glass_body()
     for index, (quadrant, colour) in enumerate(TILES):
-        tile(f"Tile {index + 1}", quadrant, colour)
+        laminate(f"Quadrant {index + 1}", quadrant, colour)
 
     RENDER.parent.mkdir(parents=True, exist_ok=True)
     OUT.parent.mkdir(parents=True, exist_ok=True)
