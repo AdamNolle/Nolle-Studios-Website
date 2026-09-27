@@ -15,6 +15,10 @@ export interface ArchivePhoto {
   video?: { mp4?: string; mp4_720?: string; webm?: string };
   width?: number;
   height?: number;
+  cameraMake?: string;
+  cameraModel?: string;
+  lensModel?: string;
+  capturedAt?: string;
 }
 
 export interface ArchiveShoot {
@@ -86,7 +90,7 @@ function normalizeFormats(value: unknown): PhotoFormats {
   return formats;
 }
 
-function normalizedArchive(data: unknown): ArchiveShoot[] | null {
+export function normalizeArchive(data: unknown): ArchiveShoot[] | null {
   if (!isRecord(data) || !Array.isArray(data.shoots)) return null;
   const shoots = data.shoots.flatMap((rawShoot: unknown, index: number): ArchiveShoot[] => {
     if (!isRecord(rawShoot)) return [];
@@ -114,6 +118,10 @@ function normalizedArchive(data: unknown): ArchiveShoot[] | null {
           mp4_720: mediaUrl(rawPhoto.video.mp4_720),
           webm: mediaUrl(rawPhoto.video.webm),
         } : undefined,
+        cameraMake: stringValue(rawPhoto.cameraMake),
+        cameraModel: stringValue(rawPhoto.cameraModel),
+        lensModel: stringValue(rawPhoto.lensModel),
+        capturedAt: stringValue(rawPhoto.capturedAt),
       };
       if (typeof rawPhoto.width === "number" && Number.isFinite(rawPhoto.width)) photo.width = rawPhoto.width;
       if (typeof rawPhoto.height === "number" && Number.isFinite(rawPhoto.height)) photo.height = rawPhoto.height;
@@ -160,16 +168,16 @@ async function readJson(url: string, timeout = 4000): Promise<unknown> {
 
 export async function loadArchive(privatePreview = false): Promise<ArchiveShoot[]> {
   if (privatePreview) {
-    const shoots = normalizedArchive(await readJson(`${BASE}api/admin/preview`));
+    const shoots = normalizeArchive(await readJson(`${BASE}api/admin/preview`));
     if (!shoots) throw new Error("Private preview is unavailable");
     return shoots;
   }
   if (import.meta.env.MODE !== "static") {
-    const shoots = normalizedArchive(await readJson(`${BASE}api/site`, 2500));
+    const shoots = normalizeArchive(await readJson(`${BASE}api/site`, 2500));
     if (!shoots) throw new Error("Site catalog is unavailable");
     return shoots;
   }
-  const shoots = normalizedArchive(await readJson(`${BASE}media/archive.json`));
+  const shoots = normalizeArchive(await readJson(`${BASE}media/archive.json`));
   if (!shoots) throw new Error("Static archive is unavailable");
   return shoots;
 }

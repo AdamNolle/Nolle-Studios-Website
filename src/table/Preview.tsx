@@ -36,6 +36,12 @@ export default function Preview(props: PreviewProps) {
   let video: HTMLVideoElement | undefined;
   const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   const photo = createMemo(() => props.shoot.photos[props.index]);
+  const metadata = createMemo(() => {
+    const current = photo();
+    if (!current) return "";
+    const camera = [current.cameraMake, current.cameraModel].filter(Boolean).join(" ");
+    return [camera, current.lensModel, current.capturedAt?.replace("T", " ")].filter(Boolean).join(" · ");
+  });
   const isVideo = () => photo()?.kind === "video";
   const count = () => props.shoot.photos.length;
   const go = (step: number) => props.onGo((props.index + step + count()) % count());
@@ -236,7 +242,10 @@ export default function Preview(props: PreviewProps) {
     </Show>
     <div class="ns-glass ns-liftbar" ref={el => refract(el)}>
       <div class="ns-liftbar__id">
-        <span class="ns-liftbar__title">{props.shoot.title}</span>
+        <span class="ns-liftbar__identity">
+          <span class="ns-liftbar__title">{props.shoot.title}</span>
+          <Show when={metadata()}>{details => <span class="ns-liftbar__metadata">{details()}</span>}</Show>
+        </span>
         <span class="ns-liftbar__count" aria-live="polite">{props.index + 1} / {count()}</span>
       </div>
       <div class="ns-liftbar__actions">

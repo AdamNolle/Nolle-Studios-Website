@@ -20,7 +20,7 @@
     "cms:seed": "node --env-file-if-exists=.env server/seed.ts",
     "cms:hash": "node server/hash-password.ts",
     "alt:model": "llama-server -hf unsloth/Qwen3-VL-8B-Instruct-GGUF:Q4_K_M --host 127.0.0.1 --port 8790 -c 8192 -np 1 --jinja --no-webui",
-    "test": "node --test server/*.test.ts scripts/*.test.ts src/**/*.test.ts",
+    "test": "node --test server/*.test.ts scripts/*.test.ts src/*.test.ts src/**/*.test.ts",
     "test:cms": "node --test server/*.test.ts",
     "test:static": "node --test scripts/*.test.ts",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.test.json && tsc -p server/tsconfig.json"

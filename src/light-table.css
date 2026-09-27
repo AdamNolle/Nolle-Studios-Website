@@ -48,11 +48,11 @@ picture { display: contents; }
 .ns-glass {
   --rim: 33px;
   position: absolute; isolation: isolate; overflow: hidden;
-  border: 1px solid rgba(255,255,255,.18);
+  border: 1px solid rgba(255,255,255,.09);
   background: linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,.03) 38%, rgba(255,255,255,0) 60%, rgba(255,255,255,.08)), rgba(14,11,9,.62);
   backdrop-filter: blur(24px) saturate(185%) brightness(1.04);
   -webkit-backdrop-filter: blur(24px) saturate(185%) brightness(1.04);
-  box-shadow: inset 0 -16px 28px -20px rgba(255,255,255,.18), 0 20px 44px rgba(30,14,4,.34), 0 3px 8px rgba(30,14,4,.22);
+  box-shadow: inset 0 -16px 28px -20px rgba(255,255,255,.1), 0 18px 40px rgba(30,14,4,.28), 0 3px 8px rgba(30,14,4,.16);
   color: var(--ink);
 }
 .ns-glass::before {
@@ -63,15 +63,16 @@ picture { display: contents; }
   content: ""; position: absolute; inset: -1px; z-index: 0; pointer-events: none; border-radius: inherit;
   border: var(--rim) solid transparent;
   border-image: url(./assets/glass/liquid-glass.webp) 160 fill / var(--rim) / 0 stretch;
+  opacity: .58; filter: saturate(.8) brightness(.94);
 }
 .ns-glass > * { position: relative; z-index: 1; }
 /* Where the backdrop really refracts (Chromium, src/table/glass.ts) the glass
    can be far clearer: the cork and photographs show through and bend at the
    rim, lightly tinted so white type stays legible. */
 .ns-glass.is-refracting {
-  border-color: rgba(255,255,255,.16);
+  border-color: rgba(255,255,255,.07);
   background: linear-gradient(160deg, rgba(255,255,255,.1), rgba(255,255,255,0) 42%, rgba(255,255,255,0) 70%, rgba(255,255,255,.05)), rgba(22,14,8,.4);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.05), inset 0 -10px 22px -18px rgba(255,255,255,.16), 0 18px 40px rgba(30,14,4,.3), 0 2px 6px rgba(30,14,4,.2);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.025), inset 0 -10px 22px -18px rgba(255,255,255,.1), 0 16px 36px rgba(30,14,4,.26), 0 2px 6px rgba(30,14,4,.14);
 }
 .ns-about.is-refracting, .ns-keys.is-refracting { background: rgba(20,13,8,.5); }
 
@@ -190,7 +191,7 @@ picture { display: contents; }
   display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); align-items: center; gap: 16px;
   padding: 0 12px; border-radius: 20px;
 }
-.ns-bar > .ns-bar__glint { position: absolute; left: 18%; right: 18%; bottom: 0; height: 1px; pointer-events: none; background: linear-gradient(90deg, transparent, rgba(255,222,184,.55), transparent); }
+.ns-bar > .ns-bar__glint { position: absolute; left: 22%; right: 22%; bottom: 0; height: 1px; pointer-events: none; background: linear-gradient(90deg, transparent, rgba(255,222,184,.28), transparent); }
 .ns-bar__start { justify-self: start; display: flex; align-items: center; gap: 14px; min-width: 0; }
 .ns-bar__center { justify-self: center; display: grid; justify-items: center; gap: 5px; min-width: 0; max-width: 100%; text-shadow: 0 1px 8px rgba(0,0,0,.45); }
 .ns-bar__end { justify-self: end; display: flex; align-items: center; gap: 2px; min-width: 0; }
@@ -214,8 +215,8 @@ button.ns-bar__mark:hover { transform: translateY(-1px) scale(1.04); }
 }
 .ns-pill:hover { background: rgba(255,255,255,.1); }
 .ns-pill.is-active, .ns-pill--solid {
-  border-color: rgba(255,255,255,.22); background: linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.04));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.4); color: #fff;
+  border-color: rgba(255,255,255,.13); background: linear-gradient(180deg, rgba(255,255,255,.13), rgba(255,255,255,.035));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.24); color: #fff;
 }
 span.ns-pill.is-active { cursor: default; }
 .ns-pill--solid:hover { background: linear-gradient(180deg, rgba(255,255,255,.26), rgba(255,255,255,.08)); }
@@ -277,9 +278,9 @@ span.ns-pill.is-active { cursor: default; }
   contain: layout paint;
 }
 .ns-rail__step {
-  flex: none; display: grid; place-items: center; width: 48px; height: 48px; padding: 0; border: 1px solid rgba(255,255,255,.24); border-radius: 19px;
-  background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.04)); color: #fff; cursor: pointer;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.45), inset 0 -1px 0 rgba(0,0,0,.2), 0 2px 6px rgba(0,0,0,.2); transition: background .18s, opacity .3s;
+  flex: none; display: grid; place-items: center; width: 48px; height: 48px; padding: 0; border: 1px solid rgba(255,255,255,.12); border-radius: 19px;
+  background: linear-gradient(180deg, rgba(255,255,255,.13), rgba(255,255,255,.025)); color: #fff; cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.24), inset 0 -1px 0 rgba(0,0,0,.16), 0 2px 6px rgba(0,0,0,.16); transition: background .18s, opacity .3s;
 }
 .ns-rail__step:hover:not(:disabled) { background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,.08)); }
 .ns-rail__step:active:not(:disabled) { transform: scale(.96); }
@@ -291,14 +292,14 @@ span.ns-pill.is-active { cursor: default; }
   flex: none; display: flex; align-items: center; height: 48px; padding: 4px; border: 1px solid transparent; border-radius: 19px;
   background: transparent; color: #fff; cursor: pointer; transition: background .5s, border-color .5s, box-shadow .5s;
 }
-.ns-chip:hover { border-color: rgba(255,255,255,.42); }
-.ns-chip.is-on { border-color: rgba(255,255,255,.36); background: linear-gradient(180deg, rgba(255,255,255,.2), rgba(255,255,255,.06)); box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 0 22px rgba(255,236,210,.16); }
+.ns-chip:hover { border-color: rgba(255,255,255,.24); }
+.ns-chip.is-on { border-color: rgba(255,255,255,.19); background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.035)); box-shadow: inset 0 1px 0 rgba(255,255,255,.24), 0 0 20px rgba(255,236,210,.1); }
 .ns-chip__stack { position: relative; flex: none; width: 52px; height: 38px; }
 .ns-chip__stack::before, .ns-chip__stack::after { content: ""; position: absolute; inset: 0; border-radius: 4px; }
 .ns-chip__stack::before { background: rgba(255,255,255,.2); transform: rotate(-7deg) translate(-2px,1px); }
 .ns-chip__stack::after { background: rgba(255,255,255,.32); transform: rotate(5deg) translate(2px,0); }
 .ns-chip__stack img {
-  position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; object-fit: cover; border: 1.5px solid rgba(255,255,255,.92); border-radius: 4px;
+  position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; object-fit: cover; border: 1px solid rgba(255,255,255,.58); border-radius: 4px;
   box-shadow: 0 2px 6px rgba(0,0,0,.35); opacity: .7; filter: saturate(.65) brightness(.9); transition: opacity .5s, filter .5s;
 }
 .ns-chip.is-on .ns-chip__stack img { opacity: 1; filter: none; }
@@ -364,7 +365,9 @@ span.ns-pill.is-active { cursor: default; }
 
 .ns-liftbar { --rim: 30px; position: absolute; top: 16px; left: 16px; right: 16px; z-index: 3; display: flex; align-items: stretch; justify-content: space-between; height: 58px; border-radius: 18px; }
 .ns-liftbar__id { position: relative; display: flex; align-items: center; gap: 12px; min-width: 0; padding: 0 18px; }
+.ns-liftbar__identity { min-width: 0; display: grid; gap: 4px; }
 .ns-liftbar__title { font: 400 21px/1.05 var(--serif); white-space: nowrap; overflow-x: clip; overflow-y: visible; text-overflow: ellipsis; }
+.ns-liftbar__metadata { overflow: hidden; color: rgba(238,242,247,.66); font: 500 8.5px/1 var(--mono); letter-spacing: .08em; white-space: nowrap; text-overflow: ellipsis; }
 .ns-liftbar__count { flex: none; font: 500 10px/1 var(--mono); letter-spacing: .14em; color: rgba(238,242,247,.7); font-variant-numeric: tabular-nums; }
 .ns-liftbar__actions { position: relative; display: flex; align-items: stretch; flex: none; }
 .ns-liftbar__btn {
