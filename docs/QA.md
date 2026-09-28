@@ -1,5 +1,11 @@
 # Release review — 27 September 2026
 
+## Windows glass fallback, 27 September 2026
+
+- The Windows screenshot showed near-black header and transport controls even after SVG refraction was disabled. The fallback still combined a 62%-opaque near-black tint with `backdrop-filter`; the reduced-transparency rule used a 94%-opaque near-black tint.
+- The fallback now uses a translucent warm tint with no compositor-dependent backdrop filter. macOS Chromium retains the refracting filter. Reduced-transparency mode uses a stronger warm tint without turning the controls black.
+- Typecheck and all 48 tests passed. The fallback header was visually checked in the local browser with normal and emulated reduced-transparency settings. A physical Windows recheck remains necessary.
+
 ## Sony camera metadata normalization, 27 September 2026
 
 - Sony EXIF values `SONY` / `ILCE-7M5` are now translated once at the shared metadata boundary to the correctly styled `Sony α7 V`. The same normalization covers new uploads, the Content Room, the live catalog, and static archive exports.

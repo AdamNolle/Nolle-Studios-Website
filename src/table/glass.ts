@@ -6,8 +6,9 @@ import { canRefract } from "./glass-support";
 // a thick glass slab with a round shoulder; here that map is nine-sliced to
 // each bar's size and drives an SVG feDisplacementMap, so the backdrop bends
 // at the rim the way it does through real glass, with a little chromatic
-// fringing. Chromium applies SVG filters to backdrop-filter; Safari and
-// Firefox keep the frosted glass from the stylesheet.
+// fringing. Supported macOS Chromium uses the backdrop filter; Windows and
+// other browsers use a translucent CSS tint without a compositor-dependent
+// blur, so their controls cannot turn into opaque black slabs.
 
 const MAP_SLICE = 80, MAP_RADIUS = 48;
 const SVG = "http://www.w3.org/2000/svg";
