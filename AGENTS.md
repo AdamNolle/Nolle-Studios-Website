@@ -4,8 +4,8 @@ Nolle Studios is a photography portfolio shown as a light table (SolidJS, `src/`
 
 ## How the owner works
 
-- Push straight to `main`. Keep no other branches, local or remote, apart from `gh-pages`, which is the live site. Commit and push as you go.
-- Keep the live site current: after pushing `main`, run `npm run publish:pages` (see [publishing](docs/PUBLISH.md)). `main` does not deploy on its own.
+- Push straight to `main`. Keep no other branches, local or remote, apart from `gh-pages`, which is a static fallback. Commit and push as you go.
+- The live site is the dynamic Docker stack on Adlon, not GitHub Pages. After pushing `main`, pull on Adlon and rebuild with `docker compose -f compose.yaml -f compose.tunnel.yaml up -d --build --remove-orphans` (see [publishing](docs/PUBLISH.md)). `main` does not deploy on its own. Do not run `publish:pages` for a normal production release: it omits CMS uploads.
 - Every texture and sprite must be made in Blender or code (`art/`). The owner has no rights to stock or downloaded images, which is why the cork was re-rendered procedurally.
 - Visual quality is judged closely, especially the realism of the pins, tape, and glass. Check changes in a browser at desktop and phone sizes before calling them done.
 
@@ -37,7 +37,7 @@ npm run publish:pages  # build:static, then replace gh-pages and push
 ## Where things are tuned
 
 - **Board layout, zoom limits, and how prints hang:** `src/table/layout.ts` (`boardPrints`, `clampCamera`, `holdFor`). Prints alternate between clear tape (four placements) and push pins (1, 2, or 4, in blue, yellow, red, or dark green), and neighbours never repeat. Sprites are chosen in `src/table/art.ts` by file name.
-- **Liquid glass:** the rim image and refraction normal map come from `art/liquid_glass.py`. `src/table/glass.ts` nine-slices the map and applies it through an SVG `feDisplacementMap`, in Chromium only. The bend strength is 16 on bars; higher values squeeze the cork into streaks on thin bars.
+- **Liquid glass:** the rim image and refraction normal map come from `art/liquid_glass.py`. `src/table/glass.ts` nine-slices the map and applies it through an SVG `feDisplacementMap` on macOS Chromium only; Windows Chromium renders that filter black, so it uses the CSS glass fallback. The bend strength is 16 on bars; higher values squeeze the cork into streaks on thin bars.
 - **Header logo:** `art/glass_mark.py` renders glass tiles that emit the exact brand colours under a clear coat. Lighting coloured glass instead made the colours dull, which the owner rejected.
 - **Alt-text drafting:** the prompt, input size, and model call are in `server/alt-text.ts`. Qwen3-VL 8B was chosen over 4B for accuracy. Do not send the shoot title to the model, because it describes the title as if it were visible. Drafts are suggestions and are never saved as alt text automatically.
 - **Release notes and the checks behind them:** [docs/QA.md](docs/QA.md), newest first.
@@ -56,6 +56,6 @@ Then open `http://localhost:8791/admin/` after `npm run build:admin`. The produc
 
 ## Open items
 
-- **Not yet verified:** Safari, Firefox, physical phones (pinch zoom), building the Docker images, live R2/B2 storage, and hosting the CMS online. The CMS currently runs only locally. Photographs uploaded there reach the public site only after they are exported into `public/media/` and published.
+- **Not yet verified:** Safari, Firefox, physical phones (pinch zoom), Windows glass in a real Windows browser, and live R2/B2 storage. The CMS and dynamic site run on Adlon; CMS uploads reach the public site directly through its Publish flow.
 - **Very short landscape phones** (for example 667×375): the keys and Contact panels scroll inside the glass, with a fade showing there is more.
 - **Screenshots go stale.** `public/og-image.jpg` and `docs/images/*.webp` are browser screenshots. Retake them after visible design changes.

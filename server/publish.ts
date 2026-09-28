@@ -110,7 +110,7 @@ export async function publish(db: Db, staging: Staging, storage: Storage) {
   ]);
   // A short, human history line for the Publish screen.
   const added = prepared.length, removed = withdrawn.length, edits = changed.size - added - removed;
-  const note = [added ? `${added} photo${added === 1 ? '' : 's'} live` : '', removed ? `${removed} removed` : '',
+  const note = [added ? `${added} media item${added === 1 ? '' : 's'} live` : '', removed ? `${removed} removed` : '',
     edits > 0 ? `${edits} edit${edits === 1 ? '' : 's'}` : ''].filter(Boolean).join(' · ') || 'No changes';
   if (changed.size) {
     await db.query('INSERT INTO publish_log (id, created_at, changes, added, removed, note) VALUES (?, ?, ?, ?, ?, ?)',

@@ -11,11 +11,10 @@ export async function publishIncludingShoot(shootId: string) {
   const missing = content.photos.filter(photo => !photo.published && !photo.alt.trim() &&
     (photo.shootId === shootId || !!shootOf(photo)?.approved)).length;
   if (missing) { notice(`${photoCount(missing)} need alt text before publishing`, true); return false; }
-  let note = "";
   return change(async () => {
     await api(`/shoots/${encodeURIComponent(shootId)}`, { method: "PATCH", body: { approved: true } });
-    note = (await api<{ note: string }>("/publish", { method: "POST" })).note;
-  }, () => `${shoot.title} is on the site · ${note}`);
+    await api("/publish", { method: "POST" });
+  }, `${shoot.title} is on the site`);
 }
 
 /** Changing the working shoot leaves the live assignment alone until Publish. */

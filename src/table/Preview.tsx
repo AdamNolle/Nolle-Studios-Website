@@ -267,7 +267,6 @@ export default function Preview(props: PreviewProps) {
         </span>
       </div>
       <div class="ns-liftbar__actions">
-        <span class="ns-liftbar__count" aria-live="polite" aria-label={`Photo ${props.index + 1} of ${count()}`}>{props.index + 1} / {count()}</span>
         <Show when={isVideo()}>
           <button type="button" class="ns-liftbar__btn ns-liftbar__sound" aria-label={muted() ? "Unmute video" : "Mute video"}
             aria-pressed={!muted()} onClick={toggleSound}>
@@ -286,6 +285,7 @@ export default function Preview(props: PreviewProps) {
         <button type="button" class="ns-liftbar__btn ns-liftbar__close" aria-label="Close preview" ref={close} onClick={() => props.onClose()}>
           <span class="ns-wide">Close</span><span class="ns-liftbar__x">×</span>
         </button>
+        <span class="ns-liftbar__count" aria-live="polite" aria-label={`Photo ${props.index + 1} of ${count()}`}>{props.index + 1} / {count()}</span>
       </div>
     </div>
     <Show when={showStrip()}>
