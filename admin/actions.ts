@@ -4,6 +4,20 @@ import { photoCount } from "./util";
 
 export const photoPath = (id: string) => `/photos/${encodeURIComponent(id)}`;
 
+/** Changing the working shoot leaves the live assignment alone until Publish. */
+export async function moveToShoot(ids: string[], shootId: string) {
+  const shoot = content.shoots.find(row => row.id === shootId && !row.curated);
+  if (!shoot) { notice("Choose an upload shoot", true); return false; }
+  const photos = ids.map(photoOf).filter(photo => photo && !photo.curated && photo.shootId !== shootId);
+  if (!photos.length) { notice(`Already in ${shoot.title}`); return true; }
+  return change(async () => {
+    for (const photo of photos) {
+      // A moved cover must not silently replace the destination's cover.
+      await api(photoPath(photo!.id), { method: "PATCH", body: { shootId, isCover: false } });
+    }
+  }, `${photoCount(photos.length)} moved to ${shoot.title}${photos.some(photo => photo!.published) ? " · Publish to update the site" : " · still private"}`);
+}
+
 /** Approve or return photographs to draft; ones without alt text are reported, not sent. */
 export async function setApproval(ids: string[], approved: boolean) {
   const targets = ids.map(photoOf).filter(photo => photo && photo.approved !== approved);

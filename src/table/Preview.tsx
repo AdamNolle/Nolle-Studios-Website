@@ -153,6 +153,12 @@ export default function Preview(props: PreviewProps) {
   }
 
   const [saving, setSaving] = createSignal(false);
+  const [muted, setMuted] = createSignal(true);
+  function toggleSound() {
+    if (!video) return;
+    video.muted = !video.muted;
+    setMuted(video.muted);
+  }
   async function save() {
     if (saving()) return;
     setSaving(true);
@@ -186,7 +192,7 @@ export default function Preview(props: PreviewProps) {
   });
 
   // Each photograph opens at fit.
-  createEffect(on(() => props.index, () => { setDetail(1); if (figure) fit(); }, { defer: true }));
+  createEffect(on(() => props.index, () => { setDetail(1); setMuted(true); if (video) video.muted = true; if (figure) fit(); }, { defer: true }));
   createEffect(on([stageW, stageH], () => apply(), { defer: true }));
 
   onMount(() => {
@@ -212,13 +218,14 @@ export default function Preview(props: PreviewProps) {
       onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}
       onDblClick={event => { if (!isVideo()) { if (view.scale > 1.01) fit(); else zoomAt(2, event.clientX, event.clientY); } }}>
       <figure class="ns-lift__figure" classList={{ "ns-lift__figure--video": isVideo() }} ref={figure}
-        style={{ "background-image": isVideo() ? "none" : background(photo()) }}>
+        style={{ "background-image": isVideo() ? "none" : background(photo()), ...(isVideo() && photo() ? fitted(photo()) : {}) }}>
         <Show when={photo()} keyed>{current => current.kind === "video"
-          ? <video ref={video} class="ns-lift__video" controls playsinline preload="metadata" poster={mid(current)} aria-label={current.alt}>
-              <Show when={current.video?.webm}><source src={current.video!.webm} type="video/webm" /></Show>
+          ? <video ref={video} class="ns-lift__video" controls muted playsinline preload="metadata" poster={mid(current)} aria-label={current.alt}
+              onVolumeChange={event => setMuted(event.currentTarget.muted)}>
               <Show when={props.narrow && current.video?.mp4_720} fallback={<Show when={current.video?.mp4}><source src={current.video!.mp4} type="video/mp4" /></Show>}>
                 <source src={current.video!.mp4_720} type="video/mp4" />
               </Show>
+              <Show when={current.video?.webm}><source src={current.video!.webm} type="video/webm" /></Show>
             </video>
           : <picture>
               <source type="image/avif" srcset={srcset(current, "avif")} sizes={`${Math.ceil(stageW() * detail())}px`} />
@@ -249,6 +256,18 @@ export default function Preview(props: PreviewProps) {
         <span class="ns-liftbar__count" aria-live="polite">{props.index + 1} / {count()}</span>
       </div>
       <div class="ns-liftbar__actions">
+        <Show when={isVideo()}>
+          <button type="button" class="ns-liftbar__btn ns-liftbar__sound" aria-label={muted() ? "Unmute video" : "Mute video"}
+            aria-pressed={!muted()} onClick={toggleSound}>
+            <svg class="ns-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 9v6h4l5 4V5L8 9H4Z" />
+              <Show when={muted()} fallback={<><path d="M16 9a4 4 0 0 1 0 6" /><path d="M18 6a8 8 0 0 1 0 12" /></>}>
+                <path d="m17 9 5 6m0-6-5 6" />
+              </Show>
+            </svg>
+            <span class="ns-wide">{muted() ? "Unmute" : "Mute"}</span>
+          </button>
+        </Show>
         <button type="button" class="ns-liftbar__btn" aria-label="Download this photo" disabled={saving()} onClick={() => void save()}>
           <DownloadIcon /><span class="ns-wide">{saving() ? "Saving…" : "Download"}</span>
         </button>

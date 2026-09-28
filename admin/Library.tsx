@@ -3,6 +3,7 @@ import type { PhotoDto } from "../shared/api";
 import { api } from "./api";
 import { reorderCollection, reorderShoot, saveAlt, setApproval } from "./actions";
 import Inspector from "./Inspector";
+import { selectUploadShoot } from "./Uploads";
 import {
   altDrafts, change, content, coverOf, filter, focusId, layout, openScope, photoSrc, photosIn, previewUrl,
   query, scope, scoped, selected, setDraft, setFilter, setFocusId, setLayout, setQuery, setSelected, setThumb, setView,
@@ -231,7 +232,7 @@ export default function Library(props: LibraryProps) {
                 <button type="button" classList={{ on: !sh().approved }} aria-pressed={!sh().approved} onClick={() => change(() => api(`/shoots/${encodeURIComponent(sh().id)}`, { method: "PATCH", body: { approved: false } }), `${sh().title} will be hidden after you publish`)}>Hidden</button>
               </div>
             </div>
-            <Show when={!sh().curated}><button type="button" class="primary" onClick={() => setView("uploads")}>Upload photos</button></Show>
+            <Show when={!sh().curated}><button type="button" class="primary" onClick={() => { selectUploadShoot(sh().id); setView("uploads"); }}>Upload photos</button></Show>
             <details class="action-menu">
               <summary>More</summary>
               <div class="menu-popover">

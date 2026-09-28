@@ -1,6 +1,6 @@
 import { For, Show, createEffect, createSignal, on } from "solid-js";
 import type { PhotoDto } from "../shared/api";
-import { photoPath, saveAlt, setApproval, suggestAlt, toggleInCollection } from "./actions";
+import { moveToShoot, photoPath, saveAlt, setApproval, suggestAlt, toggleInCollection } from "./actions";
 import { api } from "./api";
 import { altConfigured, altDrafts, altStatus, change, content, notice, photoSrc, previewUrl, setDraft, shootOf, statusOf, videoSrc } from "./store";
 import { pad2 } from "./util";
@@ -37,9 +37,11 @@ function Suggestion(props: { photo: PhotoDto; onUse(text: string): void }) {
 
 export default function Inspector(props: { photo: PhotoDto | undefined; rows: PhotoDto[]; narrow: boolean; onStep(step: number): void; onClose(): void }) {
   let field: HTMLTextAreaElement | undefined;
+  const [destination, setDestination] = createSignal("");
   const text = () => props.photo ? altDrafts().get(props.photo.id) ?? props.photo.alt : "";
   // Keep keyboard focus in the editor as the inspector moves between photos.
   createEffect(on(() => props.photo?.id, (id, previous) => { if (id && previous && document.activeElement === field) field?.focus(); }));
+  createEffect(on(() => props.photo?.id, () => setDestination("")));
 
   return <Show when={props.photo} fallback={<aside class="inspector is-empty"><p class="empty-copy">Select a photograph to edit its alt text, status, and collections.</p></aside>}>
     {photo => {
@@ -99,6 +101,19 @@ export default function Inspector(props: { photo: PhotoDto | undefined; rows: Ph
               }}</For>
             </div>
           </div>
+          <Show when={!photo().curated}>
+            <div class="inspector-move">
+              <label for="move-shoot">Shoot</label>
+              <div>
+                <select id="move-shoot" value={destination() || photo().shootId || ""} onChange={event => setDestination(event.currentTarget.value)}>
+                  <For each={content.shoots.filter(shoot => !shoot.curated)}>{shoot => <option value={shoot.id}>{shoot.title}</option>}</For>
+                </select>
+                <button type="button" disabled={!destination() || destination() === photo().shootId}
+                  onClick={() => void moveToShoot([photo().id], destination())}>Move</button>
+              </div>
+              <small>Photos and videos can move between shoots. Published changes go live after you publish.</small>
+            </div>
+          </Show>
           <div class="inspector-buttons">
             <button type="button" disabled={photo().isCover} onClick={() => change(() => api(photoPath(photo().id), { method: "PATCH", body: { isCover: true } }), `Cover set for ${shootOf(photo())?.title}`)}>
               {photo().isCover ? "Shoot cover" : "Set as shoot cover"}

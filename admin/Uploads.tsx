@@ -13,6 +13,7 @@ const VIDEO = /^video\/(mp4|quicktime|webm)$/;
 // The queue survives moving between screens while files are still uploading.
 const [queue, setQueue] = createStore<Item[]>([]);
 const [target, setTarget] = createSignal("");
+export const selectUploadShoot = (id: string) => setTarget(id);
 const MAX_CONCURRENT_UPLOADS = 2;
 let running = 0, nextKey = 0;
 export const uploading = () => queue.some(item => item.state === "queued" || item.state === "uploading" || item.state === "processing");
@@ -127,7 +128,7 @@ export default function Uploads(props: { onAltPass(ids: string[]): void; onCreat
           <div class={`queue-row ${item.state}`}>
             <span class="queue-thumb"><Show when={item.preview}><img src={item.preview} alt="" /></Show><Show when={item.video}><i aria-hidden="true">▶</i></Show></span>
             <span class="queue-file">
-              <span><b>{item.name}</b><small>{fileSize(item.size)}</small></span>
+              <span><b>{item.name}</b><small>{fileSize(item.size)} · {content.shoots.find(shoot => shoot.id === item.shootId)?.title ?? "Shoot unavailable"}</small></span>
               <span class="queue-bar"><i style={{ width: `${item.state === "uploading" ? Math.round(item.progress * 100) : item.state === "queued" ? 0 : 100}%` }} /></span>
             </span>
             <span class="queue-state"><Show when={item.state === "uploading" || item.state === "processing"}><i class="spin" aria-hidden="true" /></Show>{label(item)}</span>

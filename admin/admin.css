@@ -185,6 +185,13 @@ a{color:inherit;text-decoration:none}
 .inspector-collections>div{display:flex;flex-wrap:wrap;gap:5px}
 .inspector-collections button{min-height:28px;padding:0 10px;border:1px solid #d7dbdc;border-radius:15px;background:#fff;font-size:11px}
 .inspector-collections button.added{border-color:var(--green);background:#edf5ee;color:var(--green)}
+.inspector-move{display:grid;gap:7px;padding-top:15px;border-top:1px solid var(--line)}
+.inspector-move label{font-size:12px;font-weight:700}
+.inspector-move>div{display:flex;gap:6px}
+.inspector-move select{min-width:0;flex:1;min-height:36px;padding:0 9px;border:1px solid #d5d8d9;border-radius:6px;background:#fff;font-size:12px}
+.inspector-move button{min-height:36px;padding:0 13px;border:1px solid #d5d8d9;border-radius:6px;background:#fff;font-size:12px;font-weight:700}
+.inspector-move button:disabled{opacity:.45}
+.inspector-move small{color:var(--muted);font-size:11px;line-height:1.4}
 .inspector-buttons{display:flex;flex-wrap:wrap;gap:6px}
 .photo-facts{display:grid;grid-template-columns:70px 1fr;gap:7px 10px;margin:0;padding-top:15px;border-top:1px solid var(--line);font-size:11px}
 .photo-facts dt{color:var(--muted)}

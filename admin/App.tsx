@@ -1,11 +1,11 @@
 import { For, Match, Show, Switch, batch, createEffect, createSignal, lazy, onCleanup, onMount } from "solid-js";
 import type { JSX } from "solid-js";
 import type { AdminConfig, ShootDto } from "../shared/api";
-import { addToCollection, refreshAltStatus, setApproval } from "./actions";
+import { addToCollection, moveToShoot, refreshAltStatus, setApproval } from "./actions";
 import { api, endSession, setSignInNote, signInNote, signedIn, startSession } from "./api";
 import Library from "./Library";
 import Overview from "./Overview";
-import Uploads, { uploading } from "./Uploads";
+import Uploads, { selectUploadShoot, uploading } from "./Uploads";
 import {
   altAuto, altDrafts, altStatus, change, content, counts, load, notice, openScope, photoOf, selected,
   setAltAuto, setAltConfigured, setAltDrafts, setScopeSignal, setSelected, setSiteBase, setView, setWidth, siteUrl, toast, view,
@@ -92,12 +92,16 @@ function CreateDialog(props: { kind: "shoot" | "collection"; onClose(): void }) 
   const close = () => (form.closest("dialog") as HTMLDialogElement).close();
   async function submit(event: SubmitEvent) {
     event.preventDefault();
+    const fromUploads = view() === "uploads";
     const title = (form.elements.namedItem("title") as HTMLInputElement).value.trim();
     if (!title) return;
     try {
       const { id } = await api<{ id: string }>(props.kind === "shoot" ? "/shoots" : "/collections", { method: "POST", body: { title } });
       await load();
-      if (props.kind === "shoot") openScope({ type: "shoot", id });
+      if (props.kind === "shoot") {
+        selectUploadShoot(id);
+        if (fromUploads) setView("uploads"); else openScope({ type: "shoot", id });
+      }
       else { setScopeSignal({ type: "collection", id }); setView("collections"); }
       notice(`${props.kind === "shoot" ? "Shoot" : "Collection"} created`);
       close();
@@ -158,6 +162,7 @@ function ShootDialog(props: { shoot: ShootDto; onClose(): void }) {
 
 function Batch(props: { onAltPass(ids: string[]): void }) {
   const ids = () => [...selected()].filter(id => photoOf(id));
+  const movable = () => ids().filter(id => !photoOf(id)!.curated);
   const deletable = () => ids().filter(id => {
     const photo = photoOf(id);
     return photo && !photo.curated && !photo.published;
@@ -189,6 +194,14 @@ function Batch(props: { onAltPass(ids: string[]): void }) {
     <button type="button" onClick={() => void approve(false)}>Back to draft</button>
     <button type="button" onClick={() => props.onAltPass(ids())}>Write alt text</button>
     <button type="button" class="batch-danger" disabled={!deletable().length} onClick={() => void remove()}>Delete uploads</button>
+    <select aria-label="Move selected uploads to another shoot" value="" disabled={!movable().length} onChange={event => {
+      const id = event.currentTarget.value;
+      event.currentTarget.value = "";
+      if (id) void moveToShoot(movable(), id).then(saved => { if (saved) setSelected(new Set<string>()); });
+    }}>
+      <option value="">Move to shoot…</option>
+      <For each={content.shoots.filter(shoot => !shoot.curated)}>{shoot => <option value={shoot.id}>{shoot.title}</option>}</For>
+    </select>
     <select aria-label="Add selected photographs to a collection" value="" onChange={event => {
       const id = event.currentTarget.value;
       event.currentTarget.value = "";

@@ -611,8 +611,9 @@ test('video upload stays private, previews with ranges, and plays after publish'
     const source = path.join(root, 'sample.mp4');
     await run('ffmpeg', ['-nostdin', '-y', '-v', 'error', '-f', 'lavfi',
       '-i', 'testsrc=size=640x360:rate=12', '-t', '1', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', source]);
-    const { cookie, admin, upload } = await signIn();
+    const { cookie, admin, content, upload } = await signIn();
     const { id: shootId } = await (await admin('/shoots', 'POST', { title: 'Moving images', published: true })).json() as Json;
+    const { id: destinationId } = await (await admin('/shoots', 'POST', { title: 'Video destination', published: true })).json() as Json;
     const rejected = await upload('videos', shootId, await fs.readFile(source), { name: 'clip.exe' });
     assert.equal(rejected.status, 400);
     const uploaded = await upload('videos', shootId, await fs.readFile(source), { name: 'sample.mp4', alt: 'Color bars moving across the frame' });
@@ -620,10 +621,14 @@ test('video upload stays private, previews with ranges, and plays after publish'
     assert.equal(uploaded.status, 201, JSON.stringify(body));
     const id: string = body.id;
     assert.ok(body.duration > 0);
+    assert.equal((await admin(`/photos/${id}`, 'PATCH', { shootId: destinationId, isCover: false })).status, 200);
+    const moved = (await content()).photos.find(photo => photo.id === id)!;
+    assert.equal(moved.shootId, destinationId);
+    assert.equal(moved.published, false);
     assert.equal((await fetch(`${base}/media/videos/${id}/1080.mp4`)).status, 404);
     assert.equal((await fetch(`${base}/api/admin/videos/${id}/preview`)).status, 401);
     const previewCatalog = await (await admin('/preview')).json() as PublicCatalog;
-    assert.equal(previewCatalog.shoots[0].photos[0].video.mp4, `/api/admin/videos/${id}/preview`);
+    assert.equal(previewCatalog.shoots.find(shoot => shoot.id === destinationId)!.photos[0].video.mp4, `/api/admin/videos/${id}/preview`);
     const preview = await fetch(`${base}/api/admin/videos/${id}/preview`, { headers: { Cookie: cookie, Range: 'bytes=0-99' } });
     assert.equal(preview.status, 206);
     assert.equal((await preview.arrayBuffer()).byteLength, 100);
@@ -631,7 +636,7 @@ test('video upload stays private, previews with ranges, and plays after publish'
     assert.equal(badRange.status, 416);
     assert.equal((await admin(`/photos/${id}`, 'PATCH', { approved: true })).status, 200);
     assert.equal((await admin('/publish', 'POST')).status, 200);
-    const video = (await site()).shoots[0].photos[0];
+    const video = (await site()).shoots.find(shoot => shoot.id === destinationId)!.photos[0];
     assert.equal(video.kind, 'video');
     assert.match(video.video.mp4!, /\/videos\//);
     assert.equal((await fetch(`${base}${video.video.mp4}`)).status, 200);
