@@ -205,7 +205,7 @@ export function Contact(props: { onClose(): void }) {
       </div>
       <div class="ns-contact__body ns-scroll" ref={fadeWhileScrollable}>
         <img class="ns-contact__logo" src="/nolle-studios-header-on-dark.svg" alt="Nolle Studios" width="210" height="60" draggable={false} />
-        <p class="ns-contact__lead">For prints, portraits, or a shoot of your own, get in touch.</p>
+        <p class="ns-contact__lead">Let's get in touch.</p>
         <div class="ns-contact__links">
           <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}<span>EMAIL ↗</span></a>
           <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer">{INSTAGRAM_HANDLE}<span>INSTAGRAM ↗</span></a>
