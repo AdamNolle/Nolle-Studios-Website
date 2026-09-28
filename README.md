@@ -33,7 +33,7 @@ Every shoot is a contact sheet on a cork board, newest first. Open one and its p
 
 **Everything is rendered, nothing is stock.** The cork, the liquid-glass rims, the loupe, the push pins, and the tape are Blender scenes in [`art/`](art/README.md), rendered on the GPU with Cycles. The glass bends what is behind it: a normal map rendered from the same glass slab drives an SVG displacement filter, so the cork and photographs refract at the rim (Chromium; Safari and Firefox show frosted glass).
 
-**The Content Room.** A private editor at `/admin/` for shoots, collections, uploads, and ordering. Photographs move from Draft to Approved to Live, and nothing reaches visitors until **Publish**. Uploads are resized concurrently to AVIF, WebP, and JPEG from 640 to 3200 px. Camera, lens, and capture time stay with every generated image while GPS, serial numbers, names, and other private metadata are removed. Videos are transcoded to 720p and 1080p.
+**The Content Room.** A private editor at `/admin/` for shoots, collections, uploads, and ordering. Create a shoot, upload described photos or videos, and press **Publish**; nothing reaches visitors before that step. Intentionally private shoots stay out of the release until you choose **Include & publish**. Uploads are resized concurrently to AVIF, WebP, and JPEG from 640 to 3200 px. Camera, lens, and capture time stay with every generated image while GPS, serial numbers, names, and other private metadata are removed. Videos are transcoded to 720p and 1080p.
 
 <p align="center">
   <img src="docs/images/alt-text-pass.webp" alt="The alt-text pass: a photograph beside a drafted description, labelled as drafted by the local model" width="900">

@@ -96,7 +96,10 @@ function CreateDialog(props: { kind: "shoot" | "collection"; onClose(): void }) 
     const title = (form.elements.namedItem("title") as HTMLInputElement).value.trim();
     if (!title) return;
     try {
-      const { id } = await api<{ id: string }>(props.kind === "shoot" ? "/shoots" : "/collections", { method: "POST", body: { title } });
+      const keepPrivate = props.kind === "shoot" && (form.elements.namedItem("keepPrivate") as HTMLInputElement).checked;
+      const { id } = await api<{ id: string }>(props.kind === "shoot" ? "/shoots" : "/collections", {
+        method: "POST", body: props.kind === "shoot" ? { title, approved: !keepPrivate } : { title },
+      });
       await load();
       if (props.kind === "shoot") {
         selectUploadShoot(id);
@@ -111,9 +114,10 @@ function CreateDialog(props: { kind: "shoot" | "collection"; onClose(): void }) 
     <form ref={form} onSubmit={submit}>
       <div class="eyebrow">NEW ARCHIVE ITEM</div>
       <h2 id="create-title">{props.kind === "shoot" ? "New shoot" : "New collection"}</h2>
-      <p>{props.kind === "shoot" ? "A shoot holds photographs from one or more days. It stays private until you publish it." : "A collection groups photographs from any shoot."}</p>
+      <p>{props.kind === "shoot" ? "Add photos, then press Publish to put the shoot and its described photos on the site. Nothing goes public before Publish." : "A collection groups photographs from any shoot."}</p>
       <label for="create-name">Name</label>
       <input id="create-name" name="title" maxlength="140" required autocomplete="off" autofocus />
+      <Show when={props.kind === "shoot"}><label class="create-private"><input type="checkbox" name="keepPrivate" /> Keep this shoot private for now</label></Show>
       <p class="message" role="status">{error()}</p>
       <div class="dialog-actions"><button type="button" onClick={close}>Cancel</button><button class="primary" type="submit">Create</button></div>
     </form>

@@ -1,7 +1,7 @@
 import { For, Match, Show, Switch, batch, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import type { PhotoDto } from "../shared/api";
 import { api } from "./api";
-import { reorderCollection, reorderShoot, saveAlt, setApproval } from "./actions";
+import { publishIncludingShoot, reorderCollection, reorderShoot, saveAlt, setApproval } from "./actions";
 import Inspector from "./Inspector";
 import { selectUploadShoot } from "./Uploads";
 import {
@@ -26,6 +26,7 @@ export default function Library(props: LibraryProps) {
   let search: HTMLInputElement | undefined;
   const narrow = () => width() < 900;
   const [sheetOpen, setSheetOpen] = createSignal(false);
+  const [publishingShoot, setPublishingShoot] = createSignal(false);
   const [dragging, setDragging] = createSignal("");
   const [over, setOver] = createSignal("");
   let lastClicked = "";
@@ -248,9 +249,12 @@ export default function Library(props: LibraryProps) {
         </div>
       </div>
       <Show when={shoot() && !shoot()!.approved}>
-        <div class="hidden-banner">{shoot()!.published ? "This shoot will leave the table after you publish." : "This shoot is hidden from the site. Approve the photos you want, then show the shoot."}
-          <button type="button" onClick={() => change(() => api(`/shoots/${encodeURIComponent(shoot()!.id)}`, { method: "PATCH", body: { approved: true } }), "Shoot will appear after you publish")}>
-            {shoot()!.published ? "Keep shoot on site" : "Show shoot on site"}</button>
+        <div class="hidden-banner">This shoot is private. Publishing it will include every described photo and video in the shoot, plus other queued site changes.
+          <button type="button" disabled={publishingShoot()} onClick={async () => {
+            setPublishingShoot(true);
+            await publishIncludingShoot(shoot()!.id);
+            setPublishingShoot(false);
+          }}>{publishingShoot() ? "Publishing…" : "Publish this shoot"}</button>
         </div>
       </Show>
       <Show when={shoot()?.approved && scoped().some(p => statusOf(p) === "approved")}>

@@ -221,7 +221,8 @@ export function createApp({ db, settings }: { db: Db; settings: Settings }): Cms
        published, approved, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [id, title, slug, description, date, endDate, location, sortOrder,
-      title, slug, description, date, endDate, location, sortOrder, published, published, stamp, stamp]);
+      title, slug, description, date, endDate, location, sortOrder,
+      published, body.approved === undefined ? published : flag(body.approved), stamp, stamp]);
     return c.json({ id }, 201);
   });
 

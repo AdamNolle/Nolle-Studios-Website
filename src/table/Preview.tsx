@@ -45,6 +45,18 @@ export default function Preview(props: PreviewProps) {
   const isVideo = () => photo()?.kind === "video";
   const count = () => props.shoot.photos.length;
   const go = (step: number) => props.onGo((props.index + step + count()) % count());
+  const warmed = new Set<string>();
+  function warmNeighbours() {
+    for (const step of [-1, 1]) {
+      const neighbour = props.shoot.photos[(props.index + step + count()) % count()];
+      if (!neighbour || neighbour.kind === "video") continue;
+      const url = neighbour.formats.avif?.mid || mid(neighbour);
+      if (!url || warmed.has(url)) continue;
+      warmed.add(url);
+      const image = new Image();
+      image.src = url;
+    }
+  }
 
   // The stage sits between the title bar and the thumbnail strip.
   const showStrip = () => props.height > 560;
@@ -232,7 +244,7 @@ export default function Preview(props: PreviewProps) {
               <img class="ns-lift__img" src={mid(current)} srcset={srcset(current, "webp")} sizes={`${Math.ceil(stageW() * detail())}px`}
                 alt={current.alt} draggable={false} decoding="async" fetchpriority="high"
                 style={fitted(current)}
-                onLoad={event => { event.currentTarget.classList.add("is-loaded"); apply(); }} />
+                onLoad={() => { apply(); warmNeighbours(); }} />
             </picture>}
         </Show>
       </figure>
@@ -253,9 +265,9 @@ export default function Preview(props: PreviewProps) {
           <span class="ns-liftbar__title">{props.shoot.title}</span>
           <Show when={metadata()}>{details => <span class="ns-liftbar__metadata">{details()}</span>}</Show>
         </span>
-        <span class="ns-liftbar__count" aria-live="polite">{props.index + 1} / {count()}</span>
       </div>
       <div class="ns-liftbar__actions">
+        <span class="ns-liftbar__count" aria-live="polite" aria-label={`Photo ${props.index + 1} of ${count()}`}>{props.index + 1} / {count()}</span>
         <Show when={isVideo()}>
           <button type="button" class="ns-liftbar__btn ns-liftbar__sound" aria-label={muted() ? "Unmute video" : "Mute video"}
             aria-pressed={!muted()} onClick={toggleSound}>

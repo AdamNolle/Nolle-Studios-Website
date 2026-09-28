@@ -547,6 +547,50 @@ test('Publish includes every described draft in shoots marked on site', async ()
   } finally { await close(); }
 });
 
+test('approved media in a private shoot stays private until the shoot is included', async () => {
+  const { root, site, signIn, close } = await fixture();
+  try {
+    const { admin, content, upload } = await signIn();
+    const created = await admin('/shoots', 'POST', { title: 'Private shoot' });
+    assert.equal(created.status, 201);
+    const { id: shootId } = await created.json() as Json;
+    const { id: photoId } = await (await upload('photos', shootId, await jpegOf('#a0b3a2'), { alt: 'A private portrait' })).json() as Json;
+    assert.equal((await admin(`/photos/${photoId}`, 'PATCH', { approved: true })).status, 200);
+    const publicFile = path.join(root, 'media', 'photos', photoId, '640.jpg');
+
+    const privatePublish = await admin('/publish', 'POST');
+    assert.equal(privatePublish.status, 200);
+    assert.equal(((await privatePublish.json()) as Json).note, 'No changes');
+    assert.equal((await content()).photos.find(photo => photo.id === photoId)!.published, false);
+    assert.equal(await exists(publicFile), false);
+    assert.equal((await site()).shoots.some(shoot => shoot.id === shootId), false);
+
+    assert.equal((await admin(`/shoots/${shootId}`, 'PATCH', { approved: true })).status, 200);
+    assert.equal((await admin('/publish', 'POST')).status, 200);
+    assert.equal((await site()).shoots.find(shoot => shoot.id === shootId)!.photos[0].id, photoId);
+    assert.equal(await exists(publicFile), true);
+
+    assert.equal((await admin(`/shoots/${shootId}`, 'PATCH', { approved: false })).status, 200);
+    assert.equal((await admin('/publish', 'POST')).status, 200);
+    assert.equal((await site()).shoots.some(shoot => shoot.id === shootId), false);
+    assert.equal((await content()).photos.find(photo => photo.id === photoId)!.published, false);
+    assert.equal(await exists(publicFile), false);
+  } finally { await close(); }
+});
+
+test('a queued new shoot remains private until Publish', async () => {
+  const { site, signIn, close } = await fixture();
+  try {
+    const { admin, content, upload } = await signIn();
+    const { id: shootId } = await (await admin('/shoots', 'POST', { title: 'New shoot', approved: true })).json() as Json;
+    assert.equal((await content()).shoots.find(shoot => shoot.id === shootId)!.published, false);
+    assert.equal((await site()).shoots.some(shoot => shoot.id === shootId), false);
+    assert.equal((await upload('photos', shootId, await jpegOf('#b4b2a1'), { alt: 'A new frame' })).status, 201);
+    assert.equal((await admin('/publish', 'POST')).status, 200);
+    assert.equal((await site()).shoots.find(shoot => shoot.id === shootId)!.photos.length, 1);
+  } finally { await close(); }
+});
+
 test('failed later upload keeps earlier additions out of the public catalog', async () => {
   const { root, site, signIn, close } = await fixture();
   try {

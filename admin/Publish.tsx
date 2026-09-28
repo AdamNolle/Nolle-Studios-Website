@@ -1,7 +1,8 @@
 import { For, Show, createMemo, createSignal } from "solid-js";
 import { api } from "./api";
+import { publishIncludingShoot } from "./actions";
 import { Pipeline } from "./Overview";
-import { autoPublishReady, change, collectionPending, content, photoOf, photoPending, photoSrc, shootOf, shootPending, siteUrl, statusOf, coverOf, setView } from "./store";
+import { autoPublishReady, change, collectionPending, content, photoOf, photoPending, photoSrc, shootOf, shootPending, siteUrl, coverOf, intendedLive, openScope, setView } from "./store";
 import { localPreview, photoCount, siteLabel, when } from "./util";
 
 export default function Publish() {
@@ -12,13 +13,14 @@ export default function Publish() {
     const collections = content.collections.filter(collectionPending);
     return { photos, shoots, collections, total: photos.length + shoots.length + collections.length };
   });
+  const privateShoots = () => content.shoots.filter(shoot => !shoot.approved && shoot.photos.length);
   const groups = () => {
     const p = pending().photos;
     return ([
-      ["Photos going live", p.filter(photo => (photo.approved || autoPublishReady(photo)) && !photo.published).length],
-      ["Photos coming off the site", p.filter(photo => !photo.approved && photo.published).length],
-      ["Alt text updates", p.filter(photo => photo.approved && photo.published && photo.alt !== photo.liveAlt).length],
-      ["Sequences reordered", new Set(p.filter(photo => photo.approved && photo.published && photo.sortOrder !== photo.liveSortOrder).map(photo => photo.shootId)).size],
+      ["Photos and videos going live", p.filter(photo => intendedLive(photo) && !photo.published).length],
+      ["Media returning to private storage", p.filter(photo => !intendedLive(photo) && photo.published).length],
+      ["Alt text updates", p.filter(photo => intendedLive(photo) && photo.published && photo.alt !== photo.liveAlt).length],
+      ["Sequences reordered", new Set(p.filter(photo => intendedLive(photo) && photo.published && photo.sortOrder !== photo.liveSortOrder).map(photo => photo.shootId)).size],
       ["Shoot changes", pending().shoots.length],
       ["Collection changes", pending().collections.length],
     ] as [string, number][]).filter(([, count]) => count);
@@ -26,7 +28,7 @@ export default function Publish() {
   const rows = () => [
     ...pending().photos.map(photo => ({
       title: photo.alt || "Untitled photograph", sub: shootOf(photo)?.title ?? "Archive", image: photoSrc(photo),
-      action: autoPublishReady(photo) ? "ADDING AUTOMATICALLY" : photo.approved !== photo.published ? (photo.approved ? "ADDING" : "REMOVING") :
+      action: autoPublishReady(photo) ? "ADDING AUTOMATICALLY" : intendedLive(photo) !== photo.published ? (intendedLive(photo) ? "ADDING" : "RETURNING PRIVATE") :
         [photo.alt !== photo.liveAlt && "ALT TEXT", photo.shootId !== photo.liveShootId && "SHOOT",
           photo.sortOrder !== photo.liveSortOrder && "ORDER", photo.isCover !== photo.liveIsCover && "COVER"].filter(Boolean).join(" · "),
     })),
@@ -38,39 +40,52 @@ export default function Publish() {
           JSON.stringify(collection.photoIds) !== JSON.stringify(collection.livePhotoIds) ? "MEMBERS" : "DETAILS" };
     }),
   ];
-  const blocked = () => content.photos.filter(photo => statusOf(photo) === "approved" && !content.shoots.find(s => s.id === photo.shootId)?.approved).length;
   const missingLive = () => content.photos.filter(photo => !photo.alt.trim() &&
-    (photo.approved || (!photo.published && !!shootOf(photo)?.approved))).length;
-  const privateDrafts = () => content.photos.filter(photo => statusOf(photo) === "draft" && !autoPublishReady(photo) &&
-    !(!photo.alt.trim() && !!shootOf(photo)?.approved)).length;
+    !photo.published && !!shootOf(photo)?.approved).length;
 
   async function publishNow() {
     setBusy(true);
     let note = "";
     await change(async () => { note = (await api<{ note: string }>("/publish", { method: "POST" })).note; },
-      () => `${localPreview ? "Local site updated" : "Live on nollestudios.com"}${note ? ` · ${note}` : ""}`);
+      () => note === "No changes" ? "No public changes made" : `${localPreview ? "Local site updated" : "Live on nollestudios.com"} · ${note}`);
+    setBusy(false);
+  }
+  async function includeAndPublish(shootId: string) {
+    setBusy(true);
+    await publishIncludingShoot(shootId);
     setBusy(false);
   }
 
   return <main class="publish-page page-wrap">
     <div class="eyebrow">PUBLISH · {siteLabel.toUpperCase()}</div>
     <h1>Put the work on the table</h1>
-    <p class="intro">Publish releases everything ready for the site in one step: every described new photo in an “On site” shoot goes live,
-      removed photos come off, and alt text and ordering update together. Photos in hidden shoots stay private.
+    <p class="intro">Publish releases described photos and videos in shoots marked for the site. Private shoots are listed separately below so they never go public by surprise.
       {localPreview ? " This updates the local catalog; the GitHub Pages site needs a separate static build and deployment." : ""}</p>
     <Pipeline />
     <div class="publish-layout">
       <section class="panel">
         <div class="panel-title"><h2>Waiting to go live</h2><span>{pending().total} CHANGE{pending().total === 1 ? "" : "S"}</span></div>
-        <Show when={groups().length} fallback={<p class="empty-copy">No changes since the last publish. The site matches the content room.</p>}>
+        <Show when={groups().length} fallback={<p class="empty-copy">No public changes queued. Private shoots remain off the site unless you include them below.</p>}>
           <dl class="publish-groups"><For each={groups()}>{([label, count]) => <><dt>{label}</dt><dd>{count}</dd></>}</For></dl>
         </Show>
-        <Show when={blocked()}><p class="publish-note">{photoCount(blocked())} approved in hidden shoots will not appear until those shoots are shown.</p></Show>
         <Show when={missingLive()}><p class="publish-note publish-note--warn">{photoCount(missingLive())} in “On site” shoots still need alt text. Add it before publishing everything. <button type="button" onClick={() => setView("library")}>Open Library</button></p></Show>
-        <Show when={privateDrafts()}><p class="publish-note">{photoCount(privateDrafts())} will remain private because their shoots are hidden. Nothing from a hidden shoot is published.</p></Show>
+        <Show when={privateShoots().length}>
+          <div class="publish-private">
+            <strong>Private shoots · not included above</strong>
+            <For each={privateShoots()}>{shoot => {
+              const missing = () => shoot.photos.filter(photo => !photo.published && !photo.alt.trim()).length;
+              return <div class="publish-private-row">
+                <span><b>{shoot.title}</b><small>{shoot.photos.length} media item{shoot.photos.length === 1 ? "" : "s"} · {missing() ? `${missing()} need alt text` : "ready to include"}</small></span>
+                <button type="button" disabled={busy() || !!missing()} onClick={() => void includeAndPublish(shoot.id)}>Include & publish</button>
+                <Show when={missing()}><button type="button" onClick={() => openScope({ type: "shoot", id: shoot.id })}>Open shoot</button></Show>
+              </div>;
+            }}</For>
+            <small>Including a shoot also publishes other ready changes shown above.</small>
+          </div>
+        </Show>
         <div class="publish-go">
           <button type="button" class="primary" disabled={!pending().total || !!missingLive() || busy()} onClick={publishNow}>
-            {busy() ? "Publishing…" : missingLive() ? `Add alt text to ${photoCount(missingLive())}` : pending().total ? `Publish everything · ${pending().total} change${pending().total === 1 ? "" : "s"}` : "Everything is live"}
+            {busy() ? "Publishing…" : missingLive() ? `Add alt text to ${photoCount(missingLive())}` : pending().total ? `Publish site changes · ${pending().total}` : "No public changes queued"}
           </button>
           <a href={siteUrl("")} target="_blank" rel="noopener">View site ↗</a>
         </div>

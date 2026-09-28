@@ -25,11 +25,14 @@ export async function publish(db: Db, staging: Staging, storage: Storage) {
     await db.query('UPDATE photos SET approved = 1, updated_at = ? WHERE id = ?', [queuedAt, photo.id]);
   }
   const [photos, shoots, collections] = await Promise.all([
-    db.query<PhotoRow>('SELECT * FROM photos WHERE approved <> published ORDER BY created_at ASC, id ASC'),
+    db.query<PhotoRow & { shoot_approved: number }>(`SELECT photos.*, COALESCE(shoots.approved, 0) AS shoot_approved
+      FROM photos LEFT JOIN shoots ON shoots.id = photos.shoot_id
+      WHERE photos.published <> CASE WHEN photos.approved = 1 AND shoots.approved = 1 THEN 1 ELSE 0 END
+      ORDER BY photos.created_at ASC, photos.id ASC`),
     db.query<{ id: string }>('SELECT id FROM shoots WHERE approved <> published'),
     db.query<{ id: string }>('SELECT id FROM collections WHERE approved <> published'),
   ]);
-  if (photos.some(photo => photo.approved && !photo.alt.trim())) {
+  if (photos.some(photo => photo.approved && photo.shoot_approved && !photo.alt.trim())) {
     throw new HttpError(400, 'Add alt text before publishing approved photographs');
   }
   // Publish new variants before making their rows public; withdraw rows before
@@ -38,7 +41,7 @@ export async function publish(db: Db, staging: Staging, storage: Storage) {
   const unprepare = () => Promise.allSettled(prepared.filter(photo => photo.storage_prefix)
     .flatMap(photo => variantKeys(photo.id, photo.kind)).map(key => storage.delete(key)));
   try {
-    for (const photo of photos.filter(photo => photo.approved)) {
+    for (const photo of photos.filter(photo => photo.approved && photo.shoot_approved)) {
       if (photo.storage_prefix) await publishVariants(photo.id, staging, storage, photo.kind);
       prepared.push(photo);
     }
@@ -48,7 +51,7 @@ export async function publish(db: Db, staging: Staging, storage: Storage) {
   }
   const withdrawn: PhotoRow[] = [];
   try {
-    for (const photo of photos.filter(photo => !photo.approved)) {
+    for (const photo of photos.filter(photo => !photo.approved || !photo.shoot_approved)) {
       if (photo.storage_prefix) await unpublishVariants(photo.id, staging, storage, photo.kind);
       withdrawn.push(photo);
     }

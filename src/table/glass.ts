@@ -1,5 +1,6 @@
 import { onCleanup } from "solid-js";
 import normalMap from "../assets/glass/liquid-glass-normal.png";
+import { canRefract } from "./glass-support";
 
 // Liquid-glass refraction. art/liquid_glass.py renders the surface normals of
 // a thick glass slab with a round shoulder; here that map is nine-sliced to
@@ -10,9 +11,10 @@ import normalMap from "../assets/glass/liquid-glass-normal.png";
 
 const MAP_SLICE = 80, MAP_RADIUS = 48;
 const SVG = "http://www.w3.org/2000/svg";
-type Brands = { brands?: { brand: string }[] };
-const supported = typeof navigator !== "undefined" &&
-  !!(navigator as Navigator & { userAgentData?: Brands }).userAgentData?.brands?.some(b => b.brand === "Chromium") &&
+type BrowserData = { brands?: { brand: string }[]; platform?: string };
+const browserData = typeof navigator === "undefined" ? undefined : (navigator as Navigator & { userAgentData?: BrowserData }).userAgentData;
+const supported = !!browserData && canRefract(browserData.platform ?? navigator.platform,
+  browserData.brands?.map(b => b.brand) ?? []) &&
   !matchMedia("(prefers-reduced-transparency: reduce)").matches;
 
 let map: Promise<HTMLImageElement> | undefined;

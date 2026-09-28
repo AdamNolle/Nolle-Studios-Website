@@ -1,8 +1,22 @@
 import { ApiError, api } from "./api";
-import { altDrafts, change, content, load, notice, photoOf, photosIn, setAltStatus, setDraft } from "./store";
+import { altDrafts, change, content, load, notice, photoOf, photosIn, setAltStatus, setDraft, shootOf } from "./store";
 import { photoCount } from "./util";
 
 export const photoPath = (id: string) => `/photos/${encodeURIComponent(id)}`;
+
+/** One explicit action for making an existing private shoot and its ready media public. */
+export async function publishIncludingShoot(shootId: string) {
+  const shoot = content.shoots.find(row => row.id === shootId);
+  if (!shoot) { notice("Shoot not found", true); return false; }
+  const missing = content.photos.filter(photo => !photo.published && !photo.alt.trim() &&
+    (photo.shootId === shootId || !!shootOf(photo)?.approved)).length;
+  if (missing) { notice(`${photoCount(missing)} need alt text before publishing`, true); return false; }
+  let note = "";
+  return change(async () => {
+    await api(`/shoots/${encodeURIComponent(shootId)}`, { method: "PATCH", body: { approved: true } });
+    note = (await api<{ note: string }>("/publish", { method: "POST" })).note;
+  }, () => `${shoot.title} is on the site · ${note}`);
+}
 
 /** Changing the working shoot leaves the live assignment alone until Publish. */
 export async function moveToShoot(ids: string[], shootId: string) {

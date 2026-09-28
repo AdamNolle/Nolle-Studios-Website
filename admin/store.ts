@@ -102,9 +102,10 @@ export const collectionPending = (collection: CollectionDto) => collection.appro
 
 /** Described new uploads in visible shoots are picked up by Publish automatically. */
 export const autoPublishReady = (photo: PhotoDto) => !photo.published && !photo.approved && !!photo.alt.trim() && !!shootOf(photo)?.approved;
+export const intendedLive = (photo: PhotoDto) => !!shootOf(photo)?.approved && (photo.approved || autoPublishReady(photo));
 
-export const photoPending = (photo: PhotoDto) => autoPublishReady(photo) || photo.approved !== photo.published ||
-  (photo.published && (photo.alt !== photo.liveAlt || photo.shootId !== photo.liveShootId || photo.sortOrder !== photo.liveSortOrder ||
+export const photoPending = (photo: PhotoDto) => intendedLive(photo) !== photo.published ||
+  (photo.published && intendedLive(photo) && (photo.alt !== photo.liveAlt || photo.shootId !== photo.liveShootId || photo.sortOrder !== photo.liveSortOrder ||
     (photo.isCover !== photo.liveIsCover && !derived.waitingCovers().has(photo.shootId))));
 
 export const counts = createRoot(() => createMemo(() => {

@@ -352,8 +352,7 @@ span.ns-pill.is-active { cursor: default; }
 .ns-lift__stage--video { touch-action: auto; cursor: default; }
 .ns-lift__figure { position: relative; margin: 0; display: flex; transform-origin: center; box-shadow: 0 50px 100px rgba(0,0,0,.5), 0 16px 32px rgba(0,0,0,.35); }
 .ns-lift__figure--video { max-width: 100%; max-height: 100%; align-items: center; justify-content: center; box-shadow: none; background: #080909 !important; }
-.ns-lift__img { display: block; width: auto; height: auto; object-fit: contain; pointer-events: none; opacity: 0; transition: opacity .35s ease; }
-.ns-lift__img.is-loaded { opacity: 1; }
+.ns-lift__img { display: block; width: auto; height: auto; object-fit: contain; pointer-events: none; }
 .ns-lift__video { display: block; width: 100%; height: 100%; max-height: 100%; object-fit: contain; background: #080909; }
 
 .ns-nav {
@@ -372,7 +371,7 @@ span.ns-pill.is-active { cursor: default; }
 .ns-liftbar__identity { min-width: 0; display: grid; gap: 4px; }
 .ns-liftbar__title { font: 400 21px/1.05 var(--serif); white-space: nowrap; overflow-x: clip; overflow-y: visible; text-overflow: ellipsis; }
 .ns-liftbar__metadata { overflow: hidden; color: rgba(238,242,247,.66); font: 500 8.5px/1 var(--mono); letter-spacing: .08em; white-space: nowrap; text-overflow: ellipsis; }
-.ns-liftbar__count { flex: none; font: 500 10px/1 var(--mono); letter-spacing: .14em; color: rgba(238,242,247,.7); font-variant-numeric: tabular-nums; }
+.ns-liftbar__count { display: grid; place-items: center; flex: none; min-width: 70px; padding: 0 12px; border-left: 1px solid rgba(255,255,255,.14); font: 500 10px/1 var(--mono); letter-spacing: .14em; color: rgba(238,242,247,.8); font-variant-numeric: tabular-nums; }
 .ns-liftbar__actions { position: relative; display: flex; align-items: stretch; flex: none; }
 .ns-liftbar__btn {
   display: flex; align-items: center; gap: 8px; padding: 0 16px; border: 0; border-left: 1px solid rgba(255,255,255,.14); background: transparent; cursor: pointer;
@@ -543,6 +542,7 @@ span.ns-pill.is-active { cursor: default; }
   .ns-hint.is-on { transform: translate(-50%, 0); }
   .ns-liftbar { top: 10px; left: 10px; right: 10px; }
   .ns-liftbar__title { font-size: 17px; }
+  .ns-liftbar__count { min-width: 50px; padding: 0 6px; font-size: 9px; }
   .ns-strip { left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); width: auto; max-width: none; padding: 0 58px; transform: none; }
   .ns-nav { top: auto; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); width: 46px; height: 46px; transform: none; z-index: 4; }
   .ns-preview-zoom { right: 10px; bottom: 82px; height: 44px; }

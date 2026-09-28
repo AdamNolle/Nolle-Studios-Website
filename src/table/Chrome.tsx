@@ -99,7 +99,6 @@ export function Header(props: HeaderProps) {
             <span class="ns-pill__dot" aria-hidden="true" />Contact
           </button>
         }>
-          <span class="ns-pill is-active" aria-current="page"><span class="ns-pill__dot" aria-hidden="true" />Tables</span>
           <button type="button" class="ns-pill" aria-expanded={props.overlay === "contact"} onClick={() => props.onOverlay("contact")}>Contact</button>
           <span class="ns-bar__rule" aria-hidden="true" />
           <button type="button" class="ns-keycap" aria-label="Keyboard and gesture help" aria-expanded={props.overlay === "help"} onClick={() => props.onOverlay("help")}>?</button>
