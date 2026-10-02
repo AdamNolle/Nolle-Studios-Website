@@ -1,0 +1,50 @@
+name: CI and deploy
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: nolle-studios-production
+  cancel-in-progress: false
+jobs:
+  validate:
+    name: CMS tests, typecheck, and static build
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","Linux","X64","personal-ci"]') || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run test:cms
+      - run: npm run build:static
+  deploy:
+    name: Deploy to Adlon Docker Compose
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: validate
+    runs-on: [self-hosted, Linux, X64, nolle-deploy]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and update the live Compose project
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker compose --project-name nolle-studios \
+            --project-directory "$GITHUB_WORKSPACE" \
+            --env-file /home/adam/Code/Nolle-Studios-Website/.env \
+            -f "$GITHUB_WORKSPACE/compose.yaml" \
+            -f /home/adam/Code/Nolle-Studios-Website/compose.tunnel.yaml \
+            up -d --build --remove-orphans
+          for attempt in {1..30}; do
+            if curl --fail --silent --show-error --output /dev/null http://127.0.0.1:18081/; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo 'Nolle Studios did not become healthy on port 18081' >&2
+          exit 1
