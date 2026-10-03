@@ -27,3 +27,19 @@ Adlon's user-level `nolle-studios-backup.timer` creates a verified PostgreSQL cu
 The `gh-pages` branch remains a static fallback and historical artifact. `npm run publish:pages` builds from `public/media/archive.json`; it does not contain the CMS database or newly uploaded photographs. It must not be used as the production DNS target while the Content Room is the source of truth.
 
 Cloudflare R2 or Backblaze B2 can later store published variants through `STORAGE_DRIVER=s3`, S3 credentials, and an HTTPS `MEDIA_BASE_URL`; PostgreSQL and private staging still require persistent storage.
+
+## Contact email
+
+Cloudflare Email Routing handles `hello@nollestudios.com`. Its routing rule invokes the `nolle-studios-email` Worker in `infra/email/`, which delivers to `adammnolle@gmail.com` and `jackn315@gmail.com`. Each destination must accept Cloudflare's verification email before it can receive messages. Check their verification status under **Email Service → Email Routing → Destination addresses**.
+
+Cloudflare's `message.forward()` cannot modify Subject. The Worker therefore relays each message from `hello@nollestudios.com` with `[NOLLESTUDIOS EMAIL]` prepended to its original subject, using the original Reply-To (or From) for replies. It preserves the MIME body byte-for-byte, including attachments and HTML, and removes authentication signatures invalidated by the changed headers. The site's email link also prefills the subject prefix.
+
+If Cloudflare rejects a relay (for example, an outgoing message exceeds its sending size limit), the Worker attempts ordinary forwarding to that inbox to preserve the inquiry. That fallback keeps the original subject. A failure at one inbox does not prevent delivery to the other; failure at both rejects the incoming message rather than silently dropping it. Workers logs contain only generic delivery errors, never message contents.
+
+Run `npm run test:email` before updating the Worker, then deploy with:
+
+```bash
+npx wrangler deploy --config infra/email/wrangler.jsonc
+```
+
+This deploys the email Worker separately from the Docker website. The existing `hello@nollestudios.com` routing rule must target this Worker; catch-all remains disabled. `workers_dev` and preview URLs are disabled because the Worker only receives email events. Verify the routing rule, both destination addresses, and an incoming test message after changes. For local runtime checks, run `npx wrangler dev --config infra/email/wrangler.jsonc --port 8793`; the `/cdn-cgi/handler/email` endpoint accepts MIME test messages with `from` and `to` query parameters, without sending to actual inboxes.

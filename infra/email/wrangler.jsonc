@@ -1,0 +1,12 @@
+{
+  "name": "nolle-studios-email",
+  "account_id": "eb5b6479cb5a0fbabd6e855949508702",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-10-02",
+  "workers_dev": false,
+  "preview_urls": false,
+  "send_email": [{
+    "name": "MAILER",
+    "allowed_destination_addresses": ["adammnolle@gmail.com", "jackn315@gmail.com"]
+  }]
+}

@@ -1,4 +1,10 @@
-# Release review — 27 September 2026
+# Release review — 2 October 2026
+
+## Contact email routing, 2 October 2026
+
+- Cloudflare's `hello@nollestudios.com` rule now invokes `nolle-studios-email`, relaying to Adam and Jack's Gmail addresses with `[NOLLESTUDIOS EMAIL]` in the subject and the original sender as Reply-To. The contact link prefills the same prefix.
+- Six focused email tests cover both deliveries, binary MIME attachment preservation, encoded/folded subjects, existing Reply-To, duplicate-prefix avoidance, malformed messages, fallback forwarding, and delivery failures. Typecheck and the CMS-flavoured production build passed.
+- Exercised the Worker in Wrangler's local email runtime: its send-email records showed two independent deliveries with the prefixed subject and original Reply-To. No test messages were sent to real inboxes. Live destination verification and actual inbox receipt are separate checks; Jack must verify his destination address before delivery works.
 
 ## Windows glass fallback, 27 September 2026
 

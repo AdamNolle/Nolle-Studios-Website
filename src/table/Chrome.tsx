@@ -7,6 +7,7 @@ import { download } from "./download";
 import glassMark from "../assets/glass/mark.webp";
 
 const CONTACT_EMAIL = "hello@nollestudios.com";
+const CONTACT_SUBJECT = "[NOLLESTUDIOS EMAIL]";
 const INSTAGRAM_HANDLE = "@nollestudios";
 const INSTAGRAM_URL = "https://www.instagram.com/nollestudios/";
 
@@ -206,7 +207,7 @@ export function Contact(props: { onClose(): void }) {
         <img class="ns-contact__logo" src="/nolle-studios-header-on-dark.svg" alt="Nolle Studios" width="210" height="60" draggable={false} />
         <p class="ns-contact__lead">Let's get in touch.</p>
         <div class="ns-contact__links">
-          <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}<span>EMAIL ↗</span></a>
+          <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(CONTACT_SUBJECT)}`}>{CONTACT_EMAIL}<span>EMAIL ↗</span></a>
           <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer">{INSTAGRAM_HANDLE}<span>INSTAGRAM ↗</span></a>
         </div>
       </div>
