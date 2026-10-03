@@ -35,6 +35,9 @@ export function relayMessage(raw, recipient, envelopeSender, messageId) {
   const replaced = new Set([
     "from", "to", "cc", "bcc", "sender", "reply-to", "subject", "message-id",
     "return-path", "dkim-signature", "authentication-results", "received-spf",
+    // Cloudflare owns these delivery headers; copying the inbound transport
+    // history causes its live send API to reject otherwise valid MIME.
+    "received", "date",
   ]);
   const preserved = fields.filter(({ name }) =>
     !replaced.has(name) && !name.startsWith("arc-") && !name.startsWith("resent-"));

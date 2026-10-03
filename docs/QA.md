@@ -1,5 +1,11 @@
 # Release review — 2 October 2026
 
+## Contact email live verification, 2 October 2026
+
+- A real Gmail message sent to `hello@nollestudios.com` exposed a difference from the local runtime: Cloudflare's live sending service rejected copied inbound `Received` and `Date` headers. The original-message fallback delivered the inquiry, but without the subject prefix.
+- The relay now removes those transport headers before sending. Added a regression test; all seven email tests passed, and deployed the patched Worker.
+- Retested through the actual contact address and confirmed receipt in Adam's Gmail inbox: `[NOLLESTUDIOS EMAIL]` subject, original sender as Reply-To, passing SPF/DKIM, and the exact attached text file. Jack remains unverified, so his inbox cannot receive until he accepts Cloudflare's verification email. The Worker attempted both destinations and continued Adam's delivery when Jack's destination failed.
+
 ## Contact email routing, 2 October 2026
 
 - Cloudflare's `hello@nollestudios.com` rule now invokes `nolle-studios-email`, relaying to Adam and Jack's Gmail addresses with `[NOLLESTUDIOS EMAIL]` in the subject and the original sender as Reply-To. The contact link prefills the same prefix.

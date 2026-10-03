@@ -36,6 +36,16 @@ test("handles absent subject and rejects malformed MIME", async () => {
   assert.throws(() => relayMessage(raw("broken"), RECIPIENTS[0], "sender@example.com", "test"));
 });
 
+test("removes inbound transport headers rejected by Cloudflare's live send API", async () => {
+  const text = await read(relayMessage(raw(
+    "Received: from sender.example.com\r\n\tby mx.cloudflare.net\r\nReceived: from gmailapi.google.com with HTTPREST\r\nDate: Fri, 2 Oct 2026 19:13:56 -0700\r\nFrom: sender@example.com\r\nSubject: Booking\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\n\r\nHello"), RECIPIENTS[0], "sender@example.com", "test"));
+  assert.doesNotMatch(text, /^Received:|^Date:|^\tby mx.cloudflare.net/m);
+  assert.match(text, /MIME-Version: 1.0/);
+  assert.match(text, /Content-Type: text\/plain; charset=utf-8/);
+  assert.match(text, /Subject: \[NOLLESTUDIOS EMAIL\] Booking/);
+  assert.ok(text.endsWith("Hello"));
+});
+
 const incoming = (overrides = {}) => ({
   to: ADDRESS,
   from: "sender@example.com",
