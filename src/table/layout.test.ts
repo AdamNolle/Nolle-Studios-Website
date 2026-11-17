@@ -49,7 +49,7 @@ test("large shoots show a +N frame", () => {
 });
 
 test("sheets fit between the header and the transport at every size", () => {
-  for (const [W, H, narrow] of [[1440, 900, false], [1920, 1080, false], [1024, 768, false], [390, 844, true], [320, 568, true], [844, 390, false]] as const) {
+  for (const [W, H, narrow] of [[1440, 900, false], [1920, 1080, false], [1024, 768, false], [390, 844, true], [320, 568, true], [844, 390, false], [2560, 1080, false], [3440, 1440, false], [5120, 1440, false], [2560, 1600, false]] as const) {
     for (const count of [1, 3, 6, 8, 20]) {
       const sheet = sheetLayout(count, narrow, W, H);
       const rows = Math.max(...sheet.plan.map(([row, , span]) => row + span - 1));
@@ -58,6 +58,12 @@ test("sheets fit between the header and the transport at every size", () => {
       assert.ok(height <= H - (narrow ? 186 : 236) + 20, `${count} at ${W}x${H} is ${height} tall`);
     }
   }
+});
+
+test("large screens give the sheet more of the table", () => {
+  const laptop = sheetLayout(12, false, 1440, 900), ultrawide = sheetLayout(12, false, 3440, 1440);
+  assert.ok(ultrawide.w > laptop.w * 1.3, `${ultrawide.w} vs ${laptop.w}`);
+  assert.equal(sheetLayout(12, false, 1440, 900).w, laptop.w);
 });
 
 test("neighbouring sheets sit edge to edge with a fixed gutter", () => {

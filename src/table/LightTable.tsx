@@ -241,12 +241,29 @@ export default function LightTable(props: { shoots: ArchiveShoot[]; initialShoot
     </div>;
   };
 
+  // The cork drifts a little with every shoot. Its tile repeats every 768 px,
+  // so once a move settles the layer jumps back by whole tiles, unseen, and
+  // never runs out of bleed however many shoots there are.
+  const CORK_TILE = 768;
+  const [corkShift, setCorkShift] = createSignal({ x: 0, y: 0 });
+  const [corkWrapping, setCorkWrapping] = createSignal(false);
+  const corkX = () => -current() * 54 + corkShift().x, corkY = () => -current() * 12 + corkShift().y;
+  const wrapBy = (value: number) => -Math.round(value / CORK_TILE) * CORK_TILE;
+  function wrapCork() {
+    const dx = wrapBy(corkX()), dy = wrapBy(corkY());
+    if (!dx && !dy) return;
+    setCorkWrapping(true);
+    setCorkShift(shift => ({ x: shift.x + dx, y: shift.y + dy }));
+    requestAnimationFrame(() => requestAnimationFrame(() => setCorkWrapping(false)));
+  }
+
   const shootAnnouncement = () => { const shoot = shoots[current()]; return `${shoot.title}, ${shoot.displayDate}, ${frames(shoot.photos.length).toLowerCase()}`; };
 
   return <div class="ns-stage" ref={stage}>
-    <div class="ns-cork" aria-hidden="true">
+    <div class="ns-cork" classList={{ "is-dragging": dragX() !== null }} aria-hidden="true">
       <div class="ns-cork__base" />
-      <div class="ns-cork__tile" style={{ transform: `translate3d(${(-current() * 54 + (dragX() ?? 0) * 0.15).toFixed(1)}px,${-current() * 12}px,0)` }} />
+      <div class="ns-cork__tile" classList={{ "is-wrapping": corkWrapping() }} onTransitionEnd={wrapCork}
+        style={{ transform: `translate3d(${(corkX() + (dragX() ?? 0) * 0.15).toFixed(1)}px,${corkY().toFixed(1)}px,0)` }} />
       <div class="ns-cork__tone" />
       <div class="ns-cork__light" />
       <div class="ns-cork__edge" />

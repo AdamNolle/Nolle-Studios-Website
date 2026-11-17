@@ -268,8 +268,9 @@ export function Picker(props: PickerProps) {
     <button type="button" class="ns-pill" onClick={() => count() === total() ? props.onClear() : props.onAll()}>
       {count() === total() ? "Clear" : props.narrow ? "All" : "Select all"}
     </button>
-    <button type="button" class="ns-pill ns-pill--solid ns-picker__save" disabled={!count() || busy() !== null} onClick={() => void save()}>
-      <DownloadIcon />{count() > 1 ? `Download ${count()}` : "Download"}
+    <button type="button" class="ns-pill ns-pill--solid ns-picker__save" disabled={!count() || busy() !== null} onClick={() => void save()}
+      aria-label={count() > 1 ? `Download ${count()} photos` : "Download"}>
+      <DownloadIcon /><span class="ns-picker__label">{count() > 1 ? `Download ${count()}` : "Download"}</span>
     </button>
     <button type="button" class="ns-picker__close" aria-label="Stop selecting" onClick={() => props.onDone()}>×</button>
   </div>;

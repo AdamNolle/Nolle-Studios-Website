@@ -437,6 +437,15 @@ test('upload stays private until publish, keeps safe EXIF, and unpublish removes
     const publicResponse = await fetch(`${base}/media/photos/${photoId}/640.jpg`);
     assert.equal(publicResponse.status, 200);
     assert.match(publicResponse.headers.get('cache-control')!, /max-age=300/);
+    // Revisits revalidate instead of downloading the photograph again.
+    const etag = publicResponse.headers.get('etag')!;
+    assert.ok(etag);
+    const revisit = await fetch(`${base}/media/photos/${photoId}/640.jpg`, { headers: { 'If-None-Match': etag } });
+    assert.equal(revisit.status, 304);
+    assert.match(revisit.headers.get('cache-control')!, /max-age=300/);
+    const byDate = await fetch(`${base}/media/photos/${photoId}/640.jpg`, { headers: { 'If-Modified-Since': publicResponse.headers.get('last-modified')! } });
+    assert.equal(byDate.status, 304);
+    assert.equal((await fetch(`${base}/media/photos/${photoId}/640.jpg`, { headers: { 'If-None-Match': 'W/"stale"' } })).status, 200);
     const publishedMeta = await sharp(publishedBytes).metadata();
     assert.ok(publishedMeta.exif);
     assert.equal(publishedMeta.xmp, undefined);

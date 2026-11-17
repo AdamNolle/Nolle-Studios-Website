@@ -58,4 +58,4 @@ Then open `http://localhost:8791/admin/` after `npm run build:admin`. The produc
 
 - **Not yet verified:** Safari, Firefox, physical phones (pinch zoom), Windows glass in a real Windows browser, and live R2/B2 storage. The CMS and dynamic site run on Adlon; CMS uploads reach the public site directly through its Publish flow.
 - **Very short landscape phones** (for example 667×375): the keys and Contact panels scroll inside the glass, with a fade showing there is more.
-- **Screenshots go stale.** `public/og-image.jpg` and `docs/images/*.webp` are browser screenshots. Retake them after visible design changes.
+- **Screenshots go stale.** `docs/images/*.webp` are browser screenshots, and `public/nolle-studios-share.jpg` is rendered from `art/share_card.html` with live photographs. Retake them after visible design changes.

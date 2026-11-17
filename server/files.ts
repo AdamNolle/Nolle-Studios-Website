@@ -24,6 +24,14 @@ export function within(root: string, relative: string): string | null {
   return file.startsWith(base + path.sep) ? file : null;
 }
 
+/** Whether the browser's cached copy (by ETag, else by date) is still current. */
+function isFresh(c: Context, etag: string, modified: Date): boolean {
+  const match = c.req.header('if-none-match');
+  if (match) return match.split(',').some(tag => tag.trim() === etag || tag.trim() === '*');
+  const since = Date.parse(c.req.header('if-modified-since') ?? '');
+  return Number.isFinite(since) && Math.floor(modified.getTime() / 1000) * 1000 <= since;
+}
+
 /**
  * Stream a regular file with byte-range support (video seeking needs it).
  * Returns null when the file does not exist so callers can fall through.
@@ -32,7 +40,13 @@ export async function sendFile(c: Context, file: string, headers: Record<string,
   let stat;
   try { stat = await fs.stat(file); } catch { return null; }
   if (!stat.isFile()) return null;
-  const base: Record<string, string> = { 'Content-Type': typeOf(file), 'Accept-Ranges': 'bytes', 'Last-Modified': stat.mtime.toUTCString(), ...headers };
+  const etag = `W/"${stat.size.toString(36)}-${Math.floor(stat.mtimeMs).toString(36)}"`;
+  const base: Record<string, string> = { 'Content-Type': typeOf(file), 'Accept-Ranges': 'bytes', 'Last-Modified': stat.mtime.toUTCString(), ETag: etag, ...headers };
+  // A revisit after the short public cache lapses costs a 304, not the file.
+  if (isFresh(c, etag, stat.mtime)) {
+    const { 'Content-Type': _type, 'Accept-Ranges': _ranges, ...validators } = base;
+    return c.body(null, 304, validators);
+  }
   const header = c.req.header('range');
   let start = 0, end = stat.size - 1, status = 200;
   if (header) {

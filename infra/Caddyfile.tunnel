@@ -17,6 +17,13 @@
   }
   redir @adminRoot /admin/ 308
 
+  # Vite fingerprints everything under /assets/, so browsers keep it for a
+  # year; the page shell revalidates so a release shows up at once.
+  @hashed path /assets/*
+  header @hashed Cache-Control "public, max-age=31536000, immutable"
+  @shell path / /index.html /archive /archive/
+  header @shell Cache-Control "no-cache"
+
   @cms path /api/* /admin /admin/* /media/photos/* /media/videos/*
   handle @cms {
     reverse_proxy cms:8787

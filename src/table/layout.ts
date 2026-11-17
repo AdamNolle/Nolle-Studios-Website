@@ -44,7 +44,10 @@ export function sheetLayout(count: number, narrow: boolean, W: number, H: number
   const { band } = tableFrame(narrow, H);
   let cols: number, maxW: number, plan: Span[], tracks: number;
   cols = narrow ? Math.min(2, count) : count <= 2 ? count : count <= 6 ? 3 : 4;
-  maxW = narrow ? W - 24 : Math.min(W - 44, count === 1 ? 860 : count <= 6 ? 1000 : 1160);
+  // Large and ultrawide screens grow the sheet with the room actually
+  // available, rather than leaving a laptop-sized sheet in a sea of cork.
+  const roomy = Math.min(1.6, Math.max(1, Math.min(W / 1600, H / 1000)));
+  maxW = narrow ? W - 24 : Math.min(W - 44, Math.round((count === 1 ? 860 : count <= 6 ? 1000 : 1160) * roomy));
   const maxRows = H < 560 ? 1 : narrow ? (H >= 760 ? 4 : 3) : H >= 860 ? 3 : 2;
   const visible = Math.min(count, cols * maxRows);
   // Portrait feature sheets use a denser track grid so their quarter-width

@@ -1,5 +1,14 @@
 # Release review — 2 October 2026
 
+## Polish, responsiveness and caching, 17 November 2026
+
+- The `?` help control is now a round bead of the header glass with a serif question mark, a specular glint, hover lift, and a pressed state while the keys panel is open. Every glass surface gained a 1 px specular edge, bright along the upper left and warm along the lower right; the soft interior light moved into `--glass-light` so hover and panel fills keep it.
+- Contact sheets grow with the screen (up to 1.6× from 1600×1000), and the header widens with them, so 2560–5120 px displays no longer show a laptop-sized sheet in open cork. Below 380 px the brand no longer runs into the Contact pill, and the download bar keeps its count readable.
+- The table's cork now wraps by whole tiles after each move, so it never runs out of bleed past about 15 shoots, and it follows a drag directly (the old sibling selector could never match).
+- Caching: Caddy serves fingerprinted `/assets/*` as immutable for a year and the page shell as `no-cache`. Public media now answer `If-None-Match` / `If-Modified-Since` with 304, so revisits after the five-minute window no longer re-download photographs. The cork texture is preloaded.
+- New link preview `public/nolle-studios-share.jpg` (1200×630, 219 KB), composed in `art/share_card.html` from the Blender cork, pins, tape, glass rim and mark with six published photographs.
+- Checked in headless Chromium at 320×568, 375×667, 390×844, 667×375, 768×1024, 1280×800, 1440×900, 1920×1080, 2560×1080, 3440×1440 and 5120×1440 across the table, hint, keys, Contact, board, selection and preview, with the macOS refraction path and the CSS fallback. Typecheck passed; 47 of 49 tests passed, and the two failures need `ffmpeg` and `unzip`, which are not installed on Adlon.
+
 ## Contact email live verification, 2 October 2026
 
 - A real Gmail message sent to `hello@nollestudios.com` exposed a difference from the local runtime: Cloudflare's live sending service rejected copied inbound `Received` and `Date` headers. The original-message fallback delivered the inquiry, but without the subject prefix.

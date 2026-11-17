@@ -56,4 +56,13 @@ python3 art/finish_tape.py art/renders/tape src/assets/tape
 - **Glass mark** (`glass_mark.py`): the header's four-square logo as one thick optical-glass lens over four coloured laminate quadrants. The seams stay below an uninterrupted dielectric surface, avoiding the look of plastic buttons; subtle volume absorption, warm and cool studio softboxes, and a slightly off-axis camera reveal real depth without weakening the small-size silhouette.
 - **Loupe** (`preview_loupe.py`): a stand loupe seen from overhead, with a clear acrylic light-collecting skirt, a black anodised barrel with turned machining, and a brushed aluminium bezel. The aperture stays transparent for the live magnified crop.
 - **Push pins** (`pins.py`): moulded push pins (dished flare, fluted grip, thumb disc, steel needle) in blue, yellow, red, and dark green, each at two leans. The CC0 interior HDRI appears only in their reflections; diffuse light comes from an even ambient and one lamp, so each pin casts a single shadow, recorded by a shadow catcher.
+- **Share card** (`share_card.html`): the 1200×630 link preview, composed in HTML from the renders above (cork, pins, tape, the glass rim and mark) with prints from published shoots. With `npm run dev` and the CMS running, render it at 2× and downsample:
+
+  ```bash
+  npx playwright screenshot --viewport-size=1200,630 --device-scale-factor=2 --wait-for-selector='body[data-ready]' \
+    http://127.0.0.1:5173/art/share_card.html art/renders/share.png
+  node -e 'require("sharp")("art/renders/share.png").resize(1200,630).jpeg({quality:88,mozjpeg:true,chromaSubsampling:"4:4:4"}).toFile("public/nolle-studios-share.jpg")'
+  ```
+
+  Swap any print with `?p1=<photo id>` … `?p6=` (ids from `/api/site`).
 - **Tape** (`tape.py`, `finish_tape.py`): thin, torn, translucent film as short corner pieces and longer strips. The board hangs each print by tape in one of four placements (all corners, top corners, a diagonal pair, or one strip across the top) or by one, two, or four pins, and neighbouring prints never repeat.

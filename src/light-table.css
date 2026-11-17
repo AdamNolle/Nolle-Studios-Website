@@ -48,17 +48,25 @@ picture { display: contents; }
 
 .ns-glass {
   --rim: 33px;
+  /* Soft light pooled inside the slab: a sky reflection top left, warm bounce
+     from the cork bottom right. Shared by every glass fill below. */
+  --glass-light: radial-gradient(90% 160% at 8% -60%, rgba(255,255,255,.3), transparent 50%), radial-gradient(60% 120% at 96% 150%, rgba(255,236,210,.14), transparent 55%);
   position: absolute; isolation: isolate; overflow: hidden;
   border: 1px solid rgba(255,255,255,.09);
   /* The fallback must be real translucency, independent of Windows' backdrop
      compositor: a filtered near-black fill rendered as solid black there. */
-  background: linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,.03) 38%, rgba(255,255,255,0) 60%, rgba(255,255,255,.08)), rgba(36,25,18,.38);
+  background: var(--glass-light), linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,.03) 38%, rgba(255,255,255,0) 60%, rgba(255,255,255,.08)), rgba(36,25,18,.38);
   box-shadow: inset 0 -16px 28px -20px rgba(255,255,255,.1), 0 18px 40px rgba(30,14,4,.28), 0 3px 8px rgba(30,14,4,.16);
   color: var(--ink);
 }
 .ns-glass::before {
-  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit;
-  background: radial-gradient(90% 160% at 8% -60%, rgba(255,255,255,.3), transparent 50%), radial-gradient(60% 120% at 96% 150%, rgba(255,236,210,.14), transparent 55%);
+  /* A specular edge: the slab's lip catches the light along its upper left
+     and, more faintly, the warm cork along its lower right. A 1px ring cut
+     from a gradient with a mask, so it follows any corner radius. */
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; border-radius: inherit; padding: 1px;
+  background: linear-gradient(162deg, rgba(255,255,255,.62), rgba(255,255,255,.16) 18%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 64%, rgba(255,232,204,.14) 84%, rgba(255,232,204,.34));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
 }
 .ns-glass::after {
   content: ""; position: absolute; inset: -1px; z-index: 0; pointer-events: none; border-radius: inherit;
@@ -72,12 +80,12 @@ picture { display: contents; }
    rim, lightly tinted so white type stays legible. */
 .ns-glass.is-refracting {
   border-color: rgba(255,255,255,.07);
-  background: linear-gradient(160deg, rgba(255,255,255,.1), rgba(255,255,255,0) 42%, rgba(255,255,255,0) 70%, rgba(255,255,255,.05)), rgba(22,14,8,.4);
+  background: var(--glass-light), linear-gradient(160deg, rgba(255,255,255,.1), rgba(255,255,255,0) 42%, rgba(255,255,255,0) 70%, rgba(255,255,255,.05)), rgba(22,14,8,.4);
   backdrop-filter: blur(24px) saturate(185%) brightness(1.04);
   -webkit-backdrop-filter: blur(24px) saturate(185%) brightness(1.04);
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.025), inset 0 -10px 22px -18px rgba(255,255,255,.1), 0 16px 36px rgba(30,14,4,.26), 0 2px 6px rgba(30,14,4,.14);
 }
-.ns-contact.is-refracting, .ns-keys.is-refracting { background: rgba(20,13,8,.5); }
+.ns-contact.is-refracting, .ns-keys.is-refracting { background: var(--glass-light), rgba(20,13,8,.5); }
 
 /* ---------- Cork backdrop (table view) ---------- */
 
@@ -94,7 +102,7 @@ picture { display: contents; }
 .ns-tabletop { position: absolute; inset: 0; z-index: 5; cursor: pointer; }
 .ns-table { position: absolute; left: 50%; width: 0; height: 0; z-index: 10; transition: opacity .5s var(--ease-out); }
 .ns-sheet { position: absolute; left: 0; top: 0; transform-origin: 50% 34%; will-change: transform; transition: transform .75s var(--ease-out); cursor: pointer; }
-.ns-table.is-dragging .ns-sheet, .ns-table.is-dragging ~ .ns-cork .ns-cork__tile { transition: none; }
+.ns-table.is-dragging .ns-sheet, .ns-cork.is-dragging .ns-cork__tile, .ns-cork__tile.is-wrapping { transition: none; }
 .ns-sheet__shadow { position: absolute; left: 14px; right: 14px; bottom: -16px; height: 26px; border-radius: 50%; background: rgba(34,14,2,.5); filter: blur(14px); }
 .ns-sheet__body {
   position: relative; border-radius: 2px; border: 1px solid rgba(222,228,235,.2); cursor: pointer;
@@ -192,7 +200,7 @@ picture { display: contents; }
 
 .ns-bar {
   --rim: 33px;
-  top: 16px; left: 16px; right: 16px; z-index: 30; max-width: 1500px; height: 66px; margin: 0 auto;
+  top: 16px; left: 16px; right: 16px; z-index: 30; max-width: clamp(1500px, 50vw + 400px, 2100px); height: 66px; margin: 0 auto;
   display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); align-items: center; gap: 16px;
   padding: 0 12px; border-radius: 20px;
 }
@@ -228,12 +236,28 @@ span.ns-pill.is-active { cursor: default; }
 .ns-pill svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; margin-left: -4px; }
 .ns-pill__dot { width: 5px; height: 5px; border-radius: 50%; background: #E8BF94; box-shadow: 0 0 8px rgba(232,191,148,.9); }
 .ns-keycap {
-  display: grid; place-items: center; width: 40px; height: 32px; padding: 0; border: 1px solid rgba(255,255,255,.28); border-radius: 9px;
-  background: linear-gradient(180deg, rgba(255,255,255,.2), rgba(255,255,255,.05)); color: #fff; font: 500 12px/1 var(--mono); cursor: pointer;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.5), inset 0 -2px 0 rgba(0,0,0,.28), 0 1px 3px rgba(0,0,0,.3);
+  /* A small bead of the same glass: lit from the upper left like the bar's
+     edge, with a caustic pooled in its lower half and a serif question mark
+     set in the brand's display face. */
+  position: relative; display: grid; place-items: center; width: 40px; height: 40px; padding: 0 0 1px; border: 0; border-radius: 50%;
+  background:
+    radial-gradient(60% 34% at 50% 84%, rgba(255,236,212,.26), transparent 70%),
+    radial-gradient(90% 70% at 30% 16%, rgba(255,255,255,.3), rgba(255,255,255,.06) 52%, rgba(255,255,255,.015) 74%),
+    rgba(255,246,236,.05);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.2), inset 0 1.5px 0 rgba(255,255,255,.42), inset 0 -8px 12px -8px rgba(30,12,0,.42),
+    0 4px 10px rgba(30,14,4,.3), 0 1px 2px rgba(30,14,4,.3);
+  color: #FBF8F3; font: 400 24px/1 var(--serif); text-shadow: 0 1px 6px rgba(0,0,0,.5); cursor: pointer;
+  transition: transform .4s var(--ease-out), box-shadow .25s, background-color .25s;
 }
-.ns-keycap:hover { background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,.08)); }
-.ns-keycap:active { transform: translateY(1px); box-shadow: inset 0 1px 0 rgba(255,255,255,.4), inset 0 -1px 0 rgba(0,0,0,.28); }
+.ns-keycap::before {
+  /* The specular glint: a soft crescent on the upper left of the bead. */
+  content: ""; position: absolute; left: 7px; top: 4px; width: 17px; height: 9px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(255,255,255,.62), rgba(255,255,255,0)); transform: rotate(-24deg);
+}
+.ns-keycap:hover { transform: translateY(-1px) scale(1.05); background-color: rgba(255,246,236,.12); box-shadow: inset 0 0 0 1px rgba(255,255,255,.3), inset 0 1.5px 0 rgba(255,255,255,.5), inset 0 -8px 12px -8px rgba(30,12,0,.42), 0 7px 16px rgba(30,14,4,.34), 0 1px 3px rgba(30,14,4,.3); }
+.ns-keycap:active { transform: scale(.95); transition-duration: .12s; }
+.ns-keycap[aria-expanded="true"] { background-color: rgba(255,246,236,.16); box-shadow: inset 0 0 0 1px rgba(255,255,255,.36), inset 0 1.5px 0 rgba(255,255,255,.5), inset 0 -8px 12px -8px rgba(30,12,0,.42), 0 0 18px rgba(255,236,210,.18); }
+.ns-keycap:focus-visible { outline-offset: 2px; }
 
 .ns-zoom { display: flex; align-items: center; gap: 2px; padding: 3px; border: 1px solid rgba(255,255,255,.18); border-radius: 14px; background: rgba(255,255,255,.05); }
 .ns-zoom button { min-width: 38px; height: 34px; padding: 0 8px; border: 0; border-radius: 11px; background: transparent; color: #fff; font: 500 15px/1 var(--mono); cursor: pointer; transition: background .2s; }
@@ -362,7 +386,7 @@ span.ns-pill.is-active { cursor: default; }
   position: absolute; top: 50%; transform: translateY(-50%); z-index: 3; display: inline-flex; align-items: center; justify-content: center;
   width: 48px; height: 56px; border-radius: 16px; cursor: pointer; line-height: 1; transition: background .2s ease, box-shadow .2s ease;
 }
-.ns-nav:hover { background: rgba(60,62,70,.6); }
+.ns-nav:hover { background: var(--glass-light), rgba(60,62,70,.6); }
 .ns-nav svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .ns-nav:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .ns-nav--prev { left: 16px; }
@@ -568,6 +592,21 @@ span.ns-pill.is-active { cursor: default; }
   .ns-private-preview { top: 76px; left: 10px; font-size: 9px; }
 }
 
+@media (max-width: 379.98px) {
+  .ns-bar { gap: 6px; padding: 0 7px; }
+  .ns-bar__mark { width: 30px; height: 30px; }
+  .ns-bar__brand { font-size: 22px; }
+  .ns-bar__end .ns-pill { gap: 0; padding: 0 10px; letter-spacing: .1em; }
+  .ns-bar__end .ns-pill__dot { display: none; }
+  /* The download button keeps its icon; the count says what it will save. */
+  .ns-picker { gap: 4px; padding-left: 14px; }
+  .ns-picker .ns-pill { padding: 0 11px; }
+  .ns-picker__save { width: 44px; justify-content: center; }
+  .ns-picker__save .ns-icon { margin: 0; }
+  .ns-picker__label { display: none; }
+  .ns-picker__close { width: 40px; }
+}
+
 @media (max-height: 720px) and (min-width: 760px) {
   .ns-keys { padding: 20px 24px; }
   .ns-keys__head { margin-bottom: 12px; }
@@ -609,5 +648,5 @@ span.ns-pill.is-active { cursor: default; }
 
 @media (forced-colors: active) {
   .ns-glass, .ns-rail__step, .ns-chip.is-on, .ns-keycap, .ns-pill.is-active { border: 1px solid CanvasText; }
-  .ns-glass::after { display: none; }
+  .ns-glass::before, .ns-glass::after, .ns-keycap::before { display: none; }
 }
