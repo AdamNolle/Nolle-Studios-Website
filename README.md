@@ -31,7 +31,13 @@ Every shoot is a contact sheet on a cork board, newest first. Open one and its p
 
 **The light table.** Contact sheets slide past under a liquid-glass header and a transport of shoot covers. Scroll, swipe, or use the arrow keys to move between shoots; click a frame to open its board. On the board, prints hang by clear tape or push pins, and no two neighbours hang the same way. Drag to pan, and scroll or pinch to zoom from the fitted view down to fine detail. A loupe follows the pointer, and the print preview zooms to full resolution. Press **Select** (or `S`) to tick several photographs and download them as one ZIP, built in the browser; the preview downloads a single photograph (`D`). `?` lists every key.
 
-**Everything is rendered, nothing is stock.** The cork, the liquid-glass rims, the loupe, the push pins, and the tape are Blender scenes in [`art/`](art/README.md), rendered on the GPU with Cycles. The glass bends what is behind it: a normal map rendered from the same glass slab drives an SVG displacement filter, so the cork and photographs refract at the rim (Chromium; Safari and Firefox show frosted glass).
+The table fits every screen from a 320 px phone to a 5120 px ultrawide. Contact sheets and the header grow with large displays, phones get a stacked sheet with touch controls, and the glass bars rearrange for narrow and short windows.
+
+**Everything is rendered, nothing is stock.** The cork, the liquid-glass rims, the loupe, the push pins, and the tape are Blender scenes in [`art/`](art/README.md), rendered on the GPU with Cycles. The glass bends what is behind it: a normal map rendered from the same glass slab drives an SVG displacement filter, so the cork and photographs refract at the rim (Chromium on macOS; other browsers show a translucent tint). A thin specular edge catches the light along each bar's upper left. Even the link preview is composed from these renders, with photographs from published shoots ([`art/share_card.html`](art/share_card.html)).
+
+<p align="center">
+  <img src="public/nolle-studios-share.jpg" alt="The link preview: Nolle Studios on a liquid-glass plaque over cork, with photographs pinned and taped around it" width="600">
+</p>
 
 **The Content Room.** A private editor at `/admin/` for shoots, collections, uploads, and ordering. Create a shoot, upload described photos or videos, and press **Publish**; nothing reaches visitors before that step. Intentionally private shoots stay out of the release until you choose **Include & publish**. Uploads are resized concurrently to AVIF, WebP, and JPEG from 640 to 3200 px. Camera, lens, and capture time stay with every generated image while GPS, serial numbers, names, and other private metadata are removed. Videos are transcoded to 720p and 1080p.
 
@@ -43,7 +49,7 @@ Every shoot is a contact sheet on a cork board, newest first. Open one and its p
 
 Shoots can span a start and end date. In the Content Room, the cover is selectable directly from any shoot thumbnail, and selected private uploads can be deleted together after confirmation. Live and curated media keep their existing publish safeguards.
 
-**Fast by default.** The site is SolidJS, under 70 KB of JavaScript, with the table code split off and fetched while the catalog loads. Images are served as AVIF first, sized to the zoom they are shown at. Animation loops run only while something moves. Fonts are self-hosted Latin subsets. The CMS is Hono on Node's built-in TypeScript support, with no build step.
+**Fast by default.** The site is SolidJS, under 70 KB of JavaScript, with the table code split off and fetched while the catalog loads. Images are served as AVIF first, sized to the zoom they are shown at. Animation loops run only while something moves. Fonts are self-hosted Latin subsets. Fingerprinted scripts, styles, and textures are cached for a year, while the page itself always revalidates, so a release shows up at once. Photographs revalidate after five minutes and come back as `304 Not Modified` unless they changed. The CMS is Hono on Node's built-in TypeScript support, with no build step.
 
 ## Stack
 
@@ -91,7 +97,7 @@ updates.
 | --- | --- |
 | `npm run build` | Build the site (`dist/`) and the Content Room (`dist-admin/`) |
 | `npm run build:static` | Build the static GitHub Pages site from `public/media/archive.json` |
-| `npm test` | CMS, static build, and board layout tests |
+| `npm test` | CMS, static build, board layout, media, and download tests (the video and ZIP tests need `ffmpeg` and `unzip`) |
 | `npm run typecheck` | Type-check the browser and server projects |
 | `npm run cms:hash` | Hash an admin password for production |
 
@@ -103,7 +109,7 @@ src/            the light table (SolidJS)
 admin/          the Content Room (SolidJS)
 server/         the CMS: API, auth, media pipeline, publishing, alt-text drafts
 shared/         API types shared by the browser and the server
-art/            Blender scenes and finishing scripts for every texture and sprite
+art/            Blender scenes and finishing scripts for every texture and sprite, and the share card
 public/media/   published photographs and their manifest
 infra/          Dockerfiles and Caddy configuration
 docs/           CMS, publishing, and release notes

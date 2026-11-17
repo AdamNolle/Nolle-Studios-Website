@@ -8,6 +8,7 @@
 - Caching: Caddy serves fingerprinted `/assets/*` as immutable for a year and the page shell as `no-cache`. Public media now answer `If-None-Match` / `If-Modified-Since` with 304, so revisits after the five-minute window no longer re-download photographs. The cork texture is preloaded.
 - New link preview `public/nolle-studios-share.jpg` (1200×630, 219 KB), composed in `art/share_card.html` from the Blender cork, pins, tape, glass rim and mark with six published photographs.
 - Checked in headless Chromium at 320×568, 375×667, 390×844, 667×375, 768×1024, 1280×800, 1440×900, 1920×1080, 2560×1080, 3440×1440 and 5120×1440 across the table, hint, keys, Contact, board, selection and preview, with the macOS refraction path and the CSS fallback. Typecheck passed; 47 of 49 tests passed, and the two failures need `ffmpeg` and `unzip`, which are not installed on Adlon.
+- Retook the README's light-table and shoot-board screenshots from the live site (the old ones still showed the removed About link and earlier shoots), and brought the README, `docs/CMS.md`, and `AGENTS.md` up to date with the share card, screen-size scaling, and caching. The Content Room screenshots were not retaken; its interface did not change in this release.
 
 ## Contact email live verification, 2 October 2026
 
