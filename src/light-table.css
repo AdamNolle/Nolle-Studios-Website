@@ -236,10 +236,10 @@ span.ns-pill.is-active { cursor: default; }
 .ns-pill svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; margin-left: -4px; }
 .ns-pill__dot { width: 5px; height: 5px; border-radius: 50%; background: #E8BF94; box-shadow: 0 0 8px rgba(232,191,148,.9); }
 .ns-keycap {
-  /* A small bead of the same glass: lit from the upper left like the bar's
-     edge, with a caustic pooled in its lower half and a serif question mark
-     set in the brand's display face. */
-  position: relative; display: grid; place-items: center; width: 40px; height: 40px; padding: 0 0 1px; border: 0; border-radius: 50%;
+  /* A small square tile of the same glass, rounded like the header's other
+     controls: lit from the upper left like the bar's edge, with a caustic
+     pooled in its lower half and a serif question mark in the display face. */
+  position: relative; display: grid; place-items: center; width: 40px; height: 40px; padding: 0 0 1px; border: 0; border-radius: 12px;
   background:
     radial-gradient(60% 34% at 50% 84%, rgba(255,236,212,.26), transparent 70%),
     radial-gradient(90% 70% at 30% 16%, rgba(255,255,255,.3), rgba(255,255,255,.06) 52%, rgba(255,255,255,.015) 74%),
@@ -250,9 +250,9 @@ span.ns-pill.is-active { cursor: default; }
   transition: transform .4s var(--ease-out), box-shadow .25s, background-color .25s;
 }
 .ns-keycap::before {
-  /* The specular glint: a soft crescent on the upper left of the bead. */
-  content: ""; position: absolute; left: 7px; top: 4px; width: 17px; height: 9px; border-radius: 50%; pointer-events: none;
-  background: radial-gradient(closest-side, rgba(255,255,255,.62), rgba(255,255,255,0)); transform: rotate(-24deg);
+  /* The specular glint: a soft streak along the tile's upper left. */
+  content: ""; position: absolute; left: 4px; top: 3px; width: 20px; height: 7px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(255,255,255,.55), rgba(255,255,255,0)); transform: rotate(-8deg);
 }
 .ns-keycap:hover { transform: translateY(-1px) scale(1.05); background-color: rgba(255,246,236,.12); box-shadow: inset 0 0 0 1px rgba(255,255,255,.3), inset 0 1.5px 0 rgba(255,255,255,.5), inset 0 -8px 12px -8px rgba(30,12,0,.42), 0 7px 16px rgba(30,14,4,.34), 0 1px 3px rgba(30,14,4,.3); }
 .ns-keycap:active { transform: scale(.95); transition-duration: .12s; }

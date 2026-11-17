@@ -2,7 +2,7 @@
 
 ## Polish, responsiveness and caching, 17 November 2026
 
-- The `?` help control is now a round bead of the header glass with a serif question mark, a specular glint, hover lift, and a pressed state while the keys panel is open. Every glass surface gained a 1 px specular edge, bright along the upper left and warm along the lower right; the soft interior light moved into `--glass-light` so hover and panel fills keep it.
+- The `?` help control is now a square tile of the header glass (round corners, like the other controls) with a serif question mark, a specular glint, hover lift, and a pressed state while the keys panel is open. Every glass surface gained a 1 px specular edge, bright along the upper left and warm along the lower right; the soft interior light moved into `--glass-light` so hover and panel fills keep it.
 - Contact sheets grow with the screen (up to 1.6× from 1600×1000), and the header widens with them, so 2560–5120 px displays no longer show a laptop-sized sheet in open cork. Below 380 px the brand no longer runs into the Contact pill, and the download bar keeps its count readable.
 - The table's cork now wraps by whole tiles after each move, so it never runs out of bleed past about 15 shoots, and it follows a drag directly (the old sibling selector could never match).
 - Caching: Caddy serves fingerprinted `/assets/*` as immutable for a year and the page shell as `no-cache`. Public media now answer `If-None-Match` / `If-Modified-Since` with 304, so revisits after the five-minute window no longer re-download photographs. The cork texture is preloaded.
